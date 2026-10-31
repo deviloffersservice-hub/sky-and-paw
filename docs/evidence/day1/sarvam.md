@@ -42,3 +42,8 @@ All latencies are wall-clock round trips from this cloud environment through the
 
 ## Rerun after reported top-up (2026-10-31, later the same day)
 The coordinator reported that credits had been added. I reran check 1 (realtime socket) once with no changes: **still refused.** Handshake **101** at 1011 ms, then the same `error` / `quota_exceeded` / `status_code: 402` event at 1031 ms, then close **1003** "Credits exhausted". As instructed, I stopped after this first refusal; checks 2–6 were not rerun. Spend: **₹0.00**. Possible causes: the credits went to a different key or organisation than the `SARVAM_API_KEY` this session holds, the top-up hasn't taken effect yet, or this session's environment still has an older key.
+
+## Second rerun after reported key replacement (2026-10-31)
+The coordinator reported that `SARVAM_API_KEY` had been replaced with a key from another account. I probed with check 5 (translate en-IN to mr-IN) in a fresh process: **402 `insufficient_quota_error` "No credits available."**, 1011 ms (request_id `20261031_98895df5-…`). I stopped there as instructed, so checks 1–4 and 6 were not rerun. Spend: **₹0.00**.
+
+Key identity: no hash was saved in the earlier runs, so **whether the key value changed is unknown**. From now on: SHA-256 prefix of the current value is `b209d61be475`. The variable is not set in any shell profile file (`~/.bashrc`, `~/.profile`, `/etc/environment`, `/etc/profile*`). It is inherited from the session's process environment, which is fixed when the container starts. A key replaced in the environment's secrets after this session started most likely does **not** reach this session; a new session is needed to pick it up.
