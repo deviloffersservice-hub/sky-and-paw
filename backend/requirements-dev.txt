@@ -51,12 +51,15 @@ numpy==2.1.3 ; python_version >= "3.13"
     #   cyberwave
     #   opencv-python-headless
     #   skypaw (pyproject.toml)
+    #   trimesh
 opencv-python-headless==4.10.0.84
     # via skypaw (pyproject.toml)
 packaging==26.3
     # via pytest
 paho-mqtt==2.1.0
-    # via cyberwave
+    # via
+    #   cyberwave
+    #   skypaw (pyproject.toml)
 pluggy==1.7.0
     # via pytest
 pydantic==2.9.2
@@ -89,6 +92,7 @@ pyyaml==6.0.3
     # via
     #   cyberwave
     #   cyberwave-contracts
+    #   skypaw (pyproject.toml)
     #   uvicorn
 ruff==0.6.9
     # via skypaw (pyproject.toml)
@@ -100,6 +104,8 @@ sniffio==1.3.1
     # via httpx
 starlette==0.46.2
     # via fastapi
+trimesh==4.5.3
+    # via skypaw (pyproject.toml)
 typing-extensions==4.16.0
     # via
     #   aiosqlite
