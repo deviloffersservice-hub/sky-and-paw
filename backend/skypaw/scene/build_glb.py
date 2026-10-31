@@ -15,6 +15,14 @@ Every box is its own mesh node (``rubble_00`` .. ``rubble_17``), never concatena
 collides mesh geoms by their convex hull, so one merged mesh would become one hull spanning
 the whole site. Output is deterministic (same bytes for the same ``site.yaml`` and trimesh
 version) and about 20 kB.
+
+**Collision pieces (v1, stream E):** separate nodes are not enough. Cyberwave's GLB -> MuJoCo
+conversion flattens every node of an asset into one OBJ mesh and one ``type="mesh"`` geom
+(``export_mujoco_scene`` of skypaw-v1-dev-e, 2026-10-31: ``skypaw-rubble.obj`` = one object,
+144 vertices, geom ``pos="0 0 0"``), so the whole site collided as one convex hull and the Go2
+stopped on its boundary. :func:`build_piece_glbs` therefore writes one GLB per box (vertices
+still in world coordinates, so each twin sits at the origin) and the scene uploads each as its
+own asset/twin: one convex geom per box. ``rubble.glb`` (all boxes) stays for the console.
 """
 
 from __future__ import annotations
@@ -82,6 +90,30 @@ def build_glb_bytes(site: Site) -> bytes:
     if len(data) >= MAX_GLB_BYTES:
         raise ValueError(f"rubble.glb is {len(data)} bytes; the limit is {MAX_GLB_BYTES}")
     return data
+
+
+def piece_name(index: int) -> str:
+    """Asset and twin name of rubble box ``index`` (``skypaw-rubble-00`` ..)."""
+    return f"skypaw-rubble-{index:02d}"
+
+
+def build_piece_glbs(site: Site) -> list[tuple[str, bytes]]:
+    """One GLB per rubble box, ``(piece_name(i), bytes)``, vertices in the same frame as
+    :func:`build_scene` (deterministic). Each becomes its own convex MuJoCo collision geom."""
+    out: list[tuple[str, bytes]] = []
+    for i, box in enumerate(site.rubble):
+        scene = trimesh.Scene()
+        mesh = trimesh.creation.box(
+            extents=box_extents(box, site.glb_vertex_frame),
+            transform=box_transform(box, site.glb_vertex_frame),
+        )
+        name = f"rubble_{i:02d}"
+        scene.add_geometry(mesh, node_name=name, geom_name=name)
+        data = scene.export(file_type="glb")
+        if not isinstance(data, bytes | bytearray):
+            raise TypeError(f"trimesh returned {type(data).__name__}, expected bytes")
+        out.append((piece_name(i), bytes(data)))
+    return out
 
 
 def sha256(data: bytes) -> str:

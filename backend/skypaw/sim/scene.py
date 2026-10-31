@@ -74,8 +74,9 @@ class SceneHandles:
     rubble_asset_uuid: str | None = None
     go2_twin_uuid: str | None = None
     drone_twin_uuid: str | None = None
-    rubble_twin_uuid: str | None = None
+    rubble_twin_uuid: str | None = None  # piece 00 (MQTT rubble-pose probe)
     waypoints: dict[str, str | None] = field(default_factory=dict)
+    rubble_pieces: dict[str, str | None] = field(default_factory=dict)  # name -> twin uuid
 
     def as_dict(self) -> dict[str, Any]:
         """uuids only (safe for evidence/handles.json)."""
@@ -418,6 +419,54 @@ def ensure_waypoints(
     return {s["name"]: ids.get(s["name"]) for s in specs}
 
 
+# --- rubble collision pieces --------------------------------------------------------------------
+def remove_legacy_rubble(ctx: SceneContext, env_uuid: str | None) -> bool:
+    """Delete the single-mesh ``skypaw-rubble`` twin from the environment, if present.
+
+    Cyberwave flattens a multi-node GLB into one MuJoCo mesh geom, which collides as the
+    convex hull of the whole site (V1-E evidence); the per-box pieces replace it.
+    """
+    if env_uuid is None:
+        return False
+    legacy = _by_name(ctx.cw.twins.list(environment_id=env_uuid), TWIN_NAMES["rubble"])
+    if not legacy:
+        return False
+    for twin in legacy:
+        if ctx.dry_run:
+            ctx.step("delete", "twin", TWIN_NAMES["rubble"], "planned: single-mesh convex hull")
+        else:
+            ctx.cw.twins.delete(_uuid(twin))
+            ctx.step("delete", "twin", TWIN_NAMES["rubble"], "single-mesh convex hull replaced")
+    return not ctx.dry_run
+
+
+def ensure_rubble_pieces(
+    ctx: SceneContext, env_uuid: str | None, site: Site
+) -> dict[str, str | None]:
+    """One asset + fixed twin per rubble box (``skypaw-rubble-NN``), each at the origin.
+
+    Each piece GLB holds one box in world coordinates, so MuJoCo gets one convex collision
+    geom per box. Idempotent: the same lookups and sha256 checks as the single asset.
+    """
+    from skypaw.scene.build_glb import build_piece_glbs, sha256
+
+    pieces: dict[str, str | None] = {}
+    origin = site.spawn["rubble"]
+    for name, data in build_piece_glbs(site):
+        asset_uuid = ensure_asset_glb(
+            ctx,
+            name,
+            data,
+            sha256(data),
+            filename=f"{name}.glb",
+            env_uuid=env_uuid,
+            twin_name=name,
+        )
+        pieces[name] = ensure_twin(ctx, env_uuid, name, asset_uuid, origin, fixed_base=True)
+        place(ctx, env_uuid, pieces[name], name, origin)
+    return pieces
+
+
 # --- everything -------------------------------------------------------------------------------
 def build_scene(
     ctx: SceneContext,
@@ -425,40 +474,34 @@ def build_scene(
     *,
     project: str,
     environment: str,
-    glb: bytes,
-    glb_sha256: str,
+    glb: bytes | None = None,
+    glb_sha256: str | None = None,
     go2_pose: SitePose | None = None,
 ) -> SceneHandles:
-    """Ensure the whole scene; returns the handles. ``go2_pose`` overrides the staging spawn."""
+    """Ensure the whole scene; returns the handles. ``go2_pose`` overrides the staging spawn.
+
+    Rubble = one asset and fixed twin per box (:func:`ensure_rubble_pieces`); a legacy
+    single-mesh ``skypaw-rubble`` twin is deleted from the environment. ``glb`` /
+    ``glb_sha256`` (the combined rubble.glb) are accepted for compatibility and unused.
+    """
     assert_client_simulation(ctx.cw)
     h = SceneHandles()
     h.project_uuid = ensure_project(ctx, project)
     h.environment_uuid = ensure_environment(ctx, environment, h.project_uuid)
-    h.rubble_asset_uuid = ensure_asset_glb(
-        ctx,
-        RUBBLE_ASSET_NAME,
-        glb,
-        glb_sha256,
-        env_uuid=h.environment_uuid,
-        twin_name=TWIN_NAMES["rubble"],
-    )
+    remove_legacy_rubble(ctx, h.environment_uuid)
+    h.rubble_pieces = ensure_rubble_pieces(ctx, h.environment_uuid, site)
+    first = next(iter(h.rubble_pieces), None)
+    h.rubble_twin_uuid = h.rubble_pieces.get(first) if first else None
+    if h.rubble_twin_uuid and not ctx.dry_run:
+        h.rubble_asset_uuid = find_asset(ctx, first, h.environment_uuid, first)
     spawn = site.spawn
     go2_target = go2_pose or spawn["go2"]
     h.go2_twin_uuid = ensure_twin(ctx, h.environment_uuid, TWIN_NAMES["go2"], GO2_SLUG, go2_target)
     h.drone_twin_uuid = ensure_twin(
         ctx, h.environment_uuid, TWIN_NAMES["drone"], DRONE_SLUG, spawn["drone"]
     )
-    h.rubble_twin_uuid = ensure_twin(
-        ctx,
-        h.environment_uuid,
-        TWIN_NAMES["rubble"],
-        h.rubble_asset_uuid,
-        spawn["rubble"],
-        fixed_base=True,
-    )
     place(ctx, h.environment_uuid, h.go2_twin_uuid, TWIN_NAMES["go2"], go2_target)
     place(ctx, h.environment_uuid, h.drone_twin_uuid, TWIN_NAMES["drone"], spawn["drone"])
-    place(ctx, h.environment_uuid, h.rubble_twin_uuid, TWIN_NAMES["rubble"], spawn["rubble"])
     h.waypoints = ensure_waypoints(ctx, h.environment_uuid, waypoint_specs(site))
     ws = ctx.notes.get("workspace_uuid")
     h.workspace_uuid = str(ws) if ws else None
@@ -481,6 +524,8 @@ __all__ = [
     "find_asset",
     "ensure_waypoints",
     "place",
+    "remove_legacy_rubble",
+    "ensure_rubble_pieces",
     "resolve_asset_uuid",
     "upload_glb_bytes",
     "waypoint_specs",
