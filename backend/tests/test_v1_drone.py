@@ -97,16 +97,16 @@ async def test_full_survey_reaches_corners_captures_and_holds(tmp_path: Path) ->
     assert sink.waypoints == list(range(11))
     # capture spacing: never more than 2.5 m of travel between frames
     assert len(sink.frames) >= 35
-    assert rep.max_capture_gap_m <= 2.5
+    assert rep.max_capture_gap_m <= DroneConfig().capture_spacing
     for a, b in zip(sink.frames, sink.frames[1:], strict=False):
-        assert math.dist(a.position[:2], b.position[:2]) <= 2.5 + 1e-6
+        assert math.dist(a.position[:2], b.position[:2]) <= DroneConfig().capture_spacing + 1e-6
     # frames are real files with pose + intrinsics
     f0 = sink.frames[0]
     assert Path(f0.path).is_file() and f0.sensor_id == "camera_chasis_bottom"
     assert len(f0.rotation) == 4 and f0.intrinsics["width"] == 640
     # ends at the hold point, never left the fence, coverage near complete
     end = drone.track[-1]
-    assert math.hypot(end[0], end[1]) <= 0.5
+    assert math.hypot(end[0], end[1]) <= DroneConfig().tol
     fence = Fence()
     assert all(fence.contains(x, y, z) for x, y, z in drone.track)
     assert sink.coverage.pct_mapped() >= 95

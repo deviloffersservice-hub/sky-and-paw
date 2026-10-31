@@ -58,13 +58,15 @@ async def test_turns_in_place_then_moves_then_arrives() -> None:
     moves = [c for c in robot.calls if c != "stop"]
     first_forward = moves.index("forward")
     assert first_forward > 0 and set(moves[:first_forward]) == {"turn_right"}
-    # 0.6 rad/s x 0.3 s = 0.18 rad per burst < 0.2 tolerance: no left/right dithering
+    # 1.0 rad/s x 0.5 s = 0.5 rad per small burst, and small bursts start below
+    # big_turn_rad (0.6), so they end within the 0.3 rad tolerance: no left/right dithering
     assert "turn_left" not in moves[:first_forward]
     assert robot.calls[-1] == "stop"
     assert ctrl.mode == "arrived" and ctrl.last_result is res
     turn_s = sum(r["dur"] for r in res.turn_rates)
-    assert res.seconds == pytest.approx(turn_s + 0.5 * res.forwards, abs=1e-6)
-    assert [r["cmd"] for r in res.turn_rates][:2] == [0.8, 0.8]  # 90 deg error: big turns first
+    assert res.seconds == pytest.approx(turn_s + ControllerConfig().forward_burst_s * res.forwards, abs=1e-6)
+    big = ControllerConfig().big_turn_rate
+    assert [r["cmd"] for r in res.turn_rates][:2] == [big, big]  # 90 deg error: big turns first
 
 
 async def test_full_route_to_v01_from_spawn_never_enters_blocked() -> None:
@@ -103,7 +105,7 @@ async def test_aborts_on_stale_pose() -> None:
     assert res.status == "stale_pose"
     assert robot.calls[-1] == "stop"
     # aborts within one burst after the 3 s age limit
-    assert 3.0 < robot.clock() - robot.latest().t <= 3.5
+    assert 3.0 < robot.clock() - robot.latest().t <= 3.0 + ControllerConfig().forward_burst_s
 
 
 async def test_no_pose_at_all_aborts_quickly() -> None:
@@ -136,7 +138,7 @@ async def test_timeout() -> None:
     robot = KinematicGo2(x=-11.0, y=-7.5, yaw=0.0, speed_scale=0.5)
     res = await _ctrl(robot, timeout_s=5.0).navigate(V01, "V-01")
     assert res.status == "timeout"
-    assert 5.0 < res.seconds <= 5.6
+    assert 5.0 < res.seconds <= 5.1 + ControllerConfig().forward_burst_s
 
 
 async def test_stop_interrupts_and_sends_stop() -> None:
@@ -268,12 +270,14 @@ async def test_big_turns_then_small_turns_and_rates_logged() -> None:
     res = await _ctrl(robot).navigate([-8.0, -7.5, 0.0], "T-7")
     assert res.status == "arrived"
     cmds = [r["cmd"] for r in res.turn_rates]
-    assert cmds[0] == 0.8 and 0.6 in cmds and cmds.index(0.6) > cmds.index(0.8)
+    cfg = ControllerConfig()
+    small, big = cfg.turn_rate, cfg.big_turn_rate
+    assert cmds[0] == big and small in cmds and cmds.index(small) > cmds.index(big)
     for r in res.turn_rates:  # the kinematic robot achieves exactly what is commanded
         assert r["achieved"] == pytest.approx(r["cmd"], abs=1e-3)
     assert any("yaw_rate" in row for row in res.trace)
     summary = res.as_dict()["turn_rate"]
-    assert set(summary) == {"0.6", "0.8"}
+    assert set(summary) == {f"{small:g}", f"{big:g}"}
 
 
 @pytest.mark.parametrize(

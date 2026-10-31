@@ -111,17 +111,17 @@ class CachePoseSource:
 class ControllerConfig:
     """Tunables (defaults are the v1 values from the task / SPEC §6.4)."""
 
-    turn_rate: float = 0.6  # rad/s
-    turn_burst_s: float = 0.3
+    turn_rate: float = 1.0  # rad/s
+    turn_burst_s: float = 0.5
     big_turn_rad: float = 0.6  # above this heading error use the big turn burst
-    big_turn_rate: float = 0.8
-    big_turn_burst_s: float = 0.5
+    big_turn_rate: float = 1.2
+    big_turn_burst_s: float = 0.7
     turn_api: str = "named"  # "named" (turn_left / turn_right) or "move" (signed angular_z)
     turn_check_min_rad: float = 0.02  # first-burst yaw change below this = no effect
-    forward_speed: float = 0.4  # m/s
-    forward_burst_s: float = 0.5
-    heading_tol_rad: float = 0.2
-    waypoint_tol_m: float = 0.35
+    forward_speed: float = 0.8  # m/s
+    forward_burst_s: float = 1.0
+    heading_tol_rad: float = 0.3
+    waypoint_tol_m: float = 0.5
     arrive_tol_m: float = 0.7
     stale_after_s: float = 3.0
     timeout_s: float | None = None  # None: from the route, see goto_timeout()
