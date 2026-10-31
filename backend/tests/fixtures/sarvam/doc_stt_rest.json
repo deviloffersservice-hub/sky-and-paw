@@ -1,0 +1,10 @@
+{
+  "_provenance": "shape from sarvamai 0.1.41 types and docs.sarvam.ai (RESEARCH §2); not yet recorded live: the account had ₹0 credits",
+  "status": 200,
+  "body": {
+    "request_id": "20261031_doc-stt",
+    "transcript": "dog को V-01 के पास भेजो",
+    "language_code": "hi-IN",
+    "language_probability": 0.95
+  }
+}

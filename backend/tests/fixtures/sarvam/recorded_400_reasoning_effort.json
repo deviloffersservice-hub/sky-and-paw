@@ -1,0 +1,12 @@
+{
+  "_provenance": "recorded live 2026-10-31 (docs/evidence/day1/sarvam.md); key redacted",
+  "status": 400,
+  "headers": {},
+  "body": {
+    "error": {
+      "message": "body.reasoning_effort : Input should be 'low', 'medium' or 'high'",
+      "code": "invalid_request_error",
+      "request_id": "20261031_53831f63-b652-40e2-bc3e-4da13f075c4c"
+    }
+  }
+}
