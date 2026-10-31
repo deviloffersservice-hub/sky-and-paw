@@ -76,7 +76,7 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
-LINT_SCRIPTS := scripts/scene.py
+LINT_SCRIPTS := scripts/scene.py scripts/overhead.py
 
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend
