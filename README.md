@@ -1,5 +1,8 @@
 # Sky & Paw
 
+> **Live demo:** https://deviloffersservice-hub.github.io/sky-and-paw/ — the approved interactive operator console running a scripted mission, with real Cyberwave MuJoCo frames captured by `make scene`. Demo script: [docs/DEMO.md](docs/DEMO.md). What is live vs simulated is stated there.
+
+
 A drone and a quadruped robot search a collapsed building together, guided by a field lead
 who speaks to them in Indian languages. **Simulation only**: robots run as Cyberwave MuJoCo
 twins, and every Cyberwave call goes through `skypaw.sim.guard.assert_simulation_only()`.
