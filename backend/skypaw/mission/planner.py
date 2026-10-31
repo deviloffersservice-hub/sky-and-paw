@@ -6,8 +6,11 @@
   x3 people) x (x4 if the cell entered is within 1.2 m of a hazard).
 * Start and goal snap to the nearest traversable cell when theirs is not (a goal under a
   slab is difficult, hence traversable, and is used as is).
-* The cell path is simplified by removing collinear interior points; the route starts at the
-  given start position and ends at the goal (or the snapped goal cell's centre).
+* The cell path is simplified by removing collinear interior points, then smoothed by line of
+  sight (:func:`smooth_los`): an intermediate point is skipped when the straight segment stays
+  on passable cells (or difficult cells the Dijkstra path already uses) and keeps
+  ``LOS_CLEARANCE_M`` (0.3 m) from blocked and unmapped cells. The route starts at the given
+  start position and ends at the goal (or the snapped goal cell's centre).
 * Metrics: length, climbs (entries into difficult runs), seconds (passable / difficult speeds
   per profile, Go2 0.6 / 0.3 m/s), hazards within 1.8 m, difficulty (hard if any hazard or
   >= 3 climbs; moderate if >= 1 climb; else easy).
@@ -23,11 +26,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from skypaw.mission.grid import DIFFICULT, OccupancyGrid
+from skypaw.mission.grid import BLOCKED, DIFFICULT, PASSABLE, UNMAPPED, OccupancyGrid
 
 HAZARD_COST_RADIUS_M = 1.2
 HAZARD_COST_MULT = 4.0
 HAZARD_REPORT_RADIUS_M = 1.8
+LOS_CLEARANCE_M = 0.3
+LOS_STEP_M = 0.05
 _SQRT2 = math.sqrt(2.0)
 _NEIGHBOURS = (
     (1, 0, 1.0),
@@ -190,6 +195,63 @@ def simplify(points: Sequence[Sequence[float]], tol: float = 1e-6) -> list[list[
     return out
 
 
+def segment_clear(
+    grid: OccupancyGrid,
+    a: Sequence[float],
+    b: Sequence[float],
+    path_cells: set[tuple[int, int]],
+    clearance: float = LOS_CLEARANCE_M,
+) -> bool:
+    """True if every point of segment ``a``-``b`` lies on a passable cell or a difficult cell
+    in ``path_cells``, at least ``clearance`` from any blocked or unmapped cell (or the edge)."""
+    s = grid.spec
+    cls = grid.cls
+    n = max(1, math.ceil(math.dist(a[:2], b[:2]) / LOS_STEP_M))
+    reach = math.ceil(clearance / s.cs)
+    for k in range(n + 1):
+        px = a[0] + (b[0] - a[0]) * k / n
+        py = a[1] + (b[1] - a[1]) * k / n
+        i, j = s.cell_of(px, py)
+        if not s.in_bounds(i, j):
+            return False
+        c = cls[j, i]
+        if not (c == PASSABLE or (c == DIFFICULT and (i, j) in path_cells)):
+            return False
+        for jj in range(j - reach, j + reach + 1):
+            for ii in range(i - reach, i + reach + 1):
+                if s.in_bounds(ii, jj) and cls[jj, ii] not in (BLOCKED, UNMAPPED):
+                    continue
+                x0, y0 = s.x0 + ii * s.cs, s.y0 + jj * s.cs  # outside the grid counts too
+                dx = max(x0 - px, 0.0, px - (x0 + s.cs))
+                dy = max(y0 - py, 0.0, py - (y0 + s.cs))
+                if math.hypot(dx, dy) < clearance:
+                    return False
+    return True
+
+
+def smooth_los(
+    grid: OccupancyGrid,
+    points: Sequence[Sequence[float]],
+    path_cells: Sequence[tuple[int, int]],
+    clearance: float = LOS_CLEARANCE_M,
+) -> list[list[float]]:
+    """Greedy line-of-sight shortcutting: from each kept point jump to the farthest later
+    point whose segment is :func:`segment_clear`; consecutive points are always kept."""
+    pts = [list(p) for p in points]
+    if len(pts) <= 2:
+        return pts
+    allowed = set(path_cells)
+    out = [pts[0]]
+    i = 0
+    while i < len(pts) - 1:
+        j = len(pts) - 1
+        while j > i + 1 and not segment_clear(grid, pts[i], pts[j], allowed, clearance):
+            j -= 1
+        out.append(pts[j])
+        i = j
+    return out
+
+
 def _difficulty(climbs: int, hazards_near: int) -> str:
     if hazards_near > 0 or climbs >= 3:
         return "hard"
@@ -203,6 +265,8 @@ def plan_route(
     start: Sequence[float],
     goal: Sequence[float],
     profile: RobotProfile = GO2,
+    *,
+    smooth: bool = True,
 ) -> Route:
     """Plan a route from world ``start`` to world ``goal`` (``[x, y]`` or ``[x, y, z]``).
 
@@ -227,6 +291,8 @@ def plan_route(
     if start_snapped:
         raw.insert(0, (sx, sy))
     points2d = simplify(raw)
+    if smooth:
+        points2d = smooth_los(grid, points2d, cells)
     length = sum(math.dist(points2d[k], points2d[k + 1]) for k in range(len(points2d) - 1))
 
     climbs = 0
@@ -276,11 +342,14 @@ __all__ = [
     "HAZARD_COST_MULT",
     "HAZARD_COST_RADIUS_M",
     "HAZARD_REPORT_RADIUS_M",
+    "LOS_CLEARANCE_M",
     "PERSON",
     "NoRoute",
     "RobotProfile",
     "Route",
     "plan_route",
+    "segment_clear",
     "simplify",
+    "smooth_los",
     "snap_to_traversable",
 ]

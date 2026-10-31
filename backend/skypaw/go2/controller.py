@@ -9,10 +9,20 @@ Loop (one decision per burst, pose from MQTT ``position`` / ``rotation`` at ~8 H
 
 1. read the pose; abort ``stale_pose`` if it is older than ``stale_after_s`` (3 s);
 2. advance past waypoints within ``waypoint_tol_m`` or already passed along the segment;
-3. at the last point, stop as ``arrived`` within ``arrive_tol_m`` (0.6 m);
-4. heading error >= ``heading_tol_rad`` (0.2): ``turn_left``/``turn_right(0.6, duration=0.3)``;
-   else ``move_forward(0.4, duration=0.5)``;
-5. abort ``timeout`` after ``timeout_s`` (120 s), and ``stuck`` when over the last
+3. at the last point, stop as ``arrived`` within ``arrive_tol_m`` (0.7 m);
+4. heading error > ``big_turn_rad`` (0.6): ``turn_left``/``turn_right(0.8, duration=0.5)``;
+   >= ``heading_tol_rad`` (0.2): ``turn_*(0.6, duration=0.3)``; else
+   ``move_forward(0.4, duration=0.5)``. The achieved yaw rate of every turn burst is logged
+   (``go2_turn_rate``) and kept in the trace: live run 3 measured ~0.07 rad/s for 0.6 commanded;
+   Turns use the named ``turn_left`` / ``turn_right`` commands by default: live runs 1-3
+   measured them turning CCW / CW respectively (the sim reads the command name; the SDK's
+   ``angular_z`` is ``+abs(rate)`` for both). ``turn_api="move"`` sends
+   ``locomotion.move(angular_z=+-rate)`` instead, but cyberwave 0.7.4 refuses it client-side
+   for the Go2 (run 4: "Command 'move' is not in the MQTT catalog for this twin"), so that
+   error falls back to the named commands. The first turn burst self-checks the direction
+   (sign flip for ``move``; logged only for named) as ``go2_turn_calibration``;
+5. abort ``timeout`` after ``timeout_s`` (default from the route:
+   ``max(120, 2.5 * route.seconds + 30)`` capped at 300 s), and ``stuck`` when over the last
    ``stuck_window`` bursts the Go2 neither moved ``stuck_min_m`` nor turned ``stuck_min_yaw``
    (pushing against rubble: there is no obstacle avoidance on the velocity path).
 
@@ -103,17 +113,31 @@ class ControllerConfig:
 
     turn_rate: float = 0.6  # rad/s
     turn_burst_s: float = 0.3
+    big_turn_rad: float = 0.6  # above this heading error use the big turn burst
+    big_turn_rate: float = 0.8
+    big_turn_burst_s: float = 0.5
+    turn_api: str = "named"  # "named" (turn_left / turn_right) or "move" (signed angular_z)
+    turn_check_min_rad: float = 0.02  # first-burst yaw change below this = no effect
     forward_speed: float = 0.4  # m/s
     forward_burst_s: float = 0.5
     heading_tol_rad: float = 0.2
     waypoint_tol_m: float = 0.35
-    arrive_tol_m: float = 0.6
+    arrive_tol_m: float = 0.7
     stale_after_s: float = 3.0
-    timeout_s: float = 120.0
+    timeout_s: float | None = None  # None: from the route, see goto_timeout()
+    timeout_min_s: float = 120.0
+    timeout_max_s: float = 300.0
     stuck_window: int = 12  # bursts of any kind
     stuck_min_m: float = 0.15
     stuck_min_yaw: float = 0.1  # rad, summed |yaw change| over the window
     poll_s: float = 0.1
+
+
+def goto_timeout(cfg: ControllerConfig, route_seconds: float) -> float:
+    """``cfg.timeout_s`` if set, else ``max(120, 2.5 * route_seconds + 30)`` capped at 300."""
+    if cfg.timeout_s is not None:
+        return float(cfg.timeout_s)
+    return min(cfg.timeout_max_s, max(cfg.timeout_min_s, 2.5 * route_seconds + 30.0))
 
 
 @dataclass
@@ -158,6 +182,9 @@ class GotoResult:
     route_end_error_m: float | None = None  # final pose to the route's last point
     turns: int = 0
     forwards: int = 0
+    timeout_s: float | None = None
+    turn_rates: list[dict[str, float]] = field(default_factory=list)
+    turn_calibration: dict[str, Any] | None = None
     trace: list[dict[str, Any]] = field(default_factory=list)
     error: str | None = None
 
@@ -193,6 +220,9 @@ class GotoResult:
             "route_end_error_m": _r(self.route_end_error_m),
             "turns": self.turns,
             "forwards": self.forwards,
+            "timeout_s": self.timeout_s,
+            "turn_rate": _turn_rate_summary(self.turn_rates),
+            "turn_calibration": self.turn_calibration,
             "route": self.route.as_dict() if self.route else None,
             "error": self.error,
         }
@@ -206,6 +236,17 @@ def _no_progress(window: list[tuple[float, float, float]], min_m: float, min_yaw
     moved = math.dist(window[0][:2], window[-1][:2])
     turned = sum(abs(wrap(b[2] - a[2])) for a, b in zip(window, window[1:], strict=False))
     return moved < min_m and turned < min_yaw
+
+
+def _turn_rate_summary(rates: list[dict[str, float]]) -> dict[str, Any] | None:
+    """Mean achieved |yaw rate| per commanded rate over the turn bursts."""
+    if not rates:
+        return None
+    out: dict[str, Any] = {}
+    for cmd in sorted({r["cmd"] for r in rates}):
+        got = [r["achieved"] for r in rates if r["cmd"] == cmd]
+        out[f"{cmd:g}"] = {"bursts": len(got), "achieved_mean": round(sum(got) / len(got), 3)}
+    return out
 
 
 def _r(v: float | None, nd: int = 3) -> float | None:
@@ -243,6 +284,10 @@ class Go2Controller:
         self._run = run_blocking
         self._stop_requested = False
         self.mode = "idle"
+        self._turn_api = self.config.turn_api
+        self._turn_sign = 1.0  # multiplies angular_z (+ = CCW)
+        self._turn_checked = False
+        self.turn_calibration: dict[str, Any] | None = None
         self.target: str | None = None
         self.last_result: GotoResult | None = None
 
@@ -277,6 +322,7 @@ class Go2Controller:
             except NoRoute as exc:
                 return self._finish(result, "no_route", pose, error=str(exc))
             result.route = route
+            timeout_s = result.timeout_s = goto_timeout(cfg, route.seconds)
             log_event(
                 log,
                 "go2_route",
@@ -285,6 +331,7 @@ class Go2Controller:
                 points=len(route.points),
                 est_s=round(route.seconds, 1),
                 difficulty=route.difficulty,
+                timeout_s=round(timeout_s, 1),
             )
             pts = route.points
             k = 1 if len(pts) > 1 else 0
@@ -298,7 +345,7 @@ class Go2Controller:
                     return self._finish(result, "stopped", pose)
                 if pose is None or age is None or age > cfg.stale_after_s:
                     return self._finish(result, "stale_pose", pose, error=f"pose age {age}")
-                if now - t0 > cfg.timeout_s:
+                if now - t0 > timeout_s:
                     return self._finish(result, "timeout", pose)
                 k = self._advance(pts, k, pose)
                 last = k == len(pts) - 1
@@ -339,8 +386,13 @@ class Go2Controller:
                     )
                 else:
                     result.turns += 1
-                    turn = getattr(self.twin.locomotion, action)
-                    await self._run(turn, cfg.turn_rate, duration=cfg.turn_burst_s)
+                    big = abs(err) > cfg.big_turn_rad
+                    rate = cfg.big_turn_rate if big else cfg.turn_rate
+                    dur = cfg.big_turn_burst_s if big else cfg.turn_burst_s
+                    await self._turn(action, rate, dur)
+                    self._record_turn(result, pose, rate, dur)
+                    if not self._turn_checked:
+                        self._check_turn(result, pose, action)
         except Exception as exc:  # noqa: BLE001 - report, stop the robot, never re-raise silently
             log.exception("go2_goto_error")
             return self._finish(result, "error", self.pose_source.latest(), error=repr(exc))
@@ -361,6 +413,77 @@ class Go2Controller:
         client = getattr(self.twin, "client", None)
         if client is not None:
             assert_client_simulation(client)
+
+    async def _turn(self, action: str, rate: float, dur: float) -> None:
+        """One turn burst toward ``action`` (``turn_left`` = CCW) with the current API."""
+        if self._turn_api == "move":
+            sign = 1.0 if action == "turn_left" else -1.0
+            try:
+                await self._run(
+                    self.twin.locomotion.move,
+                    linear_x=0.0,
+                    angular_z=sign * self._turn_sign * abs(rate),
+                    duration=dur,
+                )
+                return
+            except ValueError as exc:  # SDK catalog check, raised before anything is published
+                if "not in the MQTT catalog" not in str(exc):
+                    raise
+                self._turn_api = "named"
+                log_event(
+                    log,
+                    "go2_turn_calibration",
+                    level=30,
+                    api="move",
+                    verdict="move_not_in_catalog_fallback_named",
+                    error=str(exc)[:200],
+                )
+        await self._run(getattr(self.twin.locomotion, action), abs(rate), duration=dur)
+
+    def _check_turn(self, result: GotoResult, before: PoseReading, action: str) -> None:
+        """After the first turn burst: keep, flip the sign, or fall back to named turns."""
+        after = self.pose_source.latest()
+        if after is None or after.t <= before.t:
+            return  # no fresh pose yet: check on the next burst
+        self._turn_checked = True
+        dyaw = wrap(after.yaw - before.yaw)
+        want = 1.0 if action == "turn_left" else -1.0
+        api, sign = self._turn_api, self._turn_sign
+        if abs(dyaw) < self.config.turn_check_min_rad:
+            verdict = "no_effect_fallback_named" if api == "move" else "no_effect"
+            if api == "move":
+                self._turn_api = "named"
+        elif dyaw * want > 0:
+            verdict = "sign_ok"
+        else:
+            verdict = "sign_flipped" if api == "move" else "named_wrong_direction"
+            if api == "move":
+                self._turn_sign = -sign
+        self.turn_calibration = {
+            "api": api,
+            "angular_z_sign": sign,
+            "requested": action,
+            "dyaw": round(dyaw, 4),
+            "verdict": verdict,
+            "now_api": self._turn_api,
+            "now_sign": self._turn_sign,
+        }
+        result.turn_calibration = self.turn_calibration
+        log_event(log, "go2_turn_calibration", **self.turn_calibration)
+
+    def _record_turn(
+        self, result: GotoResult, before: PoseReading, rate: float, dur: float
+    ) -> None:
+        """Achieved |yaw rate| between the pose before the burst and the latest pose."""
+        after = self.pose_source.latest()
+        if after is None or after.t <= before.t:
+            return
+        achieved = abs(wrap(after.yaw - before.yaw)) / (after.t - before.t)
+        rec = {"cmd": rate, "dur": dur, "achieved": round(achieved, 3)}
+        result.turn_rates.append(rec)
+        if result.trace:
+            result.trace[-1]["yaw_rate"] = rec["achieved"]
+        log_event(log, "go2_turn_rate", commanded=rate, duration=dur, achieved=rec["achieved"])
 
     async def _wait_pose(self, t0: float) -> PoseReading | None:
         """First fresh pose, waiting up to ``stale_after_s``."""
@@ -451,6 +574,7 @@ class Go2Controller:
             distance_error_m=_r(result.distance_error_m),
             turns=result.turns,
             forwards=result.forwards,
+            turn_rate=_turn_rate_summary(result.turn_rates),
             error=error,
         )
         return result
@@ -458,6 +582,7 @@ class Go2Controller:
 
 __all__ = [
     "STATUSES",
+    "goto_timeout",
     "CachePoseSource",
     "ControllerConfig",
     "Go2Controller",
