@@ -21,7 +21,8 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 
 ## Deadline package (owner request, due 15:45 IST 2026-10-31)
 - Scope cut approved by owner: deliver (1) the approved interactive console on GitHub Pages, (2) a real Cyberwave simulation run with captured frames shown in the console, (3) DEMO.md stating live vs simulated. M2–M7 continue afterwards.
-- Pages first deploy failed on `enablement: true` (token cannot create the site); owner sets Settings → Pages → Source = GitHub Actions once, then the workflow is re-run.
+- Pages: owner set Source = GitHub Actions. Deploys from `main` still failed instantly because the `github-pages` environment only allows the repository's **default branch**, which is `claude/spec-and-mockup`. Workaround: `main` is mirrored to that branch and the workflow also triggers on it. **Live since 14:46 IST:** https://deviloffersservice-hub.github.io/sky-and-paw/ (verified headlessly: mission runs, 4 real frames served). To remove the workaround later: Settings → Branches → default branch = `main`.
+- M2 probe merged: drone takeoff + lateral flight to the footprint centre at 6 m over MQTT-WSS velocity bursts (10 s), overhead bottom-camera frame shows the rubble (mean 150, std 50); Go2 moved 0.8 m on `move_forward`. 0.02 credits.
 
 ## Milestones
 | # | Milestone | Status | Evidence |

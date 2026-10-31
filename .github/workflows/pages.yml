@@ -6,7 +6,7 @@ name: Pages
 # Actions are pinned to full commit SHAs (tag in the trailing comment).
 on:
   push:
-    branches: [main]
+    branches: [main, claude/spec-and-mockup]  # the second is the repo default branch; the github-pages environment only deploys from it
   workflow_dispatch:
 
 permissions:
