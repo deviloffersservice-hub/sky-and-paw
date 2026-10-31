@@ -1,0 +1,8 @@
+Person photos for the YOLO detector test (backend/tests/test_detector.py).
+All three are NASA images, public domain (NASA media usage guidelines: NASA content is
+generally not subject to copyright in the United States). Downloaded 2026-10-31 from the
+"~small" renditions on images-assets.nasa.gov, resized to 480 px on the long side.
+
+nasa_NHQ202504080055.jpg            https://images.nasa.gov/details/NHQ202504080055             Expedition 73 Cosmonaut Hotel Departure (several people, standing)
+nasa_KSC-20250811-PH-KLS01_0169.jpg https://images.nasa.gov/details/KSC-20250811-PH-KLS01_0169  Artemis II Crew Suiting and Walkout (one person, seated, orange suit)
+nasa_s66-59966.jpg                  https://images.nasa.gov/details/s66-59966                   Gemini-Titan 12 walk up ramp (many people, small)
