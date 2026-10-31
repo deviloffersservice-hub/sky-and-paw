@@ -19,11 +19,15 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 - Cyberwave rounds 1–2 (≈0.07 credits): px4vision crashes MuJoCo → drone is `skydio/skydio-x2` (SPEC v1.2); MQTT works over WSS 443; Go2 moves on velocity commands, `goto` inert in unmapped scenes; custom GLB → MuJoCo via raw upload + asset PATCH. See `docs/RESEARCH.md` §6, `docs/evidence/day1/cyberwave.md`.
 - Sarvam: key authenticates, zero credits on the key visible to this session; owner rotated to another account's key, which only a fresh session/Codespace can read. Scripts in `scripts/checks/sarvam/`. M5 live tests run there.
 
+## Deadline package (owner request, due 15:45 IST 2026-10-31)
+- Scope cut approved by owner: deliver (1) the approved interactive console on GitHub Pages, (2) a real Cyberwave simulation run with captured frames shown in the console, (3) DEMO.md stating live vs simulated. M2–M7 continue afterwards.
+- Pages first deploy failed on `enablement: true` (token cannot create the site); owner sets Settings → Pages → Source = GitHub Actions once, then the workflow is re-run.
+
 ## Milestones
 | # | Milestone | Status | Evidence |
 |---|---|---|---|
 | T0 | Repository scaffold (backend, frontend shell, Makefile, Docker, devcontainer, CI, Pages) | **DONE** · merged `main` 2026-10-31 | `tests/evidence/T0/REPORT.md` |
-| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | in progress (`feat/m1-scene`) | `docs/tasks/M1-scene.md` |
+| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | **DONE (demo-grade)** · merged 2026-10-31 · live: MuJoCo ready in 48–55 s, 3 cameras captured, MQTT-WSS pose, clean stop, 0.035 credits · **gaps:** 2nd run duplicates the asset (`assets.list()` omits user assets), no M1 unit tests, RUNBOOK missing, A6/A7-abort not run live, review+QA loop skipped for the 15:45 deadline | `tests/evidence/M1/dev/` |
 | M2 | Drone mission: takeoff, scan, camera down, frame capture | not started | — |
 | M3 | Vision: YOLO → waypoints with priority + alerts | not started | — |
 | M4 | Dog mission: Go2 to waypoints by priority; time-to-rescue | not started | — |
