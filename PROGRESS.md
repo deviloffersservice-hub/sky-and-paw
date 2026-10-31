@@ -35,3 +35,15 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 | M5 | Voice: commands → plan → execution; Bulbul; translated log | not started | — |
 | M6 | Dashboard per mockup, live, deployed | not started | — |
 | M7 | Hardening, README, demo script, recording plan | not started | — |
+
+## v1 build (owner: "real working website with voice and robots", started 14:52 IST 2026-10-31)
+Scope cut applied for v1 (owner asked to finish asap): no 3D twin, egress/EVERYONE OUT, team positioning, man-down, body cams, phone app, allocation timeline. Contract: `docs/PROTOCOL.md`; ports: `backend/skypaw/mission/ports.py`.
+Five parallel streams, each on its own branch and worktree, 120-minute time box:
+| Stream | Branch | Owner | Scope |
+|---|---|---|---|
+| A | `feat/v1-runtime` | sim-engineer | mission runtime, live state, WebSocket server, drone survey executor |
+| B | `feat/v1-detection` | vision-engineer | victim markers in the scene, YOLO + marker detector, projection, fusion, waypoints/alerts |
+| C | `feat/v1-voice` | voice-engineer | SarvamClient, realtime STT relay, sarvam-105b planner + rule fallback, Bulbul cache, translate cache (offline-first; key in this session has ₹0) |
+| D | `feat/v1-console` | frontend-engineer | console on live snapshots, mic capture, TTS playback, mock server, Playwright |
+| E | `feat/v1-go2` | sim-engineer | occupancy grid, Dijkstra planner, Go2 velocity controller, time-to-rescue |
+Integration after all five land: merge A → E → B → C → D, wire real executors, one live end-to-end run, QA, deploy (Codespace backend + Pages console).
