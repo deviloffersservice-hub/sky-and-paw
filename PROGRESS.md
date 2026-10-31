@@ -9,9 +9,10 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 - **Open items carried forward:** API keys not yet in the environment (D3); Cyberwave credit balance unverified (D4); MQTT 8883 blocked in dev (D2 → ADR-001); GLB collision readiness (D6 → M1 task).
 
 ## Phase 1 — Stack decision · PROPOSED
-- **Done:** `docs/ADR-001-stack.md` written (FastAPI + Python 3.11, Vite + TypeScript + Three.js, one WebSocket, SQLite, single Docker image). Hosting revised to **Hugging Face Spaces free Docker tier** after the owner's zero-cost constraint; Fly.io rejected.
-- **Done by owner:** `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` in the environment; GitHub Actions allowed.
-- **Waiting on owner:** approval of revised ADR-001; HF Space + `HF_TOKEN`; Cyberwave credit balance.
+- **Done:** `docs/ADR-001-stack.md` **approved by owner** (FastAPI + Python 3.11, Vite + TypeScript + Three.js, one WebSocket, SQLite). Hosting revised twice under the zero-cost, no-card constraint: Fly.io rejected (card); HF Docker Spaces rejected (now paid); final: **backend in GitHub Codespaces free tier, frontend on GitHub Pages**.
+- **Done by owner:** `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` in the environment; GitHub Actions allowed; Cyberwave balance **50 credits** (enforcement on, warning <10; QA floor 15).
+- **Done:** `main` created from `claude/spec-and-mockup`. Task T0 (scaffold) written and assigned.
+- **Budget rule for QA:** every live run passes `duration ≤ 600 s` and stops the sim in `finally`; abort live tests if balance < 15 credits; Sarvam spend logged per run.
 - **Next:** on approval, create `main` from `claude/spec-and-mockup`, scaffold the repo (backend, frontend, Makefile, Dockerfile, `.env.example`, CI), then start M1.
 
 ## Milestones

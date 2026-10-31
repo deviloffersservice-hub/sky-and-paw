@@ -26,9 +26,10 @@ Sky & Paw is cloud-only and simulation-only. The backend must talk to Cyberwave 
 | Frontend | **Vite 5 + TypeScript**, no UI framework; the mockup's Canvas 2D map, decision queue, panels and phone view ported module-by-module; **Three.js** r160-class pinned for the 3D twin; built assets served by FastAPI from `/static` | vite 5.4.x, typescript 5.6.x, three 0.169.x |
 | Browser audio | Web Audio API: `AudioWorklet` capture → int16 PCM → WebSocket; TTS playback via `<audio>` from `/tts/<id>.wav` after a user gesture | — |
 | Packaging / run | Single **Docker** image (backend + built frontend + YOLO weights); `make run` (or `docker compose up`) runs everything locally; `.env.example` lists every variable | — |
-| Hosting | **Hugging Face Spaces (Docker Space, free "CPU basic": 2 vCPU, 16 GB RAM, no card)**. One Space runs the whole image (backend + built frontend + YOLO weights) on port 7860 with WebSockets; secrets in Space settings; outbound network open so `CW_STATE_SOURCE=mqtt` in production, `rest` in the dev environment. Disk is ephemeral: SQLite and the TTS cache live in `/data` inside the container and are rebuilt on restart (TTS phrases are pre-warmed at startup from a committed phrase list to spend credits once per deploy). The free Space sleeps after 48 h without visitors; the demo script includes "open the Space 3 minutes before the demo". | Space SDK `docker`, `README.md` front-matter in repo |
-| Cost | **₹0 / $0.** Open-weight YOLOv8n; Sarvam ₹100 signup credit (metered, cached); Cyberwave credits as available in the account; GitHub Actions free minutes; HF Spaces free tier. No paid service anywhere. | — |
-| CI | GitHub Actions (free): lint (ruff), unit tests (pytest), frontend build, Playwright UI tests; deploy on push to `main` by pushing the repo to the Space's git remote with `HF_TOKEN` | — |
+| Hosting: backend | **GitHub Codespaces (free tier: 120 core-hours + 15 GB/month for personal accounts, no card)**. A `.devcontainer` in the repo builds the environment, `postCreateCommand` runs `make setup`, `postStartCommand` runs `make run`, and port 7860 is forwarded with **public** visibility, giving a `https://<codespace>-7860.app.github.dev` URL that carries HTTP and WebSockets. Outbound network is open, so `CW_STATE_SOURCE=mqtt` there and `rest` in the Claude dev environment. Secrets are Codespaces repository secrets (`CYBERWAVE_API_KEY`, `SARVAM_API_KEY`). Idle timeout is raised to 4 h in the devcontainer settings. A 2-core machine gives ~60 hours/month: enough for QA runs and the demo. The demo runbook: open the Codespace 3 minutes before, copy the forwarded URL into the console's "backend" field once. | `.devcontainer/devcontainer.json` |
+| Hosting: frontend | **GitHub Pages** (free) at `https://deviloffersservice-hub.github.io/sky-and-paw/`, deployed by Actions on push to `main`. The console reads the backend URL from `?api=` or a settings field (stored in `localStorage`) and defaults to same-origin when the backend serves it. Optional mirror: a free **Hugging Face Static Space** (static only; HF now charges for Docker/Gradio Spaces). | `.github/workflows/pages.yml` |
+| Cost | **₹0 / $0, no card anywhere.** Open-weight YOLOv8n; Sarvam ₹100 signup credit (metered, cached); Cyberwave prepaid balance 50 credits (MuJoCo 0.01/min, enforcement on, warning below 10 → QA stops at 15); GitHub Actions, Codespaces and Pages free tiers. Docker the tool is free and used only for the optional image build. | — |
+| CI | GitHub Actions (free): lint (ruff), unit tests (pytest), frontend typecheck + build, Playwright smoke; Pages deploy of the frontend on push to `main`. No backend deploy step: the backend runs in the Codespace. | — |
 | Secrets | `CYBERWAVE_API_KEY`, `CYBERWAVE_ENVIRONMENT_ID`, `SARVAM_API_KEY`, `SKYPAW_LEAD_TOKEN`, `SKYPAW_TEAM_TOKEN` from environment only | — |
 
 ### Request flow
@@ -46,7 +47,9 @@ Browser (lead/phone) ──WS JSON+PCM──► FastAPI ──► Sarvam realtim
 
 | Option | Why not |
 |---|---|
+| Hugging Face Docker / Gradio Spaces | **Paid since 2026** ("Gradio and Docker Spaces require a paid plan. Static Spaces stay free"). Only a Static Space is free, so HF can host the frontend mirror at most. |
 | Fly.io / Railway / Render paid tiers | Project constraint: **no paid services**. Fly requires a card and bills per machine; the others' usable tiers are paid. |
+| Running the backend only on the owner's laptop | Free and simplest, but the brief asks for a cloud host and judges may open the console from their own devices. Kept as the emergency fallback (`make run` works identically). |
 | Render / Koyeb free tiers | 512 MB RAM is below what PyTorch + YOLOv8n + OpenCV need at import time; Render free sleeps after 15 min and kills the sim loop mid-mission. |
 | Oracle Cloud Always-Free VM | Genuinely free and powerful, but sign-up needs a card for identity verification and a day of setup; keep as plan B if HF Spaces proves too slow. |
 | Google Cloud Run free tier | Needs a billing account (card) even within the free quota. |
@@ -63,13 +66,14 @@ Browser (lead/phone) ──WS JSON+PCM──► FastAPI ──► Sarvam realtim
 ## Consequences
 - Everything runs from one container with one command; a stranger follows README → `make run`.
 - Dev in this cloud environment uses `CW_STATE_SOURCE=rest`; production on Fly uses `mqtt`. QA must run the live suite in both modes once.
-- One free Space, one process, ephemeral disk: horizontal scaling and durable history are out of scope (one mission, one lead). The mission log is also written to the browser console/evidence files by QA, so nothing needed for judging depends on disk surviving a restart.
-- Free-tier cold start after sleep is 1–3 minutes (image pull + YOLO weights load); the demo runbook wakes the Space in advance.
+- One Codespace, one process: horizontal scaling and always-on hosting are out of scope (one mission, one lead). The Codespace disk persists between stops (15 GB quota), so SQLite and the TTS cache survive restarts; the monthly core-hour quota is the real limit, tracked in PROGRESS.md.
+- Cold start of a stopped Codespace is ~1–2 minutes (container resume + YOLO weights load); the demo runbook opens it in advance. The frontend on Pages is always up.
+- The frontend and backend are on different origins in production, so the backend enables CORS for the Pages origin and the console carries a backend-URL setting.
 - Three.js is bundled by Vite rather than loaded from a CDN, so the deployed console has no third-party runtime dependency.
 
-## Accounts and access the owner must provide (all free, no card)
-1. **Hugging Face** account (free). Create a **Docker Space** named `sky-and-paw` (public or private), and a **write-scope access token**; add the token as the GitHub Actions secret `HF_TOKEN` and tell Fable the Space URL (`https://huggingface.co/spaces/<user>/sky-and-paw`). Fable adds `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` as Space secrets via the UI instructions in the README, or you paste them in *Settings → Variables and secrets*.
-2. **Cyberwave** API key: DONE (in the environment). Please also confirm the **credit balance** in the dashboard; MuJoCo costs 0.01 credits/min and there is no documented free allocation.
-3. **Sarvam** API key: DONE (in the environment). ₹100 free credit assumed.
-4. **GitHub**: Actions allowed: DONE. `main` will be created from `claude/spec-and-mockup` on approval.
-5. Network: the dev environment still blocks raw TLS on 8883 (its proxy is HTTPS-only), so dev uses `CW_STATE_SOURCE=rest`; the Space uses `mqtt`. No action needed.
+## Accounts and access (all free, no card)
+1. **GitHub** (DONE): repo connected, Actions allowed, `main` created. Fable's remaining asks, each a one-time click in the repo settings when the time comes: add `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` as **Codespaces secrets** (Settings → Secrets and variables → Codespaces), and open the Codespace once before each demo/QA run.
+2. **Cyberwave** (DONE): key in the environment; balance **50 credits**, enforcement on, warning below 10.
+3. **Sarvam** (DONE): key in the environment; ₹100 free credit assumed.
+4. **Hugging Face** (optional): the owner's existing account can host a free Static Space mirror of the frontend later; nothing needed now.
+5. Network: the dev environment blocks raw TLS on 8883 (HTTPS-only proxy), so dev uses `CW_STATE_SOURCE=rest`; the Codespace uses `mqtt`. No action needed.
