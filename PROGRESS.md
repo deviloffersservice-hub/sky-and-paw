@@ -8,12 +8,12 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 - **Blocker resolved:** `dji/mini-4-pro` is not MuJoCo-compatible → owner approved `holybro/px4vision`. SPEC.md bumped to v1.1 with the corrections in RESEARCH.md §4; mockup labels updated.
 - **Open items carried forward:** API keys not yet in the environment (D3); Cyberwave credit balance unverified (D4); MQTT 8883 blocked in dev (D2 → ADR-001); GLB collision readiness (D6 → M1 task).
 
-## Phase 1 — Stack decision · PROPOSED
+## Phase 1 — Stack decision · APPROVED (2026-10-31)
 - **Done:** `docs/ADR-001-stack.md` **approved by owner** (FastAPI + Python 3.11, Vite + TypeScript + Three.js, one WebSocket, SQLite). Hosting revised twice under the zero-cost, no-card constraint: Fly.io rejected (card); HF Docker Spaces rejected (now paid); final: **backend in GitHub Codespaces free tier, frontend on GitHub Pages**.
 - **Done by owner:** `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` in the environment; GitHub Actions allowed; Cyberwave balance **50 credits** (enforcement on, warning <10; QA floor 15).
 - **Done:** `main` created from `claude/spec-and-mockup`. Task T0 (scaffold) written and assigned.
 - **Budget rule for QA:** every live run passes `duration ≤ 600 s` and stops the sim in `finally`; abort live tests if balance < 15 credits; Sarvam spend logged per run.
-- **Next:** on approval, create `main` from `claude/spec-and-mockup`, scaffold the repo (backend, frontend, Makefile, Dockerfile, `.env.example`, CI), then start M1.
+- **Next:** M1 (scene) on `feat/m1-scene`, then M2.
 
 ## Day-one live checks · DONE (2026-10-31)
 - Cyberwave rounds 1–2 (≈0.07 credits): px4vision crashes MuJoCo → drone is `skydio/skydio-x2` (SPEC v1.2); MQTT works over WSS 443; Go2 moves on velocity commands, `goto` inert in unmapped scenes; custom GLB → MuJoCo via raw upload + asset PATCH. See `docs/RESEARCH.md` §6, `docs/evidence/day1/cyberwave.md`.
