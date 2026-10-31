@@ -64,7 +64,9 @@ async def test_turns_in_place_then_moves_then_arrives() -> None:
     assert robot.calls[-1] == "stop"
     assert ctrl.mode == "arrived" and ctrl.last_result is res
     turn_s = sum(r["dur"] for r in res.turn_rates)
-    assert res.seconds == pytest.approx(turn_s + ControllerConfig().forward_burst_s * res.forwards, abs=1e-6)
+    assert res.seconds == pytest.approx(
+        turn_s + ControllerConfig().forward_burst_s * res.forwards, abs=1e-6
+    )
     big = ControllerConfig().big_turn_rate
     assert [r["cmd"] for r in res.turn_rates][:2] == [big, big]  # 90 deg error: big turns first
 
