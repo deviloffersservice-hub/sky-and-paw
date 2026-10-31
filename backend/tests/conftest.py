@@ -15,7 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from skypaw.app import create_app
-from skypaw.config import Settings
+from skypaw.config import Settings, get_settings
 
 _real_connect = socket.socket.connect
 _real_connect_ex = socket.socket.connect_ex
@@ -53,6 +53,14 @@ def _block_network(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_settings_cache() -> Iterator[None]:
+    """get_settings() is cached; tests that change env vars must see a fresh read."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture

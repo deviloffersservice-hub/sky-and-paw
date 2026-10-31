@@ -1,14 +1,14 @@
 """Simulation-only guard.
 
-Sky & Paw never drives real hardware. Every Cyberwave call site (affect mode, sim
-start, navigation, waypoints) must call ``assert_simulation_only()`` first, so a
-mis-set environment variable or a bad code path fails loudly instead of moving
-a real robot.
+Sky & Paw never drives real hardware. Every Cyberwave call site (sim start,
+navigation, waypoints) must call ``assert_simulation_only()`` first, so a mis-set
+environment variable or a bad code path fails loudly instead of moving a real robot.
+Switching the SDK's runtime mode is done only by ``skypaw.sim.affect.simulation_affect``.
 """
 
 from __future__ import annotations
 
-import os
+from skypaw.config import get_settings
 
 ENV_VAR = "CW_RUNTIME_MODE"
 DEFAULT_MODE = "simulation"
@@ -30,11 +30,11 @@ class SimulationOnlyViolation(RuntimeError):
 def assert_simulation_only(mode: str | None = None) -> str:
     """Return the normalised mode if it is a simulation mode, otherwise raise.
 
-    With no argument (or ``None``) the mode is read from the ``CW_RUNTIME_MODE``
-    environment variable, defaulting to ``"simulation"``.
+    With no argument (or ``None``) the mode is the configured ``cw_runtime_mode``
+    (env var ``CW_RUNTIME_MODE`` or .env, via ``get_settings()``), default ``"simulation"``.
     """
     if mode is None:
-        mode = os.environ.get(ENV_VAR, DEFAULT_MODE)
+        mode = get_settings().cw_runtime_mode
     if not isinstance(mode, str):
         raise SimulationOnlyViolation(
             f"Cyberwave mode must be a string, got {type(mode).__name__}; "

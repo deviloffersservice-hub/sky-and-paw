@@ -9,6 +9,7 @@ frontend (frontend/dist) served at ``/`` when present. Run with::
 from __future__ import annotations
 
 import json
+import logging
 import platform
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -35,7 +36,13 @@ def _ensure_data_dir(path: Path) -> None:
     try:
         path.mkdir(parents=True, exist_ok=True)
     except OSError as exc:  # read-only or missing parent: later milestones need it, T0 does not
-        log_event(log, "data_dir_unavailable", level=30, data_dir=str(path), error=str(exc))
+        log_event(
+            log,
+            "data_dir_unavailable",
+            level=logging.WARNING,
+            data_dir=str(path),
+            error=str(exc),
+        )
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -58,7 +65,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         log_event(log, "shutdown")
 
-    app = FastAPI(title="Sky & Paw", version=__version__, lifespan=lifespan, docs_url="/docs")
+    dev = settings.skypaw_env == "dev"
+    app = FastAPI(
+        title="Sky & Paw",
+        version=__version__,
+        lifespan=lifespan,
+        # Interactive API docs only in dev; prod (Codespaces, Docker) exposes no /docs.
+        docs_url="/docs" if dev else None,
+        redoc_url="/redoc" if dev else None,
+        openapi_url="/openapi.json" if dev else None,
+    )
     app.state.settings = settings
 
     app.add_middleware(
@@ -104,7 +120,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 text = message.get("text") or ""
                 try:
                     payload = json.loads(text)
-                except json.JSONDecodeError:
+                except (ValueError, RecursionError):  # JSONDecodeError is a ValueError
                     await websocket.send_json({"type": "error", "error": "invalid_json"})
                     continue
                 await websocket.send_json(payload)

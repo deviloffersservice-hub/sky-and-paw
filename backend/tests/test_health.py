@@ -84,6 +84,13 @@ def test_cors_allows_known_origins(client: TestClient, origin: str) -> None:
         "https://deviloffersservice-hub.github.io.evil.com",
         "https://app.github.dev.evil.com",
         "http://evil.app.github.dev",
+        "https://evil.com/.app.github.dev",
+        "https://evil.com#.app.github.dev",
+        "https://.app.github.dev",
+        "https://evil.com?.app.github.dev",
+        "https://a.b.app.github.dev",
+        "https://-x.app.github.dev",
+        "https://X-7860.app.github.dev.evil.com",
     ],
 )
 def test_cors_rejects_other_origins(client: TestClient, origin: str) -> None:
@@ -156,3 +163,24 @@ def test_env_example_copied_verbatim_loads(tmp_path: Path, monkeypatch: pytest.M
     documented = {k.upper() for k in keys}
     for name, field in Settings.model_fields.items():
         assert (field.alias or name).upper() in documented, name
+
+
+def test_docs_only_in_dev(settings: Settings) -> None:
+    with TestClient(create_app(settings)) as dev:
+        assert dev.get("/docs").status_code == 200
+        assert dev.get("/openapi.json").status_code == 200
+    prod_app = create_app(settings.model_copy(update={"skypaw_env": "prod"}))
+    with TestClient(prod_app) as prod:
+        # No docs routes: / is the placeholder route only, so these 404.
+        assert prod.get("/docs").status_code == 404
+        assert prod.get("/redoc").status_code == 404
+        assert prod.get("/openapi.json").status_code == 404
+
+
+def test_ws_survives_deeply_nested_json(client: TestClient) -> None:
+    """json.loads raises RecursionError on very deep nesting; the socket must stay usable."""
+    with client.websocket_connect("/ws") as ws:
+        ws.send_text("[" * 200_000 + "]" * 200_000)
+        assert ws.receive_json() == {"type": "error", "error": "invalid_json"}
+        ws.send_json({"type": "hello"})
+        assert ws.receive_json() == {"type": "hello"}

@@ -18,8 +18,9 @@ DEFAULT_FRONTEND_DIST = REPO_ROOT / "frontend" / "dist"
 
 #: GitHub Pages origin of the deployed console.
 PAGES_ORIGIN = "https://deviloffersservice-hub.github.io"
-#: GitHub Codespaces forwarded-port URLs (https://<codespace>-7860.app.github.dev).
-CODESPACES_ORIGIN_REGEX = r"https://.*\.app\.github\.dev"
+#: GitHub Codespaces forwarded-port URLs (https://<codespace>-7860.app.github.dev): one DNS
+#: label of [a-z0-9-] before .app.github.dev, so no "/", "#", "." or empty label can sneak in.
+CODESPACES_ORIGIN_REGEX = r"https://[a-z0-9][a-z0-9-]*\.app\.github\.dev"
 #: Local development origins (any port), only allowed when SKYPAW_ENV=dev.
 LOCALHOST_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
 

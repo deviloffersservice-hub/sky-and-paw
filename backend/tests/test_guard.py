@@ -75,9 +75,27 @@ def test_no_argument_reads_env_allowed(monkeypatch: pytest.MonkeyPatch, value: s
     assert assert_simulation_only() == value.lower()
 
 
-@pytest.mark.parametrize("value", ["live", "real", "tele", ""])
+@pytest.mark.parametrize("value", ["live", "real", "tele", "Real-World", "production"])
 def test_no_argument_reads_env_refused(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
     monkeypatch.setenv(ENV_VAR, value)
+    with pytest.raises(SimulationOnlyViolation):
+        assert_simulation_only()
+
+
+def test_no_argument_empty_env_means_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An empty CW_RUNTIME_MODE (e.g. a verbatim copy of .env.example) means the default."""
+    monkeypatch.setenv(ENV_VAR, "")
+    assert assert_simulation_only() == "simulation"
+
+
+def test_no_argument_uses_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The no-argument form goes through get_settings(), not os.environ directly."""
+    from skypaw.config import Settings
+    from skypaw.sim import guard
+
+    monkeypatch.setenv(ENV_VAR, "simulation")
+    fake = Settings(_env_file=None, cw_runtime_mode="live")
+    monkeypatch.setattr(guard, "get_settings", lambda: fake)
     with pytest.raises(SimulationOnlyViolation):
         assert_simulation_only()
 
