@@ -43,7 +43,10 @@ SARVAM_BASE_URL = "https://api.sarvam.ai"
 REALTIME_WS_URL = "wss://api.sarvam.ai/speech-to-text-realtime/ws"
 
 #: Model identifiers (SPEC §3.1); the only planning model is sarvam-105b.
-MODEL_PLAN = "sarvam-105b"
+MODEL_PLAN = "sarvam-105b-conversations"  # no reasoning; the default planner
+MODEL_PLAN_REASONING = "sarvam-105b"  # reasoning model; second attempt only
+#: Chat models that reason (reasoning tokens bill as output and count toward max_tokens).
+REASONING_MODELS = frozenset({MODEL_PLAN_REASONING})
 MODEL_STT_REALTIME = "saaras:v3-realtime"
 MODEL_STT_REST = "saaras:v4"
 MODEL_TTS = "bulbul:v3"
@@ -423,12 +426,13 @@ class SarvamClient:
         self,
         messages: list[dict[str, str]],
         *,
+        model: str = MODEL_PLAN,
         response_format: dict[str, Any] | None = None,
-        reasoning_effort: str | None = "low",
+        reasoning_effort: str | None = None,
         max_tokens: int = 1024,
         temperature: float | None = 0.0,
     ) -> dict[str, Any]:
-        body: dict[str, Any] = {"model": MODEL_PLAN, "messages": messages, "max_tokens": max_tokens}
+        body: dict[str, Any] = {"model": model, "messages": messages, "max_tokens": max_tokens}
         if reasoning_effort is not None:
             body["reasoning_effort"] = reasoning_effort
         if response_format is not None:
@@ -440,6 +444,9 @@ class SarvamClient:
         t_in = int(usage.get("prompt_tokens") or sum(len(m["content"]) for m in messages) // 3)
         t_out = int(usage.get("completion_tokens") or max_tokens)
         rec.units = {"tokens_in": t_in, "tokens_out": t_out}
+        details = usage.get("completion_tokens_details") or {}
+        if details.get("reasoning_tokens") is not None:
+            rec.units["reasoning_tokens"] = int(details["reasoning_tokens"])
         rec.rupees = self.meter.llm(t_in, t_out)
         self.meter.record(rec)
         return resp
@@ -715,8 +722,14 @@ class FakeSarvam:
             content = json.dumps(asdict(p) | {"confidence": 0.9}, ensure_ascii=False)
             resp = {
                 "id": "fake",
-                "model": MODEL_PLAN,
-                "choices": [{"index": 0, "message": {"role": "assistant", "content": content}}],
+                "model": kw.get("model", MODEL_PLAN),
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": content},
+                    }
+                ],
                 "usage": {"prompt_tokens": 900, "completion_tokens": 60},
             }
         usage = resp.get("usage") or {}
@@ -782,11 +795,13 @@ class FakeSarvam:
 
 __all__ = [
     "MODEL_PLAN",
+    "MODEL_PLAN_REASONING",
     "MODEL_STT_REALTIME",
     "MODEL_STT_REST",
     "MODEL_TRANSLATE",
     "MODEL_TTS",
     "RATES",
+    "REASONING_MODELS",
     "REALTIME_WS_URL",
     "SARVAM_BASE_URL",
     "CallRecord",

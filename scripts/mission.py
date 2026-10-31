@@ -112,6 +112,10 @@ async def run(args: argparse.Namespace) -> int:
     settings = get_settings()
     if args.data_dir:
         settings = settings.model_copy(update={"data_dir": Path(args.data_dir)})
+    # Headless default: fakes for the Go2 and voice (--real-go2 / --real-voice to opt in).
+    settings = settings.model_copy(
+        update={"skypaw_fake_go2": not args.real_go2, "skypaw_fake_voice": not args.real_voice}
+    )
     ev: Path = args.evidence_dir
     ev.mkdir(parents=True, exist_ok=True)
     sim: SimSession | None = None
@@ -260,6 +264,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--duration", type=float, default=MAX_DURATION_S)
     ap.add_argument("--autostart-survey", action="store_true")
     ap.add_argument("--offline", action="store_true", help="kinematic drone, no Cyberwave")
+    ap.add_argument("--real-go2", action="store_true", help="stream E Go2Controller on the sim")
+    ap.add_argument("--real-voice", action="store_true", help="SarvamVoice (spends Sarvam credit)")
     ap.add_argument("--serve", action="store_true", help="also serve /ws and /api/state")
     ap.add_argument("--port", type=int, default=7860)
     ap.add_argument("--every", type=float, default=5.0, help="snapshot log period (s)")

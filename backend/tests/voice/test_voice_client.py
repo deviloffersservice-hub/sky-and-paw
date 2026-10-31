@@ -43,11 +43,16 @@ async def test_auth_header_and_chat_body(make_client):
     assert req.url == "https://api.sarvam.ai/v1/chat/completions"
     assert req.headers["api-subscription-key"] == "test-key-not-real"
     body = json.loads(req.content)
-    assert body["model"] == MODEL_PLAN == "sarvam-105b"
-    assert body["reasoning_effort"] == "low"
+    assert body["model"] == MODEL_PLAN == "sarvam-105b-conversations"
+    assert "reasoning_effort" not in body  # only sent when the caller asks (reasoning models)
     assert body["max_tokens"] == 1024
-    # metered from usage: 1180 in + 96 out
-    assert client.meter.by_kind["llm"] == pytest.approx(CreditMeter().llm(1180, 96))
+    resp = await client.chat(
+        [{"role": "user", "content": "hi"}], model="sarvam-105b", reasoning_effort="low"
+    )
+    body = json.loads(rec.requests[1].content)
+    assert (body["model"], body["reasoning_effort"]) == ("sarvam-105b", "low")
+    # metered from usage: 1180 in + 96 out, per call
+    assert client.meter.by_kind["llm"] == pytest.approx(2 * CreditMeter().llm(1180, 96))
     assert client.last["llm"].ttfb_ms is not None
 
 

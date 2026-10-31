@@ -79,6 +79,11 @@ class Settings(BaseSettings):
     # Git commit baked in at build time (Docker ARG / CI env); informational only.
     git_sha: str = "unknown"
 
+    # Mission runtime (stream A): offline fakes instead of the real Go2 controller / Sarvam
+    # voice. Default real; SKYPAW_FAKE_GO2=1 / SKYPAW_FAKE_VOICE=1 select the fakes.
+    skypaw_fake_go2: bool = False
+    skypaw_fake_voice: bool = False
+
     def cors_origins(self) -> list[str]:
         return [PAGES_ORIGIN]
 

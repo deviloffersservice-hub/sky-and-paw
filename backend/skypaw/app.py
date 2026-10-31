@@ -26,6 +26,7 @@ from skypaw.config import Settings, get_settings
 from skypaw.live.ws import build_router
 from skypaw.logging import configure_logging, get_logger, log_event
 from skypaw.mission.runtime import MissionRuntime
+from skypaw.voice.tts import router as tts_router
 
 log = get_logger(__name__)
 
@@ -115,6 +116,7 @@ def create_app(settings: Settings | None = None, runtime: MissionRuntime | None 
 
     app.state.runtime = runtime
     app.include_router(build_router(runtime, settings))
+    app.include_router(tts_router)  # stream C: GET /tts/{sha}.wav
 
     if frontend_built:
         # Mounted last so the API routes above take precedence.

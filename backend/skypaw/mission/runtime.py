@@ -25,7 +25,7 @@ from skypaw.drone.io import CachePoseSource, SdkCamera, SdkFlight, pose_from_cac
 from skypaw.live.snapshot import Hub, snapshot_loop
 from skypaw.logging import get_logger, log_event
 from skypaw.mission.decisions import DecisionError, DecisionQueue
-from skypaw.mission.fakes import FakeDetector, FakeGo2Executor, FakeVoice
+from skypaw.mission.fakes import FakeDetector
 from skypaw.mission.ports import Candidate, Detector, DroneExecutor, Frame, Go2Executor, Plan, Voice
 from skypaw.mission.sim_session import SimSession
 from skypaw.mission.state import LANGS, MissionState
@@ -37,14 +37,34 @@ INTENTS = frozenset({"aerial_survey", "navigate_go2", "speak", "stop_all", "land
 TRIAGE = frozenset({"immediate", "delayed", "unknown", "expectant"})
 LEAD_ONLY = frozenset({"command", "confirm", "cancel", "decide", "triage", "dismiss", "tts"})
 POSE_HZ = 10.0
-#: Go2 speaker phrases (``tts`` with ``phrase_id``), English source text.
-PHRASES: dict[str, str] = {
-    "p_help": "Help is here. We are coming to get you.",
-    "p_still": "Stay still and keep calm.",
-    "p_tap": "If you can hear me, tap three times.",
-    "p_water": "We are sending water.",
-}
 DEFAULT_LEAD_LANG = "hi-IN"
+DEFAULT_SURVIVOR_LANG = "mr-IN"
+
+
+def phrase_text(phrase_id: str, lang: str) -> str | None:
+    """Text of a Go2 speaker phrase (stream C's hand-checked table) in ``lang``."""
+    from skypaw.voice.phrases import PHRASES
+
+    for p in PHRASES:
+        if p.id == phrase_id:
+            return p.text.get(lang) or p.text.get("en-IN")
+    return None
+
+
+def build_voice(settings: Settings) -> Voice:
+    """``SarvamVoice`` (default) or stream C's ``FakeVoice`` when ``SKYPAW_FAKE_VOICE`` is set.
+
+    Falls back to the fake (logged) when the Sarvam client cannot be built (no key).
+    """
+    from skypaw.voice.service import FakeVoice, SarvamVoice
+
+    if not settings.skypaw_fake_voice:
+        try:
+            return SarvamVoice.from_settings(settings)
+        except Exception as exc:  # noqa: BLE001 - missing key or config: degrade, do not crash
+            log_event(log, "voice_fallback_fake", level=30, error=f"{type(exc).__name__}: {exc}")
+    return FakeVoice(data_dir=settings.data_dir)
+
 
 DroneFactory = Callable[["MissionRuntime"], DroneExecutor]
 
@@ -76,9 +96,10 @@ class MissionRuntime:
         self.sim = sim
         self.drone: DroneExecutor | None = drone
         self._drone_factory = drone_factory
-        self.go2: Go2Executor = go2 or FakeGo2Executor()
+        self.go2: Go2Executor | None = go2 or self._fake_go2_if_configured()
         self.detector: Detector = detector or FakeDetector()
-        self.voice: Voice = voice or FakeVoice()
+        self.voice: Voice = voice or build_voice(self.settings)
+        self._translate_ok = True
         self.autostart_survey = autostart_survey
         self.frames_dir = Path(self.settings.data_dir) / "frames"
         self.site = load_site()
@@ -130,12 +151,19 @@ class MissionRuntime:
                 await asyncio.wait_for(self.drone.hold(), 5)
         if self.sim is not None:
             await asyncio.to_thread(self.sim.stop)
+        pending = [t for t in self._tasks if t.get_name() == "skypaw-translate"]
+        if pending:  # let in-flight translations (aiosqlite cache) finish before closing
+            await asyncio.wait(pending, timeout=2.0)
         for task in list(self._tasks):
             task.cancel()
         for task in list(self._tasks):
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await task
         self._tasks.clear()
+        aclose = getattr(self.voice, "aclose", None)
+        if aclose is not None:
+            with contextlib.suppress(Exception):
+                await aclose()
 
     def _spawn(self, coro: Any, name: str) -> asyncio.Task[Any]:
         task = asyncio.get_running_loop().create_task(coro, name=f"skypaw-{name}")
@@ -181,9 +209,13 @@ class MissionRuntime:
         async def one(dst: str) -> tuple[str, str]:
             if dst == src:
                 return dst, text
+            if not self._translate_ok:
+                return dst, text
             try:
                 return dst, await self.voice.translate(text, src, dst)
             except Exception as exc:  # noqa: BLE001 - keep the source text
+                if type(exc).__name__ == "QuotaExhausted":
+                    self._translate_ok = False  # stop spending calls; log stays in source text
                 log_event(log, "translate_failed", level=30, dst=dst, error=str(exc))
                 return dst, text
 
@@ -228,8 +260,12 @@ class MissionRuntime:
                 self.drone = factory(self)
             except Exception as exc:  # noqa: BLE001
                 self.log("SYS", "drone_unavailable", f"Drone executor unavailable: {exc}")
-                return
-        if self.autostart_survey:
+        if self.go2 is None:
+            try:
+                self.go2 = real_go2_controller(self)
+            except Exception as exc:  # noqa: BLE001
+                self.log("SYS", "go2_unavailable", f"Go2 controller unavailable: {exc}")
+        if self.autostart_survey and self.drone is not None:
             self._autostart()
 
     def _autostart(self) -> None:
@@ -259,6 +295,28 @@ class MissionRuntime:
                     if robot is self.state.drone and robot.mode == "landed" and p.z > 1.0:
                         robot.mode = "hold"
             await asyncio.sleep(period)
+
+    # --- Go2 ------------------------------------------------------------------------
+    def _fake_go2_if_configured(self) -> Go2Executor | None:
+        """Stream E's controller on a kinematic Go2 when ``SKYPAW_FAKE_GO2`` is set."""
+        if not self.settings.skypaw_fake_go2:
+            return None  # the real controller is built when the simulation is ready
+        from skypaw.go2.fake import fake_go2_executor
+
+        ctrl, _robot = fake_go2_executor(on_progress=self.go2_progress)
+        return ctrl
+
+    def go2_progress(self, progress: Any) -> None:
+        """``Go2Progress`` callback: copy the ``robots.go2`` fields into state."""
+        fields = progress.snapshot_fields()
+        go2 = self.state.go2
+        if fields.get("pos") is not None:
+            go2.pos = [round(float(c), 3) for c in fields["pos"]]
+        if fields.get("yaw") is not None:
+            go2.yaw = float(fields["yaw"])
+        go2.mode = str(fields.get("mode") or go2.mode)
+        go2.target = fields.get("target", go2.target)
+        go2.path = [list(p) for p in fields.get("path") or []]
 
     # --- DroneSink (called by the drone executor) -----------------------------------
     def drone_mode(self, mode: str) -> None:
@@ -363,17 +421,19 @@ class MissionRuntime:
         elif plan.intent == "navigate_go2":
             await self._exec_go2(plan.target)
         elif plan.intent == "speak":
-            await self._exec_speak(plan.text_to_speak or PHRASES["p_help"], plan.target, None)
+            await self._exec_speak(plan.text_to_speak, plan.target, None, "p_help")
         elif plan.intent == "land":
             if self.drone is None:
                 raise CommandRejected("drone not available")
             await self.drone.land()
         elif plan.intent == "stop_all":
-            if self.drone is not None:
+            # PROTOCOL clarification: target "drone" | "go2" stops one robot, none stops both.
+            if plan.target in (None, "drone") and self.drone is not None:
                 await self.drone.hold()
-            await self.go2.stop()
-            if self.state.go2.mode == "moving":
-                self.state.go2.mode = "idle"
+            if plan.target in (None, "go2") and self.go2 is not None:
+                await self.go2.stop()
+                if self.state.go2.mode == "moving":
+                    self.state.go2.mode = "idle"
 
     async def _exec_survey(self) -> None:
         if self.drone is None:
@@ -419,6 +479,9 @@ class MissionRuntime:
                 "warn", "Go2: no target", f"No located victim {target or ''}".strip()
             )
             return
+        if self.go2 is None:
+            self.decisions.add("warn", "Go2 not available", "The simulation is not ready yet.")
+            return
         go2 = self.state.go2
         go2.target, go2.mode = v["id"], "moving"
         v["status"] = "enroute"
@@ -430,16 +493,27 @@ class MissionRuntime:
             go2.mode = "blocked"
             self.log("NAV", "go2_blocked", f"Go2 blocked: {exc}")
             return
-        if go2.mode == "moving":
+        result = getattr(self.go2, "last_result", None)
+        if result is not None and not result.arrived:
+            go2.mode = "blocked"
+            self.log("NAV", "go2_blocked", f"Go2 did not reach {v['id']}")
+            return
+        if go2.mode in ("moving", "arrived"):
             go2.mode = "arrived"
             v["status"] = "arrived"
             self.log("NAV", "go2_arrived", f"Go2 arrived at {v['id']}")
             self.emit("nav.arrived", {"victim_id": v["id"]})
 
-    async def _exec_speak(self, text: str, target: str | None, lang: str | None) -> None:
+    async def _exec_speak(
+        self, text: str | None, target: str | None, lang: str | None, phrase_id: str = "p_help"
+    ) -> None:
         if lang is None:
             v = self.state.victim(target) if target else self._nearest_victim(self.state.go2.pos)
-            lang = self._victim_lang.get(v["id"], DEFAULT_LEAD_LANG) if v else DEFAULT_LEAD_LANG
+            lang = self._victim_lang.get(v["id"], DEFAULT_SURVIVOR_LANG) if v else None
+            lang = lang or DEFAULT_SURVIVOR_LANG
+        text = text or phrase_text(phrase_id, lang) or ""
+        if not text:
+            raise CommandRejected(f"no text for phrase {phrase_id!r}")
         url = await self.voice.speak(text, lang)
         self.state.tts_playing = {
             "text": text,
@@ -489,6 +563,9 @@ class MissionRuntime:
             elif res.decision.kind == "plan":
                 self.log("LEAD", "plan_cancelled", f"Plan {res.decision.plan_id} cancelled")
                 self.emit("plan.cancelled", {"plan_id": res.decision.plan_id})
+            elif res.decision.kind == "speak" and phrase_text(res.action, "en-IN"):
+                # Speaker card: the action id is a phrase id (PROTOCOL clarification).
+                self._spawn(self._exec_speak(None, None, None, res.action), "tts")
             else:
                 self.log("LEAD", "decided", f"{res.decision.id}: {res.action}")
         elif kind == "triage":
@@ -509,10 +586,12 @@ class MissionRuntime:
         elif kind == "text_command":
             await self._final_text(str(msg["text"]), str(msg.get("lang") or DEFAULT_LEAD_LANG))
         elif kind == "tts":
-            text = msg.get("text") or PHRASES.get(str(msg.get("phrase_id")), "")
+            lang = msg.get("lang") or DEFAULT_SURVIVOR_LANG
+            pid = str(msg.get("phrase_id") or "")
+            text = msg.get("text") or (phrase_text(pid, lang) if pid else None)
             if not text:
                 raise CommandRejected("tts needs text or a known phrase_id")
-            self._spawn(self._exec_speak(str(text), None, msg.get("lang")), "tts")
+            self._spawn(self._exec_speak(str(text), None, lang), "tts")
         elif kind == "mic":
             if msg.get("state") == "start":
                 self.mic_start(str(msg.get("lang") or "auto"))
@@ -530,8 +609,14 @@ class MissionRuntime:
         tr.active, tr.partial, tr.final, tr.lang, tr.final_t = False, "", text, lang, self.state.t()
         self.log("STT", "stt_final", text, lang=lang if lang in LANGS else "en-IN")
         self.emit("stt.final", {"text": text, "lang": lang})
-        plan = await self.voice.plan(text, lang)
-        self.propose(plan, source_text=text, model=getattr(self.voice, "model", "fake"))
+        try:
+            plan = await self.voice.plan(text, lang)
+        except Exception as exc:  # noqa: BLE001 - QuotaExhausted, network: tell the lead
+            log_event(log, "plan_failed", level=40, error=f"{type(exc).__name__}: {exc}")
+            self.decisions.add("warn", "Planner unavailable", f"{type(exc).__name__}: {text}")
+            return
+        model = getattr(self.voice, "plan_model", None) or getattr(self.voice, "model", "fake")
+        self.propose(plan, source_text=text, model=str(model))
 
     # --- microphone -----------------------------------------------------------------
     def mic_start(self, lang: str) -> None:
@@ -569,14 +654,30 @@ class MissionRuntime:
 
         final: dict[str, Any] | None = None
         async for ev in self.voice.transcribe_stream(chunks(), lang):
-            if ev.get("type") == "partial":
+            kind = ev.get("kind") or ev.get("type")  # stream C yields "kind"
+            if kind == "partial":
                 self.state.transcript.partial = str(ev.get("text", ""))
                 self.emit("stt.partial", {"text": ev.get("text"), "lang": ev.get("lang")})
-            elif ev.get("type") == "final":
+            elif kind == "final":
                 final = ev
         self.state.transcript.active = False
         if final and final.get("text"):
             await self._final_text(str(final["text"]), str(final.get("lang") or lang))
+
+
+def real_go2_controller(rt: MissionRuntime) -> Go2Executor:
+    """Stream E's ``Go2Controller`` on the simulation's Go2 twin and MQTT pose."""
+    from skypaw.go2.controller import CachePoseSource as Go2PoseSource
+    from skypaw.go2.controller import Go2Controller
+
+    if rt.sim is None or rt.sim.info.go2_uuid is None:
+        raise RuntimeError("no simulation / Go2 twin")
+    return Go2Controller(
+        rt.sim.twin("go2"),
+        Go2PoseSource(rt.sim.cache, rt.sim.info.go2_uuid),
+        grid=rt.state.coverage.grid,
+        on_progress=rt.go2_progress,
+    )
 
 
 def default_drone_factory(rt: MissionRuntime) -> DroneExecutor:
@@ -599,7 +700,9 @@ def default_drone_factory(rt: MissionRuntime) -> DroneExecutor:
 
 __all__ = [
     "INTENTS",
-    "PHRASES",
+    "build_voice",
+    "phrase_text",
+    "real_go2_controller",
     "CommandRejected",
     "MissionRuntime",
     "default_drone_factory",

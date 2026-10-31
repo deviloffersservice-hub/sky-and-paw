@@ -22,6 +22,18 @@ from skypaw.mission.state import SNAPSHOT_KEYS
 PROTOCOL = Path(__file__).resolve().parents[2] / "docs" / "PROTOCOL.md"
 
 
+@pytest.fixture
+def settings(settings: Settings) -> Settings:
+    """The shared settings with the offline fakes (stream C FakeVoice, stream E kinematic Go2)."""
+    return settings.model_copy(update={"skypaw_fake_go2": True, "skypaw_fake_voice": True})
+
+
+@pytest.fixture
+def client(settings: Settings) -> Any:
+    with TestClient(create_app(settings)) as c:
+        yield c
+
+
 def get_path(d: dict[str, Any], path: str) -> dict[str, Any]:
     for part in filter(None, path.split(".")):
         d = d[part]
@@ -292,7 +304,64 @@ def test_ws_binary_audio_only_while_mic_open(client: TestClient) -> None:
         for _ in range(60):
             msg = ws.receive_json()
             if msg["type"] == "event" and msg["name"] == "stt.final":
-                assert msg["data"]["text"] == "drone survey"
+                assert msg["data"]["text"]  # stream C FakeVoice: its scripted lead sample
                 break
         else:
             raise AssertionError("no stt.final")
+
+
+# --- integration with streams C and E (fakes selected by settings flags) ----------------
+async def test_default_runtime_uses_stream_fakes_go2_progress_and_phrases(
+    settings: Settings,
+) -> None:
+    from skypaw.go2.controller import Go2Controller
+    from skypaw.voice.service import FakeVoice as StreamCFakeVoice
+
+    rt = MissionRuntime(settings, detector=FakeDetector())
+    assert isinstance(rt.go2, Go2Controller) and isinstance(rt.voice, StreamCFakeVoice)
+    await rt.start()
+    try:
+        await rt.drone_frame(Frame("f_000001", "x.jpg", 1.0, "cam", [3.5, 2.0, 6.0], [1, 0, 0, 0]))
+        await rt.apply({"type": "command", "intent": "navigate_go2", "target": "V-01"})
+        await rt.apply({"type": "confirm", "plan_id": "P-1"})
+        for _ in range(300):
+            await asyncio.sleep(0.01)
+            if rt.state.go2.mode in ("arrived", "blocked"):
+                break
+        snap = rt.snapshot()["robots"]["go2"]
+        assert snap["mode"] == "arrived", snap
+        assert snap["pos"] is not None and snap["target"] == "V-01"
+        # tts with a phrase id uses the console's language and stream C's phrase table
+        assert (await rt.apply({"type": "tts", "phrase_id": "p_help", "lang": "ta-IN"}))["accepted"]
+        await settle(10)
+        playing = rt.snapshot()["tts"]["playing"]
+        assert playing["lang"] == "ta-IN" and playing["url"].startswith("/tts/")
+        assert playing["text"] != "Help is on the way. Stay calm."  # the Tamil line
+    finally:
+        await rt.stop()
+
+
+async def test_stop_all_target(settings: Settings) -> None:
+    from skypaw.mission.fakes import FakeDroneExecutor
+
+    rt = runtime(settings)
+    rt.drone = FakeDroneExecutor()
+    await rt.start()
+    try:
+        await rt.apply({"type": "command", "intent": "stop_all", "target": "drone"})
+        await settle()
+        assert rt.drone.calls == ["hold"]  # type: ignore[attr-defined]
+        assert ("stop", None) not in rt.go2.calls  # type: ignore[union-attr]
+        await rt.apply({"type": "command", "intent": "stop_all", "target": "go2"})
+        await settle()
+        assert rt.drone.calls == ["hold"]  # type: ignore[attr-defined]
+        assert ("stop", None) in rt.go2.calls  # type: ignore[union-attr]
+    finally:
+        await rt.stop()
+
+
+def test_ws_snapshot_right_after_hello_and_tts_route(client: TestClient) -> None:
+    with client.websocket_connect("/ws") as ws:
+        ws.send_json({"type": "hello", "role": "lead", "member": "t1"})
+        assert ws.receive_json()["type"] == "snapshot"
+    assert client.get("/tts/" + "0" * 64 + ".wav").status_code == 404

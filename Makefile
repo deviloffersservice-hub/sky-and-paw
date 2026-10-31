@@ -10,6 +10,7 @@
 #   make scene     create/reuse the Cyberwave scene, run MuJoCo (120 s), save frames (billable)
 #   make scene-dry print the scene plan (GET requests only, no simulation)
 #   make mission   headless v1 runtime: MuJoCo (<= 300 s) + drone survey, fakes elsewhere (billable)
+#   make go2       Go2 to V-01 on our grid route in MuJoCo (240 s, billable)
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
@@ -31,10 +32,10 @@ NODE_STAMP := frontend/node_modules/.skypaw-setup
 DIST := frontend/dist/index.html
 FRONTEND_SRC := $(wildcard frontend/src/*) frontend/index.html frontend/vite.config.ts frontend/tsconfig.json
 
-.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean scene scene-dry glb mission FORCE
+.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean scene scene-dry glb mission go2 FORCE
 
 help:
-	@sed -n '2,12p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
+	@sed -n '2,13p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
 
 setup: $(PY_STAMP) $(NODE_STAMP) $(DIST)
 
@@ -77,7 +78,7 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
-LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py
+LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py scripts/go2_mission.py
 
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend
@@ -111,6 +112,12 @@ scene-dry: $(PY_STAMP)
 MISSION_ARGS ?= --env skypaw-v1 --duration 300 --autostart-survey
 mission: $(PY_STAMP)
 	$(VPY) scripts/mission.py $(MISSION_ARGS)
+
+# v1 stream E: Go2 to a victim on the grid route (billable, default 240 s = 0.04 credits).
+# GO2_ARGS adds flags, e.g. GO2_ARGS="--target V-02" or GO2_ARGS="--plan-only".
+GO2_ARGS ?=
+go2: $(PY_STAMP)
+	$(VPY) scripts/go2_mission.py --env skypaw-v1-dev-e --target V-01 --duration 240 $(GO2_ARGS)
 
 # Rebuild backend/skypaw/scene/rubble.glb from site.yaml (offline).
 glb: $(PY_STAMP)
