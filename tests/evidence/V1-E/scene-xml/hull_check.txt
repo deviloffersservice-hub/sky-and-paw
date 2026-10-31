@@ -1,0 +1,8 @@
+vertices 144 bbox [-9.15 -5.78  0.  ] [9.29 6.15 2.8 ]
+2D hull vertices (world xy): [(-9.15, -3.0), (-7.63, -5.51), (8.1, -5.78), (9.29, -1.96), (9.15, 4.5), (8.42, 5.57), (-0.5, 6.15), (-5.5, 6.15), (-8.72, 4.8), (-9.15, 3.0)]
+run1 first front within 0.15 m of hull: (43.739, 2.596, -5.967, 0.002) | stall front dist: -0.013 | min over run: -0.014
+run2 first front within 0.15 m of hull: (40.464, 2.394, -6.023, 0.093) | stall front dist: -0.012 | min over run: -0.012
+V-01 hull signed dist -3.88
+V-02 hull signed dist -2.57
+V-03 hull signed dist -0.96
+staging hull signed dist 5.2

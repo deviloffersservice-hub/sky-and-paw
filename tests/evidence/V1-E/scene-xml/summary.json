@@ -1,0 +1,46 @@
+{
+  "environment": "skypaw-v1-dev-e (b1aaca29-5d3a-40ff-a47b-9636a314d1ab)",
+  "source": "cw.environments.export_mujoco_scene(env_id), 2026-10-31, zero credits",
+  "before": {
+    "rubble_collision_geoms": 1,
+    "geom_type": "mesh (MuJoCo collides a mesh geom as its convex hull)",
+    "geom_pos": [
+      "0.0 0.0 0.0"
+    ],
+    "refpos_or_refquat_present": false,
+    "meshes": [
+      "skypaw-rubble"
+    ],
+    "obj": "skypaw-rubble.obj: one object, 144 vertices (18 boxes x 8), world metres"
+  },
+  "after": {
+    "rubble_collision_geoms": 18,
+    "geom_type": "mesh (MuJoCo collides a mesh geom as its convex hull)",
+    "geom_pos": [
+      "0.0 0.0 0.0"
+    ],
+    "refpos_or_refquat_present": false,
+    "meshes": [
+      "skypaw-rubble-00",
+      "skypaw-rubble-01",
+      "skypaw-rubble-02",
+      "skypaw-rubble-03",
+      "skypaw-rubble-04",
+      "skypaw-rubble-05",
+      "skypaw-rubble-06",
+      "skypaw-rubble-07",
+      "skypaw-rubble-08",
+      "skypaw-rubble-09",
+      "skypaw-rubble-10",
+      "skypaw-rubble-11",
+      "skypaw-rubble-12",
+      "skypaw-rubble-13",
+      "skypaw-rubble-14",
+      "skypaw-rubble-15",
+      "skypaw-rubble-16",
+      "skypaw-rubble-17"
+    ],
+    "obj": "skypaw-rubble-NN.obj: one box each, 8 vertices, world metres"
+  },
+  "conclusion": "No recentring: geom pos 0, no refpos/refquat, vertices are world metres. Cyberwave flattened the 18-node GLB into ONE mesh geom, so MuJoCo collided the convex hull of the whole site; the Go2 front stopped on that hull boundary in both runs (within 1 cm). Fix: one asset + fixed twin per box -> 18 convex collision geoms."
+}
