@@ -1,0 +1,389 @@
+{
+  "target": "V-01",
+  "goal_world": [
+    3.5,
+    2.0,
+    0.5
+  ],
+  "env": "skypaw-v1-dev-e",
+  "setup_steps": [
+    "reuse project skypaw",
+    "create environment skypaw-v1-dev-e",
+    "reuse asset skypaw-rubble",
+    "skip asset skypaw-rubble",
+    "create twin skypaw-go2",
+    "create twin skypaw-drone",
+    "create twin skypaw-rubble",
+    "skip place skypaw-go2",
+    "skip place skypaw-drone",
+    "skip place skypaw-rubble",
+    "create waypoint staging-west",
+    "create waypoint survey-01",
+    "create waypoint survey-02",
+    "create waypoint survey-03",
+    "create waypoint survey-04",
+    "create waypoint survey-05",
+    "create waypoint survey-06",
+    "create waypoint survey-07",
+    "create waypoint survey-08",
+    "create waypoint survey-09",
+    "create waypoint survey-10"
+  ],
+  "handles": {
+    "environment": "b1aaca29-5d3a-40ff-a47b-9636a314d1ab",
+    "go2": "bff62aef-d211-4c82-a6af-cb7e8c9e26de",
+    "rubble": "5926b3af-ef80-479b-87dc-45197700f41a"
+  },
+  "stopped_at_startup": [],
+  "mqtt_connected": true,
+  "time_to_ready_s": 48.3,
+  "go2_pose_wait_s": 0.0,
+  "go2_start_pose": {
+    "position": {
+      "x": -10.949301455422185,
+      "y": -7.485044727207899,
+      "z": 0.3527409442928083
+    },
+    "rotation": {
+      "x": -0.015842951924456967,
+      "y": 0.0011404270935152956,
+      "z": 0.022542829191793668,
+      "w": 0.999619688257686
+    }
+  },
+  "rubble": {
+    "before": {
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "after": {
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "displacement_m": 0.0,
+    "rotation_changed": false
+  },
+  "goto": {
+    "status": "stuck",
+    "target_id": "V-01",
+    "goal": [
+      3.5,
+      2.0,
+      0.5
+    ],
+    "seconds": 68.46,
+    "final_pose": {
+      "x": 3.242,
+      "y": -6.033,
+      "z": 0.382,
+      "yaw": 1.584
+    },
+    "distance_error_m": 8.037,
+    "route_end_error_m": 8.037,
+    "turns": 32,
+    "forwards": 123,
+    "route": {
+      "profile": "go2",
+      "points": [
+        [
+          -10.949,
+          -7.484,
+          0.0
+        ],
+        [
+          -10.25,
+          -7.25,
+          0.0
+        ],
+        [
+          1.25,
+          -7.25,
+          0.0
+        ],
+        [
+          3.25,
+          -5.25,
+          0.0
+        ],
+        [
+          3.25,
+          0.75,
+          0.0
+        ],
+        [
+          3.75,
+          1.25,
+          0.0
+        ],
+        [
+          3.75,
+          1.75,
+          0.0
+        ],
+        [
+          3.5,
+          2.0,
+          0.0
+        ]
+      ],
+      "length": 22.63,
+      "climbs": 0,
+      "seconds": 37.6,
+      "difficulty": "easy",
+      "hazards_near": 0,
+      "cost": 22.536,
+      "cells": [
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          13,
+          3
+        ],
+        [
+          14,
+          3
+        ],
+        [
+          15,
+          3
+        ],
+        [
+          16,
+          3
+        ],
+        [
+          17,
+          3
+        ],
+        [
+          18,
+          3
+        ],
+        [
+          19,
+          3
+        ],
+        [
+          20,
+          3
+        ],
+        [
+          21,
+          3
+        ],
+        [
+          22,
+          3
+        ],
+        [
+          23,
+          3
+        ],
+        [
+          24,
+          3
+        ],
+        [
+          25,
+          3
+        ],
+        [
+          26,
+          3
+        ],
+        [
+          27,
+          3
+        ],
+        [
+          28,
+          3
+        ],
+        [
+          29,
+          4
+        ],
+        [
+          30,
+          5
+        ],
+        [
+          31,
+          6
+        ],
+        [
+          32,
+          7
+        ],
+        [
+          32,
+          8
+        ],
+        [
+          32,
+          9
+        ],
+        [
+          32,
+          10
+        ],
+        [
+          32,
+          11
+        ],
+        [
+          32,
+          12
+        ],
+        [
+          32,
+          13
+        ],
+        [
+          32,
+          14
+        ],
+        [
+          32,
+          15
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          32,
+          17
+        ],
+        [
+          32,
+          18
+        ],
+        [
+          32,
+          19
+        ],
+        [
+          33,
+          20
+        ],
+        [
+          33,
+          21
+        ],
+        [
+          33,
+          22
+        ]
+      ],
+      "start_snapped": false,
+      "goal_snapped": false
+    },
+    "error": null
+  },
+  "score": {
+    "mission_id": "go2-skypaw-v1-dev-e",
+    "victims": [
+      {
+        "victim_id": "V-01",
+        "status": "failed",
+        "detected_t": 0.33,
+        "dispatched_t": 0.33,
+        "arrived_t": null,
+        "wait_s": 0.0,
+        "travel_s": null,
+        "time_to_rescue_s": null,
+        "distance_error_m": null
+      }
+    ],
+    "totals": {
+      "victims": 1,
+      "detected": 1,
+      "reached": 0,
+      "unreached": [
+        "V-01"
+      ],
+      "time_to_rescue_total_s": null,
+      "time_to_rescue_mean_s": null,
+      "time_to_rescue_max_s": null
+    }
+  },
+  "go2_position_msgs_during_goto": 534,
+  "arrival_frame": {
+    "shape": [
+      360,
+      640,
+      3
+    ],
+    "mean": 41.76,
+    "std": 51.93
+  },
+  "run": {
+    "environment_id": "b1aaca29-5d3a-40ff-a47b-9636a314d1ab",
+    "simulation_id": "f891065c-1225-435d-bfad-eeea1a662397",
+    "requested_duration_s": 240.0,
+    "estimated_credits": 0.04,
+    "affect_s": 3.04,
+    "time_to_ready_s": 48.3,
+    "stopped_ids": [
+      "f891065c-1225-435d-bfad-eeea1a662397"
+    ],
+    "stop_verified": true
+  },
+  "mqtt": {
+    "messages": 13403,
+    "error": null
+  }
+}
