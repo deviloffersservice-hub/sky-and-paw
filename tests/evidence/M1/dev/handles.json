@@ -1,0 +1,22 @@
+{
+  "workspace_uuid": "0a003362-ee60-4152-aeb7-05783591e311",
+  "project_uuid": "402fe32e-382f-403a-8a69-6cabf96150b2",
+  "environment_uuid": "3fef78b1-e01b-428f-b34c-b4370c8e3ea6",
+  "rubble_asset_uuid": "4c556f6a-8282-47d3-b54c-a6cd3ada3298",
+  "go2_twin_uuid": "ffb57e7b-1bb8-4482-ab00-f7d540998b50",
+  "drone_twin_uuid": "ac67d3db-6175-457f-ace1-26d837e9e543",
+  "rubble_twin_uuid": "1c57e56a-2fb6-41dc-87f4-e969034e7fc4",
+  "waypoints": {
+    "staging-west": "14984f6e-e214-423f-90b9-138ac9dca1f4",
+    "survey-01": "a4b8fe81-2299-446b-8f8a-f7ffe6c93f93",
+    "survey-02": "30ac7b3f-62ab-4c51-b9f9-3a3e4f2a2832",
+    "survey-03": "3420b5f2-b7ff-4d0e-bfe2-b55ec123e7a8",
+    "survey-04": "53d383bb-e78e-4fa1-a391-daf7bf1c0821",
+    "survey-05": "43f5b967-2402-4786-8cf4-b9bd5d261666",
+    "survey-06": "6cb54aed-b6cf-4495-b716-8cbe16ab944e",
+    "survey-07": "4699f797-3081-4cd1-9fde-8a9bd2a53c75",
+    "survey-08": "6ccd94d9-8776-404b-9d9a-29209ff2f05f",
+    "survey-09": "de4d0afd-e773-48e9-accd-391e6ee967b2",
+    "survey-10": "f4586bbb-1b2d-48fa-9fac-e0feb898c472"
+  }
+}

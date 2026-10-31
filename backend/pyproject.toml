@@ -23,6 +23,10 @@ dependencies = [
     # numpy 1.26.x ships no CPython 3.13 wheels; 2.1.3 is the nearest release that does.
     "numpy==2.1.3; python_version >= '3.13'",
     "opencv-python-headless==4.10.0.84",
+    # M1 scene: MQTT over WSS (also a cyberwave dependency), site.yaml, rubble GLB builder.
+    "paho-mqtt==2.1.0",
+    "pyyaml==6.0.3",
+    "trimesh==4.5.3",
 ]
 
 [project.optional-dependencies]

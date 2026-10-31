@@ -60,7 +60,21 @@ class Settings(BaseSettings):
 
     # Budget guards for live simulator runs.
     sim_max_duration_s: int = Field(default=600, gt=0)
+    sim_default_duration_s: int = Field(default=120, gt=0)
     credit_floor: float = Field(default=15, ge=0)
+
+    # Cyberwave scene (M1). CYBERWAVE_WORKSPACE_ID is only needed for multi-workspace keys.
+    cyberwave_workspace_id: str | None = None
+    cyberwave_base_url: str | None = None
+    cw_project_name: str = "skypaw"
+    cw_environment_name: str = "skypaw-m1"
+
+    # MQTT over secure WebSocket (RESEARCH §6): wss://mqtt.cyberwave.com:443, path "/".
+    # Port 8883 is blocked from cloud sandboxes and is never used as a silent fallback.
+    cw_mqtt_host: str = "mqtt.cyberwave.com"
+    cw_mqtt_port: int = 443
+    cw_mqtt_ws_path: str = "/"
+    cw_mqtt_username: str = "mqttcyb"
 
     # Git commit baked in at build time (Docker ARG / CI env); informational only.
     git_sha: str = "unknown"

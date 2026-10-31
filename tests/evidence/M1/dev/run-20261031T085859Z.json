@@ -1,0 +1,387 @@
+{
+  "started_utc": "20261031T085859Z",
+  "args": {
+    "project": "skypaw",
+    "env": "skypaw-m1-dev",
+    "duration": "120.0",
+    "capture": "True",
+    "dry_run": "False",
+    "no_sim": "False",
+    "fail_after_ready": "False",
+    "push_test": "False",
+    "evidence_dir": "tests/evidence/M1/dev",
+    "ready_timeout": "120.0",
+    "frame_timeout": "40.0",
+    "pose_timeout": "60.0"
+  },
+  "checks": {
+    "mqtt_connected": true,
+    "frames": false,
+    "pose_samples": true
+  },
+  "glb": {
+    "bytes": 9488,
+    "sha256": "6bb2bd34acd62aea87da666efdf1b6e81c0170c001779f1db14558e77e757bcc",
+    "boxes": 18
+  },
+  "setup_http": {
+    "total": 22,
+    "by_method": {
+      "GET": 14,
+      "POST": 7,
+      "PUT": 1
+    },
+    "writes": 8,
+    "write_calls": [
+      "POST /api/v1/projects/402fe32e-382f-403a-8a69-6cabf96150b2/environments",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/e6d568ad-6ca8-49b4-841b-349ebb3aa877/glb-file",
+      "PUT /api/v1/assets/e6d568ad-6ca8-49b4-841b-349ebb3aa877",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/environments/3fef78b1-e01b-428f-b34c-b4370c8e3ea6/waypoints"
+    ]
+  },
+  "notes": {
+    "workspace_uuid": "0a003362-ee60-4152-aeb7-05783591e311",
+    "fixed_base_accepted": true,
+    "asset_backends": [
+      "playground",
+      "mujoco"
+    ],
+    "asset_glb_attached": true
+  },
+  "plan": [
+    {
+      "action": "reuse",
+      "kind": "project",
+      "name": "skypaw",
+      "detail": ""
+    },
+    {
+      "action": "create",
+      "kind": "environment",
+      "name": "skypaw-m1-dev",
+      "detail": ""
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble",
+      "detail": "9488 bytes sha256 6bb2bd34acd6"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-go2",
+      "detail": "at world (-11.0, -7.5, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-drone",
+      "detail": "at world (-11.5, -5.5, 0.6)"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-go2",
+      "detail": "already at world (-11.0, -7.5, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-drone",
+      "detail": "already at world (-11.5, -5.5, 0.6)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "staging-west",
+      "detail": "at {'x': -12.5, 'y': -7.5, 'z': 0.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-01",
+      "detail": "at {'x': -8.0, 'y': 5.0, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-02",
+      "detail": "at {'x': 8.0, 'y': 5.0, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-03",
+      "detail": "at {'x': 8.0, 'y': 2.5, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-04",
+      "detail": "at {'x': -8.0, 'y': 2.5, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-05",
+      "detail": "at {'x': -8.0, 'y': 0.0, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-06",
+      "detail": "at {'x': 8.0, 'y': 0.0, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-07",
+      "detail": "at {'x': 8.0, 'y': -2.5, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-08",
+      "detail": "at {'x': -8.0, 'y': -2.5, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-09",
+      "detail": "at {'x': -8.0, 'y': -5.0, 'z': 6.0}"
+    },
+    {
+      "action": "create",
+      "kind": "waypoint",
+      "name": "survey-10",
+      "detail": "at {'x': 8.0, 'y': -5.0, 'z': 6.0}"
+    }
+  ],
+  "stopped_at_startup": [],
+  "preflight": {
+    "enabled": true,
+    "eligible": true,
+    "available_backends": [
+      "mujoco",
+      "mujoco_warp"
+    ],
+    "blocking_assets": [],
+    "reasons": []
+  },
+  "mqtt": {
+    "url": "wss://mqtt.cyberwave.com:443/",
+    "connected": true,
+    "connect_s": 0.541,
+    "connected_after_affect_s": 0.8,
+    "error": null
+  },
+  "run": {
+    "environment_id": "3fef78b1-e01b-428f-b34c-b4370c8e3ea6",
+    "simulation_id": "934fdb2a-8a5d-464f-b0fe-c883352160c2",
+    "requested_duration_s": 120.0,
+    "estimated_credits": 0.02,
+    "affect_s": 3.14,
+    "time_to_ready_s": 55.1,
+    "stopped_ids": [
+      "934fdb2a-8a5d-464f-b0fe-c883352160c2"
+    ],
+    "stop_verified": true
+  },
+  "frames": {
+    "camera_chasis_bottom": {
+      "twin": "drone",
+      "ok": false,
+      "attempts": 30,
+      "stats": {
+        "shape": [
+          360,
+          640,
+          3
+        ],
+        "mean": 68.96,
+        "std": 0.44
+      },
+      "since_ready_s": 40.3
+    },
+    "payload_color_camera": {
+      "twin": "drone",
+      "ok": true,
+      "attempts": 1,
+      "stats": {
+        "shape": [
+          360,
+          640,
+          3
+        ],
+        "mean": 18.98,
+        "std": 18.97
+      },
+      "since_ready_s": 40.58,
+      "file": "drone_payload.jpg"
+    },
+    "front_camera": {
+      "twin": "go2",
+      "ok": true,
+      "attempts": 1,
+      "stats": {
+        "shape": [
+          360,
+          640,
+          3
+        ],
+        "mean": 26.27,
+        "std": 37.86
+      },
+      "since_ready_s": 40.8,
+      "file": "go2_front.jpg"
+    }
+  },
+  "pose": {
+    "since_ready_s": 40.81,
+    "go2": {
+      "twin_uuid": "ffb57e7b-1bb8-4482-ab00-f7d540998b50",
+      "position_count": 381,
+      "rotation_count": 381,
+      "latest": {
+        "position": {
+          "x": -10.945858711145426,
+          "y": -7.4862282956855015,
+          "z": 0.35369359965758806
+        },
+        "t": 1793437254.383818,
+        "position_t": 1793437254.383818,
+        "rotation": {
+          "x": -0.01512904060613755,
+          "y": 0.001222909300617366,
+          "z": 0.036425650071398606,
+          "w": 0.9992210909703904
+        },
+        "rotation_t": 1793437254.3836396
+      }
+    },
+    "drone": {
+      "twin_uuid": "ac67d3db-6175-457f-ace1-26d837e9e543",
+      "position_count": 1350,
+      "rotation_count": 1350,
+      "latest": {
+        "position": {
+          "x": -11.5,
+          "y": -5.5,
+          "z": 0.6000000000000013
+        },
+        "t": 1793437254.4520028,
+        "position_t": 1793437254.4518561,
+        "rotation": {
+          "w": 1.0,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation_t": 1793437254.4520028
+      }
+    },
+    "rubble": {
+      "twin_uuid": "1c57e56a-2fb6-41dc-87f4-e969034e7fc4",
+      "position_count": 1350,
+      "rotation_count": 1350,
+      "latest": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "t": 1793437254.4543738,
+        "position_t": 1793437254.4533794,
+        "rotation": {
+          "w": 1.0,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation_t": 1793437254.4543738
+      }
+    }
+  },
+  "mqtt_stats": {
+    "messages": 14658,
+    "topics": {
+      "webrtc-offer": 8,
+      "webrtc-answer": 8,
+      "telemetry": 32,
+      "telemetry-status": 32,
+      "link_poses": 4164,
+      "free_joint_state": 2776,
+      "position": 3172,
+      "rotation": 3172,
+      "pointcloud": 646,
+      "lidar": 646,
+      "twin_updated": 1,
+      "navigation": 1
+    },
+    "subacks": {
+      "cyberwave/environment/3fef78b1-e01b-428f-b34c-b4370c8e3ea6/#": [
+        "Granted QoS 0"
+      ],
+      "cyberwave/twin/1c57e56a-2fb6-41dc-87f4-e969034e7fc4/#": [
+        "Granted QoS 0"
+      ],
+      "cyberwave/twin/ffb57e7b-1bb8-4482-ab00-f7d540998b50/#": [
+        "Granted QoS 0"
+      ],
+      "cyberwave/twin/ac67d3db-6175-457f-ace1-26d837e9e543/#": [
+        "Granted QoS 0"
+      ]
+    }
+  },
+  "http": {
+    "total": 105,
+    "by_method": {
+      "GET": 95,
+      "POST": 9,
+      "PUT": 1
+    },
+    "writes": 10,
+    "write_calls": [
+      "POST /api/v1/projects/402fe32e-382f-403a-8a69-6cabf96150b2/environments",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/e6d568ad-6ca8-49b4-841b-349ebb3aa877/glb-file",
+      "PUT /api/v1/assets/e6d568ad-6ca8-49b4-841b-349ebb3aa877",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/environments/3fef78b1-e01b-428f-b34c-b4370c8e3ea6/waypoints",
+      "POST /api/v1/environments/3fef78b1-e01b-428f-b34c-b4370c8e3ea6/simulations",
+      "POST /api/v1/environments/3fef78b1-e01b-428f-b34c-b4370c8e3ea6/simulations/934fdb2a-8a5d-464f-b0fe-c883352160c2/stop"
+    ]
+  },
+  "exit_code": 5
+}
