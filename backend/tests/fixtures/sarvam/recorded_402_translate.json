@@ -1,0 +1,14 @@
+{
+  "_provenance": "recorded live 2026-10-31 (docs/evidence/day1/sarvam.md); key redacted",
+  "status": 402,
+  "headers": {
+    "x-request-id": "20261031_98895df5-c3e1-4b19-808f-5d31735a6375"
+  },
+  "body": {
+    "error": {
+      "message": "No credits available.",
+      "code": "insufficient_quota_error",
+      "request_id": "20261031_98895df5-c3e1-4b19-808f-5d31735a6375"
+    }
+  }
+}

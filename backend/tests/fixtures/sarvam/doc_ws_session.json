@@ -1,0 +1,74 @@
+{
+  "_provenance": "shape from sarvamai 0.1.41 types and docs.sarvam.ai (RESEARCH §2); not yet recorded live: the account had ₹0 credits",
+  "events": [
+    {
+      "event": "session.begin",
+      "request_id": "20261031_doc-rt",
+      "config": {
+        "model": "saaras:v3-realtime",
+        "language_code": "auto",
+        "encoding": "linear16",
+        "sample_rate": 16000,
+        "stream_type": "fast",
+        "mode": "codemix"
+      }
+    },
+    {
+      "event": "vad.speech_start",
+      "utterance_idx": 0,
+      "confidence": 0.91
+    },
+    {
+      "event": "transcript.partial",
+      "utterance_idx": 0,
+      "text": "dog को",
+      "language": "hi-IN"
+    },
+    {
+      "event": "transcript.partial",
+      "utterance_idx": 0,
+      "text": "dog को V-01",
+      "language": "hi-IN"
+    },
+    {
+      "event": "transcript.partial",
+      "utterance_idx": 0,
+      "text": "dog को V-01",
+      "language": "hi-IN"
+    },
+    {
+      "event": "transcript.partial",
+      "utterance_idx": 0,
+      "text": "dog को V-01 के पास",
+      "language": "hi-IN"
+    },
+    {
+      "event": "pong"
+    },
+    {
+      "event": "vad.speech_end",
+      "utterance_idx": 0,
+      "confidence": 0.9
+    },
+    {
+      "event": "transcript.final",
+      "utterance_idx": 0,
+      "text": "dog को V-01 के पास भेजो",
+      "language": "hi-IN",
+      "language_confidence": 0.96,
+      "start_s": 0.1,
+      "end_s": 2.3
+    },
+    {
+      "event": "session.end",
+      "request_id": "20261031_doc-rt",
+      "total_duration_s": 2.6,
+      "total_utterances": 1,
+      "audio_duration_s": 2.5
+    }
+  ],
+  "close": {
+    "code": 1000,
+    "reason": ""
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_provenance": "recorded live 2026-10-31 (docs/evidence/day1/sarvam.md); key redacted",
+  "handshake_status": 101,
+  "events": [
+    {
+      "event": "error",
+      "code": "quota_exceeded",
+      "message": "Credits exhausted. Visit the API Dashboard to review and manage your subscription.",
+      "is_fatal": true,
+      "status_code": 402
+    }
+  ],
+  "close": {
+    "code": 1003,
+    "reason": "Credits exhausted. Visit the API Dashboard to review and manage your subscription."
+  }
+}
