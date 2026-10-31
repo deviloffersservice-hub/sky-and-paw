@@ -1,0 +1,52 @@
+$ curl -sS -i http://127.0.0.1:7860/healthz
+HTTP/1.1 200 OK
+date: Sat, 31 Oct 2026 08:30:13 GMT
+server: uvicorn
+content-length: 33
+content-type: application/json
+
+{"status":"ok","version":"0.1.0"}
+
+$ curl -sS -i http://127.0.0.1:7860/version
+HTTP/1.1 200 OK
+date: Sat, 31 Oct 2026 08:30:13 GMT
+server: uvicorn
+content-length: 96
+content-type: application/json
+
+{"name":"skypaw","version":"0.1.0","git_sha":"9dbd5db","python":"3.11.18","state_source":"rest"}
+
+$ curl -sS -i http://127.0.0.1:7860/
+HTTP/1.1 200 OK
+date: Sat, 31 Oct 2026 08:30:13 GMT
+server: uvicorn
+content-type: text/html; charset=utf-8
+accept-ranges: bytes
+content-length: 885
+last-modified: Sat, 31 Oct 2026 08:29:22 GMT
+etag: "13579aa620fc0d1c2efc67f0c848f0e6"
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Sky &amp; Paw Ops: simulation-only drone and quadruped search-and-rescue console." />
+    <title>Sky &amp; Paw Ops</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230b0f14'/%3E%3Ccircle cx='8' cy='8' r='4' fill='%23ff9f1c'/%3E%3C/svg%3E" />
+    <script type="module" crossorigin src="/assets/index-B_uUW2fB.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-T5AOTo80.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>Sky &amp; Paw Ops needs JavaScript.</noscript>
+  </body>
+</html>
+
+$ curl -sS -o /dev/null -w "%{http_code} %{content_type} %{size_download}\n" for each built asset
+/assets/index-B_uUW2fB.js -> 200 text/javascript; charset=utf-8 3975B
+/assets/index-T5AOTo80.css -> 200 text/css; charset=utf-8 2781B
+
+$ timing: 20x GET /healthz
+min 0.000619 median 0.000840 max 0.005247 (seconds)

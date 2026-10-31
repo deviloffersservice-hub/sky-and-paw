@@ -1,0 +1,64 @@
+.venv/bin/uvicorn skypaw.app:create_app --factory --host 0.0.0.0 --port 7860
+{"ts": "2026-10-31T08:30:06.517+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Started server process [10171]"}
+{"ts": "2026-10-31T08:30:06.517+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Waiting for application startup."}
+{"ts": "2026-10-31T08:30:06.518+00:00", "level": "info", "logger": "skypaw.app", "msg": "startup", "version": "0.1.0", "env": "dev", "state_source": "rest", "frontend": "/home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/frontend/dist"}
+{"ts": "2026-10-31T08:30:06.518+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Application startup complete."}
+{"ts": "2026-10-31T08:30:06.519+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Uvicorn running on http://0.0.0.0:7860 (Press CTRL+C to quit)"}
+{"ts": "2026-10-31T08:30:08.244+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33410 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.334+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33418 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.341+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33424 - \"GET /version HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.366+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33440 - \"GET / HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.377+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33454 - \"GET /assets/index-B_uUW2fB.js HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.386+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33462 - \"GET /assets/index-T5AOTo80.css HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.396+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33466 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.403+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33478 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.410+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33480 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.416+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33490 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.424+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33492 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.429+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33508 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.436+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33514 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.443+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33530 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.450+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33542 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.456+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33544 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.462+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33552 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.468+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33568 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.480+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33570 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.488+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33574 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.494+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33576 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.500+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33588 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.507+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33604 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.513+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33612 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.520+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33628 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:14.527+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:33640 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:27.831+00:00", "level": "info", "logger": "uvicorn.error", "msg": "('127.0.0.1', 60888) - \"WebSocket /ws\" [accepted]"}
+{"ts": "2026-10-31T08:30:27.831+00:00", "level": "info", "logger": "skypaw.app", "msg": "ws_connect", "client": "127.0.0.1:60888"}
+{"ts": "2026-10-31T08:30:27.832+00:00", "level": "info", "logger": "uvicorn.error", "msg": "connection open"}
+{"ts": "2026-10-31T08:30:27.835+00:00", "level": "info", "logger": "skypaw.app", "msg": "ws_disconnect", "client": "127.0.0.1:60888"}
+{"ts": "2026-10-31T08:30:27.835+00:00", "level": "info", "logger": "uvicorn.error", "msg": "connection closed"}
+{"ts": "2026-10-31T08:30:27.836+00:00", "level": "info", "logger": "uvicorn.error", "msg": "('127.0.0.1', 60896) - \"WebSocket /ws\" [accepted]"}
+{"ts": "2026-10-31T08:30:27.837+00:00", "level": "info", "logger": "skypaw.app", "msg": "ws_connect", "client": "127.0.0.1:60896"}
+{"ts": "2026-10-31T08:30:27.837+00:00", "level": "info", "logger": "uvicorn.error", "msg": "connection open"}
+{"ts": "2026-10-31T08:30:27.838+00:00", "level": "info", "logger": "skypaw.app", "msg": "ws_disconnect", "client": "127.0.0.1:60896"}
+{"ts": "2026-10-31T08:30:27.838+00:00", "level": "info", "logger": "uvicorn.error", "msg": "connection closed"}
+{"ts": "2026-10-31T08:30:37.203+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43926 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.210+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43940 - \"OPTIONS /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.219+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43950 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.227+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43966 - \"OPTIONS /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.237+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43974 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.244+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43990 - \"OPTIONS /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.252+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:43998 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.262+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44010 - \"OPTIONS /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.270+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44026 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.278+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44030 - \"OPTIONS /healthz HTTP/1.1\" 400"}
+{"ts": "2026-10-31T08:30:37.285+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44044 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.290+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44048 - \"OPTIONS /healthz HTTP/1.1\" 400"}
+{"ts": "2026-10-31T08:30:37.297+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44052 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.303+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44062 - \"OPTIONS /healthz HTTP/1.1\" 400"}
+{"ts": "2026-10-31T08:30:37.310+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44074 - \"GET /healthz HTTP/1.1\" 200"}
+{"ts": "2026-10-31T08:30:37.316+00:00", "level": "info", "logger": "uvicorn.access", "msg": "127.0.0.1:44080 - \"OPTIONS /healthz HTTP/1.1\" 400"}
+{"ts": "2026-10-31T08:30:54.429+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Shutting down"}
+{"ts": "2026-10-31T08:30:54.530+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Waiting for application shutdown."}
+{"ts": "2026-10-31T08:30:54.530+00:00", "level": "info", "logger": "skypaw.app", "msg": "shutdown"}
+{"ts": "2026-10-31T08:30:54.530+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Application shutdown complete."}
+{"ts": "2026-10-31T08:30:54.530+00:00", "level": "info", "logger": "uvicorn.error", "msg": "Finished server process [10171]"}
+make: *** [Makefile:64: run] Terminated

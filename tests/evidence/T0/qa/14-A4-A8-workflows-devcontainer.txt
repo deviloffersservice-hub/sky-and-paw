@@ -1,0 +1,85 @@
+== A4: YAML validity
+$ python -c "import yaml;yaml.safe_load(open('.github/workflows/ci.yml'))"
+rc=0
+$ python -c "import yaml;yaml.safe_load(open('.github/workflows/pages.yml'))"
+rc=0
+
+== A4: structure (jobs/steps) parsed from YAML
+.github/workflows/ci.yml | name: CI | triggers: ['push', 'pull_request']
+  job test
+    - actions/checkout@v4 |  |  | 
+    - actions/setup-python@v5 |  | {'python-version': '3.11', 'cache': 'pip', 'cache-dependency-path': 'backend/requirements-dev.txt'} | 
+    - actions/setup-node@v4 |  | {'node-version': '20', 'cache': 'npm', 'cache-dependency-path': 'frontend/package-lock.json'} | 
+    - make setup | make setup PYTHON=python |  | 
+    - make test | make test |  | 
+    - make build (frontend) | make build |  | 
+    - Install Playwright Chromium | npx playwright install --with-deps chromium |  | 
+    - Playwright smoke | scripts/smoke.sh |  | 
+    - Upload smoke screenshot and server log |  | {'name': 'smoke', 'path': 'frontend/test-results/', 'if-no-files-found': 'ignore'} | 
+    - Pages build honours VITE_BASE | make build ; grep -q 'src="/sky-and-paw/assets/' frontend/dist/index.html ; echo "dist/index.html references / |  | {'VITE_BASE': '/sky-and-paw/'}
+.github/workflows/pages.yml | name: Pages | triggers: ['push', 'workflow_dispatch']
+  job build
+    - actions/checkout@v4 |  |  | 
+    - actions/setup-node@v4 |  | {'node-version': '20', 'cache': 'npm', 'cache-dependency-path': 'frontend/package-lock.json'} | 
+    - actions/configure-pages@v5 |  | {'enablement': True} | 
+    - npm ci | npm ci --no-audit --no-fund |  | 
+    - Build | echo "VITE_BASE=$VITE_BASE" ; npm run build |  | {'VITE_BASE': '/${{ github.event.repository.name }}/'}
+    - actions/upload-pages-artifact@v3 |  | {'path': 'frontend/dist'} | 
+  job deploy
+    - actions/deploy-pages@v4 |  |  | 
+
+== A4: actionlint (if available)
+actionlint not installed; skipped
+
+== A4: make test recipe (what CI's 'make test' step runs)
+.venv/bin/ruff check backend
+.venv/bin/ruff format --check backend
+.venv/bin/pytest backend
+cd frontend && npm run --silent typecheck
+
+== A4: make -n smoke
+cd frontend && npm run build
+scripts/smoke.sh
+
+== A8: python -m json.tool .devcontainer/devcontainer.json
+{
+    "name": "Sky & Paw",
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20"
+        }
+    },
+    "postCreateCommand": "make setup",
+    "postStartCommand": "make run",
+    "forwardPorts": [
+        7860
+    ],
+    "portsAttributes": {
+        "7860": {
+            "label": "Sky & Paw backend",
+            "visibility": "public"
+        }
+    },
+    "hostRequirements": {
+        "cpus": 2
+    },
+    "containerEnv": {
+        "CW_STATE_SOURCE": "mqtt",
+        "DATA_DIR": "/workspaces/sky-and-paw/data"
+    }
+}
+rc=0
+
+== A8: required fields
+PASS image == mcr.microsoft.com/devcontainers/python:3.11
+PASS node 20 feature
+PASS postCreateCommand == make setup
+PASS postStartCommand == make run
+PASS forwardPorts == [7860]
+PASS portsAttributes.7860.visibility == public
+PASS portsAttributes.7860.label == Sky & Paw backend
+PASS hostRequirements.cpus == 2
+PASS containerEnv.CW_STATE_SOURCE == mqtt
+PASS containerEnv.DATA_DIR == /workspaces/sky-and-paw/data
+ALL PASS

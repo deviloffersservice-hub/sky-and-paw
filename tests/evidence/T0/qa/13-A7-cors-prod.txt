@@ -1,0 +1,25 @@
+Backend started with SKYPAW_ENV=prod on 127.0.0.1:7882 (localhost origins must be refused)
+== Origin: https://deviloffersservice-hub.github.io
+  GET /healthz          -> HTTP/1.1 200 OK access-control-allow-origin: https://deviloffersservice-hub.github.io 
+  OPTIONS preflight     -> HTTP/1.1 200 OK access-control-allow-origin: https://deviloffersservice-hub.github.io 
+== Origin: https://fuzzy-space-abc123-7860.app.github.dev
+  GET /healthz          -> HTTP/1.1 200 OK access-control-allow-origin: https://fuzzy-space-abc123-7860.app.github.dev 
+  OPTIONS preflight     -> HTTP/1.1 200 OK access-control-allow-origin: https://fuzzy-space-abc123-7860.app.github.dev 
+== Origin: http://localhost:5173
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 
+== Origin: http://127.0.0.1:7871
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 
+== Origin: https://evil.example.com
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 
+== Origin: https://deviloffersservice-hub.github.io.evil.com
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 
+== Origin: https://x.app.github.dev.evil.com
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 
+== Origin: http://x.app.github.dev
+  GET /healthz          -> HTTP/1.1 200 OK 
+  OPTIONS preflight     -> HTTP/1.1 400 Bad Request 

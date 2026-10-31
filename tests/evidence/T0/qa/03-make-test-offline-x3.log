@@ -1,0 +1,72 @@
+=== run 1: unshare -n make test (no network interfaces except down loopback) ===
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+network unreachable (expected)
+.venv/bin/ruff check backend
+All checks passed!
+.venv/bin/ruff format --check backend
+13 files already formatted
+.venv/bin/pytest backend
+============================= test session starts ==============================
+platform linux -- Python 3.11.18, pytest-8.3.5, pluggy-1.7.0
+rootdir: /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/backend
+configfile: pyproject.toml
+plugins: asyncio-0.24.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+collected 58 items
+
+backend/tests/test_guard.py .......................................      [ 67%]
+backend/tests/test_health.py ...................                         [100%]
+
+============================== 58 passed in 0.33s ==============================
+cd frontend && npm run --silent typecheck
+rc=0
+=== run 2: unshare -n make test (no network interfaces except down loopback) ===
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+network unreachable (expected)
+.venv/bin/ruff check backend
+All checks passed!
+.venv/bin/ruff format --check backend
+13 files already formatted
+.venv/bin/pytest backend
+============================= test session starts ==============================
+platform linux -- Python 3.11.18, pytest-8.3.5, pluggy-1.7.0
+rootdir: /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/backend
+configfile: pyproject.toml
+plugins: asyncio-0.24.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+collected 58 items
+
+backend/tests/test_guard.py .......................................      [ 67%]
+backend/tests/test_health.py ...................                         [100%]
+
+============================== 58 passed in 0.27s ==============================
+cd frontend && npm run --silent typecheck
+rc=0
+=== run 3: unshare -n make test (no network interfaces except down loopback) ===
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+network unreachable (expected)
+.venv/bin/ruff check backend
+All checks passed!
+.venv/bin/ruff format --check backend
+13 files already formatted
+.venv/bin/pytest backend
+============================= test session starts ==============================
+platform linux -- Python 3.11.18, pytest-8.3.5, pluggy-1.7.0
+rootdir: /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/backend
+configfile: pyproject.toml
+plugins: asyncio-0.24.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+collected 58 items
+
+backend/tests/test_guard.py .......................................      [ 67%]
+backend/tests/test_health.py ...................                         [100%]
+
+============================== 58 passed in 0.30s ==============================
+cd frontend && npm run --silent typecheck
+rc=0

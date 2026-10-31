@@ -1,0 +1,30 @@
+cd frontend && npm run build
+
+> skypaw-frontend@0.1.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 5 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                 0.89 kB │ gzip: 0.52 kB
+dist/assets/index-T5AOTo80.css  2.78 kB │ gzip: 1.17 kB
+dist/assets/index-B_uUW2fB.js   3.97 kB │ gzip: 1.92 kB │ map: 11.92 kB
+✓ built in 142ms
+scripts/smoke.sh
+curl http://127.0.0.1:7870/healthz -> {"status":"ok","version":"0.1.0"} (HTTP 200)
+ok   GET /healthz -> 200
+ok   /healthz body {"status":"ok","version":"0.1.0"}
+info playwright module: /usr/local/lib/node_modules_global/playwright, chromium 153.0.8010.12
+ok   GET / -> 200
+ok   page title is "Sky & Paw Ops"
+ok   status text "Sky & Paw Ops · connected" (WebSocket hello echoed)
+ok   no page errors []
+info screenshot: /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/tests/evidence/T0/smoke-shell-run3.png
+ok   cross-origin http://localhost:7871 with ?api= connects over /ws
+ok   cross-origin fetch /healthz allowed by CORS (version "0.1.0")
+ok   ?api= remembered in localStorage.skypaw_api = "http://127.0.0.1:7870"
+ok   reload without ?api= uses stored backend: "http://127.0.0.1:7870 (storage)"
+SMOKE PASS
+rc=0

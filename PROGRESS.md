@@ -15,10 +15,15 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 - **Budget rule for QA:** every live run passes `duration ≤ 600 s` and stops the sim in `finally`; abort live tests if balance < 15 credits; Sarvam spend logged per run.
 - **Next:** on approval, create `main` from `claude/spec-and-mockup`, scaffold the repo (backend, frontend, Makefile, Dockerfile, `.env.example`, CI), then start M1.
 
+## Day-one live checks · DONE (2026-10-31)
+- Cyberwave rounds 1–2 (≈0.07 credits): px4vision crashes MuJoCo → drone is `skydio/skydio-x2` (SPEC v1.2); MQTT works over WSS 443; Go2 moves on velocity commands, `goto` inert in unmapped scenes; custom GLB → MuJoCo via raw upload + asset PATCH. See `docs/RESEARCH.md` §6, `docs/evidence/day1/cyberwave.md`.
+- Sarvam: key authenticates, zero credits on the key visible to this session; owner rotated to another account's key, which only a fresh session/Codespace can read. Scripts in `scripts/checks/sarvam/`. M5 live tests run there.
+
 ## Milestones
 | # | Milestone | Status | Evidence |
 |---|---|---|---|
-| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | not started | — |
+| T0 | Repository scaffold (backend, frontend shell, Makefile, Docker, devcontainer, CI, Pages) | **DONE** · merged `main` 2026-10-31 | `tests/evidence/T0/REPORT.md` |
+| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | in progress (`feat/m1-scene`) | `docs/tasks/M1-scene.md` |
 | M2 | Drone mission: takeoff, scan, camera down, frame capture | not started | — |
 | M3 | Vision: YOLO → waypoints with priority + alerts | not started | — |
 | M4 | Dog mission: Go2 to waypoints by priority; time-to-rescue | not started | — |

@@ -1,0 +1,15 @@
+curl http://127.0.0.1:7870/healthz -> {"status":"ok","version":"0.1.0"} (HTTP 200)
+ok   GET /healthz -> 200
+ok   /healthz body {"status":"ok","version":"0.1.0"}
+info playwright module: @playwright/test, chromium 129.0.6668.29
+ok   GET / -> 200
+ok   page title is "Sky & Paw Ops"
+ok   status text "Sky & Paw Ops · connected" (WebSocket hello echoed)
+ok   no page errors []
+info screenshot: /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/tests/evidence/T0/smoke-shell-pinned-pw1.47.png
+ok   cross-origin http://localhost:7871 with ?api= connects over /ws
+ok   cross-origin fetch /healthz allowed by CORS (version "0.1.0")
+ok   ?api= remembered in localStorage.skypaw_api = "http://127.0.0.1:7870"
+ok   reload without ?api= uses stored backend: "http://127.0.0.1:7870 (storage)"
+SMOKE PASS
+rc=0

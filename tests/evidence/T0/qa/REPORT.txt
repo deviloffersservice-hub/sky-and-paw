@@ -1,0 +1,134 @@
+T0 REPOSITORY SCAFFOLD: QA REPORT
+=================================
+Commit under test : 9dbd5db761d5d45efc9835cd1ba20e4b28fcd7c1 (origin/feat/t0-scaffold), checked out detached
+                    because the branch is already checked out in another worktree.
+Date              : 2026-10-31
+Environment       : Linux x86_64; python3.11 3.11.18 (venv), node v22.23.4, npm 10.9.9  -> 00-env-versions.txt
+Cost              : no Cyberwave or Sarvam calls; 0 credits, 0 INR. .env copied from .env.example, all values empty.
+Starting state    : git clean -xfdn printed nothing, git clean -xfd printed nothing (rc 0), git status clean.
+Source changes    : none. Only untracked files under tests/evidence/T0/ were added (19-A6-gitstatus-final.txt).
+
+VERDICT: A1-A8 all PASS. 0 blocking defects. 1 low-severity defect (D1), 4 observations.
+
+PER-CRITERION RESULTS
+---------------------
+A1  PASS  make setup && make test pass with no network calls to Cyberwave or Sarvam.
+          make setup rc=0 in 23.6 s                                    -> 01-make-setup.log
+          make test rc=0: ruff check ok, ruff format --check ok (13 files), pytest 58 passed, tsc --noEmit ok
+                                                                         -> 02-make-test.log, 04-pytest-verbose.log
+          No-network proof: make test run 3/3 times inside `unshare -n` (no network interfaces;
+          curl https://api.sarvam.ai fails inside the namespace), 58 passed each time, rc=0 x3
+                                                                         -> 03-make-test-offline-x3.log
+          Test plan coverage: guard tests include case-insensitivity (SIMULATION, MuJoCo, SiM, LIVE) and
+          aliases sim, mujoco                                            -> 04-pytest-verbose.log
+
+A2  PASS  make run serves the API, the shell and the WebSocket echo.
+          GET /healthz -> 200 {"status":"ok","version":"0.1.0"}; GET /version -> 200
+          {"name":"skypaw","version":"0.1.0","git_sha":"9dbd5db","python":"3.11.18","state_source":"rest"};
+          GET / -> 200 built index.html, title "Sky &amp; Paw Ops", both hashed assets 200
+          /healthz latency over 20 calls: min 0.6 ms, median 0.8 ms, max 5.2 ms
+                                                                         -> 07-A2-curl.txt, 06-make-run-server.log
+          /ws: sent {"type": "hello"}, received {"type":"hello"}, equal, RTT 0.99 ms (no Origin) and
+          0.48 ms (Origin https://deviloffersservice-hub.github.io); invalid JSON -> {"type":"error","error":"invalid_json"}
+                                                                         -> 08-A2-ws-hello.txt
+          Clean shutdown on SIGTERM (startup/shutdown JSON log lines)    -> 06-make-run-server.log
+
+A3  PASS  assert_simulation_only('live') raises SimulationOnlyViolation (rc=1), as do LIVE, real-world, real
+          and tele; 'simulation', 'playground', 'sim' and 'mujoco' pass (rc=0); exception type confirmed
+          as SimulationOnlyViolation.                                    -> 05-A3-guard.txt
+
+A4  PASS  ci.yml and pages.yml load with yaml.safe_load (rc=0 each). CI runs make setup, make test (same
+          recipe as local: ruff check, ruff format --check, pytest, tsc --noEmit), make build, playwright
+          install chromium, scripts/smoke.sh (Playwright smoke), and a VITE_BASE build check. Pages
+          workflow: configure-pages (enablement: true), npm ci, build with VITE_BASE, upload-pages-artifact,
+          deploy-pages.                                                  -> 14-A4-A8-workflows-devcontainer.txt
+          Build honours VITE_BASE: exact CI step replayed locally (`VITE_BASE=/sky-and-paw/ make build`
+          + grep) passes, assets referenced at /sky-and-paw/assets/       -> 16-A4-ci-pages-base-step.txt
+          Pages-style build served under /sky-and-paw/ from a second origin loads all assets in the
+          browser, 3/3 runs                                              -> 12-playwright-viewports-pages-run{1,2,3}.log
+          CI smoke path with the pinned @playwright/test 1.47.2 (Chromium 129, installed into a scratch
+          directory) also passes                                         -> 15-smoke-pinned-playwright-1.47.2.log,
+                                                                            smoke-shell-pinned-pw1.47.png
+          Not run: the workflows themselves on GitHub Actions (actionlint not installed here).
+
+A5  PASS  README quick start followed in a fresh copy of HEAD (an archive export standing in for git clone):
+          cp .env.example .env -> make setup (rc 0) -> make setup again ("Nothing to be done") -> make run
+          -> curl /healthz and /version as the README shows -> Chromium at http://localhost:7860 shows
+          "Sky & Paw Ops · connected".                                   -> 17-A5-readme-fresh-copy.txt,
+                                                                            a5-readme-flow-localhost7860.png
+          Not verified: that the README clone URL github.com/deviloffersservice-hub/sky-and-paw resolves
+          (this session has no GitHub access to that repository; see O2).
+
+A6  PASS  .gitignore excludes .env (.gitignore:2) and data/ (.gitignore:5); `git check-ignore -v .env data/`
+          prints both rules; .env.example is not ignored. After make setup, make test and make run,
+          `git status --porcelain` shows nothing except this QA run's own evidence files. Generated
+          .venv, node_modules, dist, caches, egg-info, data/ and frontend/test-results are all ignored.
+          Re-checked at the end of the run, after 3 smoke runs and 3 viewport runs: still nothing, and no
+          tracked file modified.                                         -> 10-A6-gitstatus-after-run.txt,
+                                                                            19-A6-gitstatus-final.txt
+
+A7  PASS  The shell reads the backend from ?api=, then localStorage.skypaw_api, then same origin.
+          make smoke, 3/3 PASS: a second origin (http://localhost:7871) serving frontend/dist with ?api=
+          connects over /ws, the cross-origin /healthz fetch passes CORS, the URL is stored in
+          localStorage.skypaw_api, and a reload without ?api= uses the stored URL ("(storage)").
+                                                                         -> 11-make-smoke-run{1,2,3}.log,
+                                                                            smoke-shell-run{1,2,3}.png
+          QA's own suite, 3/3 PASS: same-origin default at 1280/1500/360 px (backend line "(same-origin)",
+          title, connected, no horizontal overflow, no console errors); Pages build on a second origin with
+          ?api= -> "(query)", then storage -> "(storage)"; empty ?api= clears storage and falls back to
+          same origin.                                                   -> 12-playwright-viewports-pages-run{1,2,3}.log,
+                                                                            viewports-run{1,2,3}/*.png
+          CORS, dev mode: allowed https://deviloffersservice-hub.github.io,
+          https://fuzzy-space-abc123-7860.app.github.dev and localhost; refused evil.example.com,
+          ...github.io.evil.com, x.app.github.dev.evil.com and http://x.app.github.dev (preflight 400,
+          no ACAO header)                                                -> 09-A7-cors-dev.txt
+          CORS, prod mode (SKYPAW_ENV=prod): Pages and *.app.github.dev allowed, localhost refused
+                                                                         -> 13-A7-cors-prod.txt
+
+A8  PASS  python -m json.tool .devcontainer/devcontainer.json rc=0. All 10 required fields match: image
+          python:3.11, node 20 feature, postCreateCommand make setup, postStartCommand make run,
+          forwardPorts [7860], portsAttributes 7860 label "Sky & Paw backend" and visibility public,
+          hostRequirements cpus 2, containerEnv CW_STATE_SOURCE=mqtt and
+          DATA_DIR=/workspaces/sky-and-paw/data.                         -> 14-A4-A8-workflows-devcontainer.txt
+
+FLAKINESS: make test without network 3/3; make smoke 3/3; viewport + Pages cross-origin suite 3/3.
+No flaky results.
+
+DEFECTS
+-------
+D1 (low, not an A1-A8 failure): after a GitHub Pages build into frontend/dist, `make setup` and `make run`
+   do not rebuild, so the backend serves a console whose assets 404.
+   Steps: `VITE_BASE=/sky-and-paw/ make build` (the README documents this command), then `make setup`
+   ("Nothing to be done"), then `make run`. GET / references /sky-and-paw/assets/index-*.js and *.css,
+   and both return 404 from the backend, so the page is blank.        -> 20-observation-stale-pages-dist.txt
+   Cause: the $(DIST) target in the Makefile depends only on source files, not on VITE_BASE.
+   Suggested fix (for the engineer, not applied): write the Pages build to a separate outDir, or record
+   the base in a stamp that $(DIST) depends on.
+
+OBSERVATIONS (no action required for T0)
+----------------------------------------
+O1 Locally, `make smoke` falls back to the machine-wide playwright (Chromium 153) because the pinned
+   @playwright/test 1.47.2 Chromium is not installed here. QA ran the pinned path separately and it
+   passes (15-smoke-pinned-playwright-1.47.2.log).
+O2 pages.yml sets VITE_BASE=/${{ github.event.repository.name }}/ rather than the literal /sky-and-paw/.
+   This equals /sky-and-paw/ only if the repository is named sky-and-paw. The local remote is still
+   deviloffersservice-hub/discord-bitcoin-bot. GitHub answered that name with a numeric-ID redirect, which
+   is consistent with a rename, but this session cannot reach the sky-and-paw repository to confirm it.
+O3 Docker image not built: the Docker CLI is present but no daemon is running (no /var/run/docker.sock).
+   This is allowed by the T0 hard rules.                              -> 18-docker-not-built.txt
+O4 The Codespaces CORS pattern uses `https://.*\.app\.github\.dev`. Because Starlette full-matches the
+   pattern, the lookalike suffix origins QA tried were refused (09/13). A tighter `[^/]*` would still be
+   cleaner.
+
+EVIDENCE FILES (tests/evidence/T0/)
+-----------------------------------
+00-env-versions.txt, 01-make-setup.log, 02-make-test.log, 03-make-test-offline-x3.log, 04-pytest-verbose.log,
+05-A3-guard.txt, 06-make-run-server.log, 07-A2-curl.txt, 08-A2-ws-hello.txt, 09-A7-cors-dev.txt,
+10-A6-gitstatus-after-run.txt, 11-make-smoke-run{1,2,3}.log, 12-playwright-viewports-pages-run{1,2,3}.log,
+13-A7-cors-prod.txt, 14-A4-A8-workflows-devcontainer.txt, 15-smoke-pinned-playwright-1.47.2.log,
+16-A4-ci-pages-base-step.txt, 17-A5-readme-fresh-copy.txt, 18-docker-not-built.txt, 19-A6-gitstatus-final.txt,
+20-observation-stale-pages-dist.txt, smoke-shell-run{1,2,3}.png, smoke-shell-pinned-pw1.47.png,
+a5-readme-flow-localhost7860.png, viewports-run{1,2,3}/shell-{1280,1500,360}px.png,
+viewports-run{1,2,3}/shell-pages-crossorigin-1280px.png.
+smoke-shell.png was already committed by the engineer and was left untouched.
+A secret scan of this folder found no key-like strings, and .env has no non-empty values.

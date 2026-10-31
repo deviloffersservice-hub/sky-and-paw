@@ -1,0 +1,11 @@
+$ VITE_BASE=/sky-and-paw/ make build   (README: "builds for GitHub Pages")
+✓ built in 152ms
+$ make setup
+make: Nothing to be done for 'setup'.
+$ make run (PORT=7884) and fetch / plus the assets it references
+GET /sky-and-paw/assets/index-B_uUW2fB.js -> 404
+GET /sky-and-paw/assets/index-T5AOTo80.css -> 404
+$ make build   (restore default base)
+✓ built in 168ms
+src="/assets/index-B_uUW2fB.js"
+href="/assets/index-T5AOTo80.css"

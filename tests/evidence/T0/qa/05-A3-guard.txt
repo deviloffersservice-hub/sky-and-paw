@@ -1,0 +1,28 @@
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('live')"
+skypaw.sim.guard.SimulationOnlyViolation: Refusing Cyberwave mode 'live': it targets real hardware. Sky & Paw is simulation-only; allowed modes are ['mujoco', 'playground', 'sim', 'simulation'].
+rc=1
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('LIVE')"
+skypaw.sim.guard.SimulationOnlyViolation: Refusing Cyberwave mode 'LIVE': it targets real hardware. Sky & Paw is simulation-only; allowed modes are ['mujoco', 'playground', 'sim', 'simulation'].
+rc=1
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('real-world')"
+skypaw.sim.guard.SimulationOnlyViolation: Refusing Cyberwave mode 'real-world': it targets real hardware. Sky & Paw is simulation-only; allowed modes are ['mujoco', 'playground', 'sim', 'simulation'].
+rc=1
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('real')"
+skypaw.sim.guard.SimulationOnlyViolation: Refusing Cyberwave mode 'real': it targets real hardware. Sky & Paw is simulation-only; allowed modes are ['mujoco', 'playground', 'sim', 'simulation'].
+rc=1
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('tele')"
+skypaw.sim.guard.SimulationOnlyViolation: Refusing Cyberwave mode 'tele': it targets real hardware. Sky & Paw is simulation-only; allowed modes are ['mujoco', 'playground', 'sim', 'simulation'].
+rc=1
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('simulation')"
+rc=0
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('playground')"
+rc=0
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('sim')"
+rc=0
+$ python -c "from skypaw.sim.guard import assert_simulation_only; assert_simulation_only('mujoco')"
+rc=0
+$ exception type check
+raised SimulationOnlyViolation
+simulation -> simulation
+playground -> playground
+rc=0

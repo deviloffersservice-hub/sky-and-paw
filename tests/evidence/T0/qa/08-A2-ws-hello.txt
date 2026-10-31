@@ -1,0 +1,6 @@
+websockets 17.4 url ws://127.0.0.1:7860/ws
+origin=None sent={"type": "hello"} received={"type":"hello"} rtt_ms=0.99 echo_equal=True
+  invalid json -> {"type":"error","error":"invalid_json"}
+origin='https://deviloffersservice-hub.github.io' sent={"type": "hello"} received={"type":"hello"} rtt_ms=0.48 echo_equal=True
+  invalid json -> {"type":"error","error":"invalid_json"}
+rc=0

@@ -1,0 +1,43 @@
+../../../../../../../tmp/claude-0/-home-user-discord-bitcoin-bot/d1ac0a1f-06e2-582a-a01f-580701a8430d/scratchpad/pages-root/sky-and-paw/index.html                 0.91 kB │ gzip: 0.52 kB
+../../../../../../../tmp/claude-0/-home-user-discord-bitcoin-bot/d1ac0a1f-06e2-582a-a01f-580701a8430d/scratchpad/pages-root/sky-and-paw/assets/index-T5AOTo80.css  2.78 kB │ gzip: 1.17 kB
+../../../../../../../tmp/claude-0/-home-user-discord-bitcoin-bot/d1ac0a1f-06e2-582a-a01f-580701a8430d/scratchpad/pages-root/sky-and-paw/assets/index-B_uUW2fB.js   3.97 kB │ gzip: 1.92 kB │ map: 12.11 kB
+✓ built in 174ms
+--- built index.html asset refs:
+src="/sky-and-paw/assets/index-B_uUW2fB.js"
+href="/sky-and-paw/assets/index-T5AOTo80.css"
+curl: (7) Failed to connect to 127.0.0.1 port 7880 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to 127.0.0.1 port 7880 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to 127.0.0.1 port 7880 after 0 ms: Couldn't connect to server
+chromium 153.0.8010.12
+PASS [1280px] GET / -> 200
+PASS [1280px] title "Sky & Paw Ops"
+PASS [1280px] connected in 122 ms; status "Sky & Paw Ops · connected"
+PASS [1280px] default backend is same-origin: "http://127.0.0.1:7880 (same-origin)"
+PASS [1280px] no horizontal overflow (scrollWidth 1280 <= clientWidth 1280)
+PASS [1280px] no console/page errors []
+info screenshot /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/tests/evidence/T0/viewports-run2/shell-1280px.png
+PASS [1500px] GET / -> 200
+PASS [1500px] title "Sky & Paw Ops"
+PASS [1500px] connected in 98 ms; status "Sky & Paw Ops · connected"
+PASS [1500px] default backend is same-origin: "http://127.0.0.1:7880 (same-origin)"
+PASS [1500px] no horizontal overflow (scrollWidth 1500 <= clientWidth 1500)
+PASS [1500px] no console/page errors []
+info screenshot /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/tests/evidence/T0/viewports-run2/shell-1500px.png
+PASS [360px] GET / -> 200
+PASS [360px] title "Sky & Paw Ops"
+PASS [360px] connected in 92 ms; status "Sky & Paw Ops · connected"
+PASS [360px] default backend is same-origin: "http://127.0.0.1:7880 (same-origin)"
+PASS [360px] no horizontal overflow (scrollWidth 360 <= clientWidth 360)
+PASS [360px] no console/page errors []
+info screenshot /home/user/discord-bitcoin-bot/.claude/worktrees/agent-ad45dd0e4b1b2e1a7/tests/evidence/T0/viewports-run2/shell-360px.png
+PASS [pages] GET http://localhost:7881/sky-and-paw/?api=http%3A%2F%2F127.0.0.1%3A7880 -> 200
+PASS [pages] asset URLs honour VITE_BASE: ["/sky-and-paw/assets/index-B_uUW2fB.js","/sky-and-paw/assets/index-T5AOTo80.css"]
+PASS [pages] cross-origin ?api= connects over /ws
+PASS [pages] cross-origin fetch /healthz passes CORS (version "0.1.0")
+PASS [pages] backend line "http://127.0.0.1:7880 (query)"
+PASS [pages] localStorage.skypaw_api = "http://127.0.0.1:7880"
+PASS [pages] reload without ?api= -> "http://127.0.0.1:7880 (storage)"
+PASS [pages] ?api= (empty) clears storage -> "http://localhost:7881 (same-origin)", stored=null
+PASS [pages] no failed asset requests []
+QA VIEWPORTS PASS
+rc=0

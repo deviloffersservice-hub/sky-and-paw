@@ -1,0 +1,16 @@
+$ VITE_BASE=/sky-and-paw/ make build && grep -q src="/sky-and-paw/assets/ frontend/dist/index.html   (exact CI step)
+computing gzip size...
+dist/index.html                 0.91 kB │ gzip: 0.52 kB
+dist/assets/index-T5AOTo80.css  2.78 kB │ gzip: 1.17 kB
+dist/assets/index-B_uUW2fB.js   3.97 kB │ gzip: 1.92 kB │ map: 11.92 kB
+✓ built in 142ms
+dist/index.html references /sky-and-paw/assets/
+rc=0
+src="/sky-and-paw/assets/index-B_uUW2fB.js"
+href="/sky-and-paw/assets/index-T5AOTo80.css"
+
+$ make build   (restore default base)
+dist/assets/index-B_uUW2fB.js   3.97 kB │ gzip: 1.92 kB │ map: 11.92 kB
+✓ built in 166ms
+src="/assets/index-B_uUW2fB.js"
+href="/assets/index-T5AOTo80.css"
