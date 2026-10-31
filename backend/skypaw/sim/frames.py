@@ -61,12 +61,27 @@ def frame_stats(frame: np.ndarray) -> FrameStats:
     return FrameStats(tuple(arr.shape), round(float(arr.mean()), 2), round(float(arr.std()), 2))
 
 
+def is_placeholder(frame: np.ndarray, *, min_std: float = MIN_STD) -> bool:
+    """The loading placeholder: a uniform, clearly blue frame (day one: mean 85, std ~0).
+
+    A uniform *grey* frame is a real render (the X2 bottom camera at 0.6 m sees only the
+    flat ground plane: mean ~69-119, std < 1), so uniformity alone is not rejected.
+    """
+    arr = np.asarray(frame, dtype=np.float64)
+    if arr.ndim != 3 or arr.shape[2] < 3:
+        return False
+    if max(float(arr[..., c].std()) for c in range(3)) >= min_std:
+        return False
+    b, g, r = (float(arr[..., c].mean()) for c in range(3))  # BGR
+    return b - max(g, r) > 20.0
+
+
 def is_usable(frame: Any, *, min_mean: float = MIN_MEAN, min_std: float = MIN_STD) -> bool:
-    """True for a real render: an image array that is neither black nor uniform."""
+    """True for a real render: an image array that is not black and not the placeholder."""
     if not isinstance(frame, np.ndarray) or frame.ndim < 2 or frame.size == 0:
         return False
     stats = frame_stats(frame)
-    return stats.mean > min_mean and stats.std >= min_std
+    return stats.mean > min_mean and not is_placeholder(frame, min_std=min_std)
 
 
 @dataclass
@@ -147,6 +162,7 @@ __all__ = [
     "FrameStats",
     "capture",
     "frame_stats",
+    "is_placeholder",
     "is_usable",
     "save_jpeg",
     "wait_for_frame",
