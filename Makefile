@@ -9,6 +9,7 @@
 #   make lock      regenerate backend/requirements*.txt from backend/pyproject.toml
 #   make scene     create/reuse the Cyberwave scene, run MuJoCo (120 s), save frames (billable)
 #   make scene-dry print the scene plan (GET requests only, no simulation)
+#   make mission   headless v1 runtime: MuJoCo (<= 300 s) + drone survey, fakes elsewhere (billable)
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
@@ -30,10 +31,10 @@ NODE_STAMP := frontend/node_modules/.skypaw-setup
 DIST := frontend/dist/index.html
 FRONTEND_SRC := $(wildcard frontend/src/*) frontend/index.html frontend/vite.config.ts frontend/tsconfig.json
 
-.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean scene scene-dry glb FORCE
+.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean scene scene-dry glb mission FORCE
 
 help:
-	@sed -n '2,11p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
+	@sed -n '2,12p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
 
 setup: $(PY_STAMP) $(NODE_STAMP) $(DIST)
 
@@ -76,7 +77,7 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
-LINT_SCRIPTS := scripts/scene.py scripts/overhead.py
+LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py
 
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend
@@ -104,6 +105,12 @@ scene: $(PY_STAMP)
 
 scene-dry: $(PY_STAMP)
 	$(VPY) scripts/scene.py --dry-run $(SCENE_ARGS)
+
+# v1 mission runtime, headless. MISSION_ARGS overrides the defaults, e.g.
+# MISSION_ARGS="--env skypaw-v1-dev --duration 240 --autostart-survey --serve".
+MISSION_ARGS ?= --env skypaw-v1 --duration 300 --autostart-survey
+mission: $(PY_STAMP)
+	$(VPY) scripts/mission.py $(MISSION_ARGS)
 
 # Rebuild backend/skypaw/scene/rubble.glb from site.yaml (offline).
 glb: $(PY_STAMP)
