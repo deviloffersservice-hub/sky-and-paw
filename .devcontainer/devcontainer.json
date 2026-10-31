@@ -1,0 +1,26 @@
+{
+  "name": "Sky & Paw",
+  "image": "mcr.microsoft.com/devcontainers/python:3.3.2-3.11-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20.18.0"
+    }
+  },
+  "postCreateCommand": "make setup",
+  "postStartCommand": "make run",
+  "forwardPorts": [7860],
+  "portsAttributes": {
+    "7860": {
+      "label": "Sky & Paw backend",
+      "visibility": "public"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2
+  },
+  "containerEnv": {
+    "CW_STATE_SOURCE": "mqtt",
+    "SKYPAW_ENV": "prod",
+    "DATA_DIR": "/workspaces/sky-and-paw/data"
+  }
+}
