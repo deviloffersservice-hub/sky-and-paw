@@ -96,7 +96,10 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
     async def do_translate():
         out = await client.translate(TR_TEXT, "en-IN", "mr-IN")
         rec = client.last.get("translate")
-        return out, {"ms": rec and round(rec.latency_ms), "ttfb_ms": rec and round(rec.ttfb_ms)}
+        return out, {
+            "ms": rec and round(rec.latency_ms),
+            "ttfb_ms": rec and round(rec.ttfb_ms),
+        }
 
     async def do_plan():
         vs = VoiceSettings()
@@ -116,7 +119,10 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
                 f"finish_reason={a['finish_reason']} latency_ms={a['latency_ms']}"
             )
             print(f"    usage={json.dumps(a['usage'], ensure_ascii=False)}")
-            print(f"    content={a['content']!r}" + (f" error={a['error']}" if a["error"] else ""))
+            print(
+                f"    content={a['content']!r}"
+                + (f" error={a['error']}" if a["error"] else "")
+            )
         plan_json = json.dumps(asdict(p), ensure_ascii=False)
         print(f"  plan JSON ({trace.source}): {plan_json}")
         (out_dir / "plan.json").write_text(
@@ -132,21 +138,30 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
             f"{used.model if used else '-'} {p.intent} {p.target} conf={p.confidence} "
             f"finish={used.finish_reason if used else '-'} attempts={len(trace.attempts)}"
         )
-        extra: dict[str, Any] = {"ms": round(sum(a.latency_ms or 0 for a in trace.attempts))}
+        extra: dict[str, Any] = {
+            "ms": round(sum(a.latency_ms or 0 for a in trace.attempts))
+        }
         if not trace.got_content:
-            extra["status"] = "empty"  # no attempt returned plan content: the check fails
+            extra["status"] = (
+                "empty"  # no attempt returned plan content: the check fails
+            )
         return note, extra
 
     clip: dict[str, bytes] = {}
 
     async def do_tts():
-        wav = await client.tts(CMD.text, CMD.lang, speaker_for(CMD.lang), sample_rate=16000)
+        wav = await client.tts(
+            CMD.text, CMD.lang, speaker_for(CMD.lang), sample_rate=16000
+        )
         clip["wav"] = wav
         (out_dir / "tts_hi_16k.wav").write_bytes(wav)
         secs = len(_pcm16k(wav)) / stt.BYTES_PER_S
         rec = client.last.get("tts")
         note = f"{len(wav)} bytes, {secs:.2f} s, speaker {speaker_for(CMD.lang)}"
-        return note, {"ms": rec and round(rec.latency_ms), "ttfb_ms": rec and round(rec.ttfb_ms)}
+        return note, {
+            "ms": rec and round(rec.latency_ms),
+            "ttfb_ms": rec and round(rec.ttfb_ms),
+        }
 
     async def do_stt_rest():
         ev = await stt.transcribe_clip(client, clip["wav"], "auto")
@@ -179,7 +194,9 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
 
     try:
         await check(
-            "translate en→mr (sarvam-translate:v1)", meter.translate(len(TR_TEXT)), do_translate
+            "translate en→mr (sarvam-translate:v1)",
+            meter.translate(len(TR_TEXT)),
+            do_translate,
         )
         await check(
             "plan (105b-conversations → 105b)",
@@ -189,7 +206,9 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
         await check("tts hi-IN priya (bulbul:v3)", meter.tts(len(CMD.text)), do_tts)
         if "wav" in clip:
             await check("stt REST (saaras:v4 codemix)", meter.stt(5), do_stt_rest)
-            await check("stt realtime (saaras:v3-realtime)", meter.stt(10), do_stt_realtime)
+            await check(
+                "stt realtime (saaras:v3-realtime)", meter.stt(10), do_stt_realtime
+            )
         if prewarm:
             cache = TtsCache(client, Path(get_settings().data_dir))
 
@@ -218,9 +237,15 @@ def print_table(rows: list[Row], meter: CreditMeter) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    ap.add_argument("--live", action="store_true", help="call the real API (SKYPAW_SARVAM_LIVE=1)")
-    ap.add_argument("--prewarm", action="store_true", help="also synthesise all scripted phrases")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    ap.add_argument(
+        "--live", action="store_true", help="call the real API (SKYPAW_SARVAM_LIVE=1)"
+    )
+    ap.add_argument(
+        "--prewarm", action="store_true", help="also synthesise all scripted phrases"
+    )
     ap.add_argument("--out", type=Path, default=None, help="where to save raw outputs")
     args = ap.parse_args()
 
@@ -234,19 +259,27 @@ def main() -> int:
 
     if args.live:
         if os.environ.get("SKYPAW_SARVAM_LIVE") != "1":
-            print("refusing: set SKYPAW_SARVAM_LIVE=1 to spend real credits", file=sys.stderr)
+            print(
+                "refusing: set SKYPAW_SARVAM_LIVE=1 to spend real credits",
+                file=sys.stderr,
+            )
             return 2
         if settings.sarvam_api_key is None:
             print("SARVAM_API_KEY is not set", file=sys.stderr)
             return 2
-        if CA_BUNDLE.exists():
+        try:
+            ca_present = CA_BUNDLE.exists()
+        except OSError:  # e.g. /root not readable on CI runners
+            ca_present = False
+        if ca_present:
             os.environ.setdefault("SSL_CERT_FILE", str(CA_BUNDLE))
         client: Any = SarvamClient.from_settings(settings)
         print("LIVE run against https://api.sarvam.ai")
     else:
         sock = FakeRealtimeSocket(transcript=CMD.text, language=CMD.lang)
         client = FakeSarvam(
-            realtime=[sock], stt_rest=[{"transcript": CMD.text, "language_code": CMD.lang}]
+            realtime=[sock],
+            stt_rest=[{"transcript": CMD.text, "language_code": CMD.lang}],
         )
         print("OFFLINE rehearsal with FakeSarvam (pass --live for real calls)")
 
