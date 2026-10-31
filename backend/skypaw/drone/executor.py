@@ -70,7 +70,12 @@ class DroneConfig:
     burst_s: float = 1.0
     tol: float = 0.5
     heading_tol: float = 0.25
-    turn_rate: float = 0.8
+    #: Wider heading tolerance while far from the target (pure pursuit re-aims every burst);
+    #: live run 1 spent most of its time in small heading corrections at 0.25 rad.
+    heading_tol_far: float = 0.45
+    far_m: float = 2.5
+    turn_rate: float = 1.0
+    min_turn_s: float = 0.3
     capture_spacing: float = 2.5
     reveal_r: float = 2.8
     stale_s: float = 3.0
@@ -282,7 +287,9 @@ class SurveyDroneExecutor:
         self.sink.drone_log("takeoff", f"Airborne at {self.cfg.alt:.0f} m")
 
     async def _capture(self, p: Pose) -> None:
+        t0 = self.clock()
         frame = await asyncio.to_thread(self.camera.grab)
+        log_event(log, "drone_capture", s=round(self.clock() - t0, 2), ok=frame is not None)
         if frame is None:
             log_event(log, "capture_failed", level=30, pos=p.xyz)
             return
@@ -338,15 +345,30 @@ class SurveyDroneExecutor:
             if dist <= cfg.tol:
                 return True
             err = wrap(math.atan2(ty - p.y, tx - p.x) - p.yaw)
-            if abs(err) > cfg.heading_tol:
+            tol = cfg.heading_tol_far if dist > cfg.far_m else cfg.heading_tol
+            if abs(err) > tol:
                 rate = cfg.turn_rate if err > 0 else -cfg.turn_rate
-                await asyncio.to_thread(
-                    self.controls.turn, rate, min(cfg.burst_s, abs(err) / cfg.turn_rate)
-                )
+                dur = min(cfg.burst_s, max(cfg.min_turn_s, abs(err) / cfg.turn_rate))
+                await self._cmd("turn", self.controls.turn, rate, dur, err=err, dist=dist)
                 continue
             speed = self._burst_speed(p, dist)
-            await asyncio.to_thread(self.controls.forward, speed, cfg.burst_s)
+            await self._cmd(
+                "forward", self.controls.forward, speed, cfg.burst_s, err=err, dist=dist
+            )
         return False
+
+    async def _cmd(self, kind: str, fn: Callable[..., None], *args: float, **ctx: float) -> None:
+        """Run a blocking flight command in a thread and log it with its wall time."""
+        t0 = self.clock()
+        await asyncio.to_thread(fn, *args)
+        log_event(
+            log,
+            "drone_cmd",
+            kind=kind,
+            args=[round(a, 3) for a in args],
+            s=round(self.clock() - t0, 2),
+            **{k: round(v, 2) for k, v in ctx.items()},
+        )
 
     async def _hold_here(self, reason: str) -> None:
         try:
