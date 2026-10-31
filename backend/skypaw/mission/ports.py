@@ -3,10 +3,12 @@
 Each stream implements its port and ships a fake for the others to test against.
 Positions are Cyberwave world-frame [x, y, z] metres (z up).
 """
+
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Protocol
+from typing import Any, Protocol
 
 
 @dataclass
@@ -57,7 +59,9 @@ class Detector(Protocol):
 
 
 class Voice(Protocol):
-    def transcribe_stream(self, pcm_chunks: AsyncIterator[bytes], lang: str) -> AsyncIterator[dict[str, Any]]: ...
+    def transcribe_stream(
+        self, pcm_chunks: AsyncIterator[bytes], lang: str
+    ) -> AsyncIterator[dict[str, Any]]: ...
     async def plan(self, text: str, lang: str) -> Plan: ...
     async def speak(self, text: str, lang: str) -> str: ...  # returns /tts/<sha>.wav URL
     async def translate(self, text: str, src: str, dst: str) -> str: ...
