@@ -169,17 +169,16 @@ def run_simulation(
 ) -> Iterator[SimRun]:
     """Start a MuJoCo simulation of ``env_id``, wait until ready, yield, always stop it.
 
-    ``duration_s`` defaults to ``SIM_DEFAULT_DURATION_S`` (120) and must not exceed
-    ``SIM_MAX_DURATION_S`` (600).
+    ``duration_s`` defaults to ``SIM_DEFAULT_DURATION_S`` (120) and must not exceed the
+    optional ``SIM_MAX_DURATION_S``.
     """
     settings = settings or get_settings()
     assert_simulation_only(settings.cw_runtime_mode)
     assert_client_simulation(cw)
     duration = float(duration_s if duration_s is not None else settings.sim_default_duration_s)
-    if not 0 < duration <= settings.sim_max_duration_s:
-        raise ValueError(
-            f"duration must be in (0, {settings.sim_max_duration_s}] s, got {duration}"
-        )
+    cap = settings.sim_max_duration_s
+    if not duration > 0 or (cap is not None and duration > cap):
+        raise ValueError(f"duration must be > 0 s (and <= {cap} s when capped), got {duration}")
     run = SimRun(environment_id=env_id, duration_s=duration)
     log_event(
         log,

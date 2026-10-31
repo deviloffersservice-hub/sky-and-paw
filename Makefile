@@ -9,7 +9,7 @@
 #   make lock      regenerate backend/requirements*.txt from backend/pyproject.toml
 #   make scene     create/reuse the Cyberwave scene, run MuJoCo (120 s), save frames (billable)
 #   make scene-dry print the scene plan (GET requests only, no simulation)
-#   make mission   headless v1 runtime: MuJoCo (<= 600 s) + drone survey, fakes elsewhere (billable)
+#   make mission   headless v1 runtime: MuJoCo (default 600 s, no cap) + drone survey, fakes elsewhere (billable)
 #   make go2       Go2 to V-01 on our grid route in MuJoCo (240 s, billable)
 
 SHELL := /bin/bash

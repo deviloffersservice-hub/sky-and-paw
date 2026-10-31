@@ -59,7 +59,9 @@ class Settings(BaseSettings):
     port: int = 7860
 
     # Budget guards for live simulator runs.
-    sim_max_duration_s: int = Field(default=600, gt=0)
+    # Optional cap on one simulation run; unset means no cap. The requested duration is
+    # still passed to Cyberwave, which stops the run itself when it elapses.
+    sim_max_duration_s: int | None = Field(default=None, gt=0)
     sim_default_duration_s: int = Field(default=120, gt=0)
     credit_floor: float = Field(default=15, ge=0)
 

@@ -133,8 +133,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--frame-timeout", type=float, default=40.0)
     p.add_argument("--pose-timeout", type=float, default=60.0)
     args = p.parse_args(argv)
-    if not 0 < args.duration <= s.sim_max_duration_s:
-        p.error(f"--duration must be in (0, {s.sim_max_duration_s}] s")
+    cap = s.sim_max_duration_s
+    if not args.duration > 0 or (cap is not None and args.duration > cap):
+        p.error(f"--duration must be > 0 s (and <= SIM_MAX_DURATION_S={cap} when set)")
     return args
 
 

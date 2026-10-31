@@ -35,16 +35,17 @@ def simulation_affect(cw: C, *, duration: float, environment_id: str | None = No
     """Put ``cw`` (a ``cyberwave.Cyberwave`` client) into simulation mode for ``duration`` s.
 
     Raises ``SimulationOnlyViolation`` if the configured ``CW_RUNTIME_MODE`` is not a
-    simulation mode, and ``ValueError`` if ``duration`` is not in (0, SIM_MAX_DURATION_S].
+    simulation mode, and ``ValueError`` if ``duration`` is not positive or exceeds the
+    optional ``SIM_MAX_DURATION_S``.
     """
     settings = get_settings()
     assert_simulation_only(settings.cw_runtime_mode)
     if isinstance(duration, bool) or not isinstance(duration, int | float):
         raise ValueError(f"duration must be a number of seconds, got {duration!r}")
-    if not 0 < duration <= settings.sim_max_duration_s:
+    cap = settings.sim_max_duration_s
+    if not duration > 0 or (cap is not None and duration > cap):
         raise ValueError(
-            f"duration must be in (0, {settings.sim_max_duration_s}] s "
-            f"(SIM_MAX_DURATION_S), got {duration}"
+            f"duration must be > 0 s (and <= SIM_MAX_DURATION_S={cap} when set), got {duration}"
         )
     log_event(
         log,

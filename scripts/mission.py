@@ -5,7 +5,7 @@
     scripts/mission.py --offline --autostart-survey      # kinematic drone, no Cyberwave
 
 Live mode: create/reuse the scene (look up by name), start MuJoCo through
-``run_simulation`` (``duration`` <= 600 s, always stopped in ``finally``), MQTT pose over
+``run_simulation`` (any positive ``duration``, always stopped in ``finally``), MQTT pose over
 WSS, and the real drone executor. ``--autostart-survey`` proposes and auto-confirms the
 aerial survey as soon as the simulation is ready; the run ends when the survey is over
 (``--linger`` s later), when the simulation ends, or on Ctrl-C. ``--serve`` also runs the
@@ -41,7 +41,7 @@ from skypaw.mission.sim_session import SimSession  # noqa: E402
 from skypaw.mission.state import SNAPSHOT_KEYS  # noqa: E402
 
 log = get_logger("skypaw.scripts.mission")
-MAX_DURATION_S = 600.0
+DEFAULT_DURATION_S = 600.0
 
 
 def summary(snap: dict[str, Any]) -> dict[str, Any]:
@@ -261,7 +261,9 @@ async def run(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Headless Sky & Paw mission runtime.")
     ap.add_argument("--env", default="skypaw-v1")
-    ap.add_argument("--duration", type=float, default=MAX_DURATION_S)
+    ap.add_argument(
+        "--duration", type=float, default=DEFAULT_DURATION_S, help="sim seconds (no cap)"
+    )
     ap.add_argument("--autostart-survey", action="store_true")
     ap.add_argument("--offline", action="store_true", help="kinematic drone, no Cyberwave")
     ap.add_argument("--real-go2", action="store_true", help="stream E Go2Controller on the sim")
@@ -274,8 +276,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--evidence-dir", type=Path, default=REPO_ROOT / "tests/evidence/V1-A")
     args = ap.parse_args(argv)
     configure_logging(get_settings().log_level)
-    if not 0 < args.duration <= MAX_DURATION_S:
-        log_event(log, "bad_duration", level=40, duration=args.duration, max=MAX_DURATION_S)
+    cap = get_settings().sim_max_duration_s
+    if not args.duration > 0 or (cap is not None and args.duration > cap):
+        log_event(log, "bad_duration", level=40, duration=args.duration, max=cap)
         return 2
     return asyncio.run(run(args))
 

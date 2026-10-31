@@ -134,7 +134,7 @@ def test_settings_defaults_match_spec(monkeypatch: pytest.MonkeyPatch) -> None:
     s = Settings(_env_file=None)
     assert s.port == 7860
     assert str(s.data_dir) == "/data"
-    assert s.sim_max_duration_s == 600
+    assert s.sim_max_duration_s is None
     assert s.credit_floor == 15
     assert s.cw_state_source == "rest"
     assert s.cyberwave_api_key is None and s.sarvam_api_key is None

@@ -148,8 +148,9 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     p.add_argument("--evidence-dir", type=Path, default=REPO_ROOT / "tests" / "evidence" / "V1-E")
     args = p.parse_args(argv)
-    if not 0 < args.duration <= min(300, s.sim_max_duration_s):
-        p.error("--duration must be in (0, 300] s (PROTOCOL budget)")
+    cap = s.sim_max_duration_s
+    if not args.duration > 0 or (cap is not None and args.duration > cap):
+        p.error(f"--duration must be > 0 s (and <= SIM_MAX_DURATION_S={cap} when set)")
     return args
 
 

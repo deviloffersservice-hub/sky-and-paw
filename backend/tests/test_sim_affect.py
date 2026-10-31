@@ -54,7 +54,7 @@ def test_refuses_when_configured_mode_is_live(
     assert cw.calls == []
 
 
-@pytest.mark.parametrize("duration", [0, -1, 601, 10_000, True, "60", None])
+@pytest.mark.parametrize("duration", [0, -1, True, "60", None])
 def test_rejects_bad_duration(monkeypatch: pytest.MonkeyPatch, duration: Any) -> None:
     monkeypatch.delenv("CW_RUNTIME_MODE", raising=False)
     monkeypatch.delenv("SIM_MAX_DURATION_S", raising=False)
@@ -62,6 +62,14 @@ def test_rejects_bad_duration(monkeypatch: pytest.MonkeyPatch, duration: Any) ->
     with pytest.raises(ValueError):
         simulation_affect(cw, duration=duration)
     assert cw.calls == []
+
+
+def test_no_duration_cap_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CW_RUNTIME_MODE", raising=False)
+    monkeypatch.delenv("SIM_MAX_DURATION_S", raising=False)
+    cw = FakeCyberwave()
+    simulation_affect(cw, duration=3600)
+    assert len(cw.calls) == 1
 
 
 def test_duration_cap_follows_settings(monkeypatch: pytest.MonkeyPatch) -> None:
