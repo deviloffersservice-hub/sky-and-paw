@@ -78,11 +78,7 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
-<<<<<<< HEAD
-LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/go2_mission.py scripts/detect.py scripts/voice_check.py scripts/build_demo_page.py
-=======
-LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py scripts/go2_mission.py
->>>>>>> origin/feat/v1-runtime
+LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py scripts/go2_mission.py scripts/detect.py scripts/voice_check.py scripts/build_demo_page.py
 
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend
