@@ -5,15 +5,14 @@
     "id": "20261031_doc-chat",
     "object": "chat.completion",
     "created": 1793433600,
-    "model": "sarvam-105b",
+    "model": "sarvam-105b-conversations",
     "choices": [
       {
         "index": 0,
         "finish_reason": "stop",
         "message": {
           "role": "assistant",
-          "content": "{\"intent\": \"navigate_go2\", \"target\": \"V-01\", \"language\": \"hi-IN\", \"text_to_speak\": null, \"confidence\": 0.94}",
-          "reasoning_content": "The lead asks to send the dog (Go2) to V-01."
+          "content": "{\"intent\": \"navigate_go2\", \"target\": \"V-01\", \"language\": \"hi-IN\", \"text_to_speak\": null, \"confidence\": 0.94}"
         }
       }
     ],

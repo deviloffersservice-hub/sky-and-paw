@@ -1,0 +1,28 @@
+{
+  "_provenance": "reconstructed from the GitHub Actions live run 2026-10-31 09:38 UTC (docs/RESEARCH.md, last paragraph): sarvam-105b, reasoning_effort=low, max_tokens=512, strict json_schema -> finish_reason=length, content=null, reasoning_tokens=511, 5545 ms. Fields not in that summary (ids, prompt_tokens, reasoning text) are placeholders.",
+  "status": 200,
+  "body": {
+    "id": "20261031_actions-llm",
+    "object": "chat.completion",
+    "model": "sarvam-105b",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "length",
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "reasoning_content": "The lead says dog ko V-01 ke paas bhejo ..."
+        }
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 160,
+      "completion_tokens": 512,
+      "total_tokens": 672,
+      "completion_tokens_details": {
+        "reasoning_tokens": 511
+      }
+    }
+  }
+}
