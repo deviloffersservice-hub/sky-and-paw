@@ -17,6 +17,9 @@ STATIC_URL="http://localhost:${STATIC_PORT}"
 SHOT="${SMOKE_SCREENSHOT:-${ROOT}/frontend/test-results/smoke-shell.png}"
 LOG="${SMOKE_LOG:-${ROOT}/frontend/test-results/smoke-server.log}"
 export DATA_DIR="${DATA_DIR:-${ROOT}/data}"
+# Relative paths are taken from the caller's directory (the script later cds into frontend/).
+case "$SHOT" in /*) ;; *) SHOT="${PWD}/${SHOT}" ;; esac
+case "$LOG" in /*) ;; *) LOG="${PWD}/${LOG}" ;; esac
 
 mkdir -p "$(dirname "$SHOT")" "$(dirname "$LOG")"
 

@@ -1,0 +1,25 @@
+{
+  "name": "Sky & Paw",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "postCreateCommand": "make setup",
+  "postStartCommand": "make run",
+  "forwardPorts": [7860],
+  "portsAttributes": {
+    "7860": {
+      "label": "Sky & Paw backend",
+      "visibility": "public"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2
+  },
+  "containerEnv": {
+    "CW_STATE_SOURCE": "mqtt",
+    "DATA_DIR": "/workspaces/sky-and-paw/data"
+  }
+}

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint, test, build, smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # .venv + pinned Python deps + editable backend; npm ci
+      - name: make setup
+        run: make setup PYTHON=python
+
+      # Same steps as local: ruff check, ruff format --check, pytest, tsc --noEmit
+      - name: make test
+        run: make test
+
+      - name: make build (frontend)
+        run: make build
+
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      # Backend + second static origin; Playwright: /healthz 200, title, /ws hello, ?api= + CORS
+      - name: Playwright smoke
+        run: scripts/smoke.sh
+
+      - name: Upload smoke screenshot and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke
+          path: frontend/test-results/
+          if-no-files-found: ignore
+
+      - name: Pages build honours VITE_BASE
+        env:
+          VITE_BASE: /sky-and-paw/
+        run: |
+          make build
+          grep -q 'src="/sky-and-paw/assets/' frontend/dist/index.html
+          echo "dist/index.html references /sky-and-paw/assets/"
