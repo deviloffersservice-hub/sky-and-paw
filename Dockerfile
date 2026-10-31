@@ -5,7 +5,8 @@
 # The ML stack (requirements-ml.txt) is not included at T0; M3 adds it.
 
 # --- Stage 1: build the frontend -------------------------------------------------------
-FROM node:20.18.0-bookworm-slim AS web
+# Base images pinned to exact tag + multi-arch index digest (resolved from the registry 2026-10-31).
+FROM node:20.18.0-bookworm-slim@sha256:28fbbb764069c698ead61d6a739a7615e8f0e07a4b8fe1473ceca70c1c3d6aaa AS web
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -14,7 +15,7 @@ ARG VITE_BASE=/
 RUN VITE_BASE="${VITE_BASE}" npm run build
 
 # --- Stage 2: Python runtime ------------------------------------------------------------
-FROM python:3.11-slim AS runtime
+FROM python:3.11.18-slim-bookworm@sha256:94a8fee35252d06ab75856f15f12c7bae67b10e8a6da93c7fded82b2610926cd AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
