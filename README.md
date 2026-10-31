@@ -18,7 +18,7 @@ Needs Python 3.11+ (3.11 is the target and is preferred by `make setup`; 3.13 al
 gets numpy 2.1.3 instead of 1.26.4, which has no 3.13 wheels), Node 20+, `make`.
 
 ```bash
-git clone https://github.com/deviloffersservice-hub/discord-bitcoin-bot.git sky-and-paw
+git clone https://github.com/deviloffersservice-hub/sky-and-paw.git
 cd sky-and-paw
 cp .env.example .env      # optional for T0: every value may stay empty
 make setup                # .venv + pinned Python deps, npm ci, frontend build (idempotent)
@@ -66,7 +66,7 @@ committed. The important ones:
 
 ## Use it from GitHub Codespaces (one click, free tier)
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/deviloffersservice-hub/discord-bitcoin-bot?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/deviloffersservice-hub/sky-and-paw?quickstart=1)
 
 1. Once only: add `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` under the repository's
    **Settings → Secrets and variables → Codespaces**.
