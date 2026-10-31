@@ -67,7 +67,11 @@ class DroneConfig:
     alt: float = 6.0
     speed: float = 2.2
     min_speed: float = 0.3
-    burst_s: float = 1.0
+    #: 0.85 s at 2.2 m/s = 1.87 m commanded; live run 2 saw bursts carry up to 1.28x the
+    #: commanded distance (momentum), so one burst stays under the 2.5 m capture spacing.
+    burst_s: float = 0.85
+    #: Capture before a forward burst once this much travel accumulated since the last frame.
+    capture_min_m: float = 0.2
     tol: float = 0.5
     heading_tol: float = 0.25
     #: Wider heading tolerance while far from the target (pure pursuit re-aims every burst);
@@ -338,9 +342,6 @@ class SurveyDroneExecutor:
             p = self._fresh_pose()
             if capture:
                 self.sink.drone_reveal(p.x, p.y, cfg.reveal_r)
-                # Capture now if the next burst could stretch the gap past the spacing.
-                if self._since_capture + cfg.max_burst_m > cfg.capture_spacing:
-                    await self._capture(p)
             dist = math.hypot(tx - p.x, ty - p.y)
             if dist <= cfg.tol:
                 return True
@@ -351,6 +352,8 @@ class SurveyDroneExecutor:
                 dur = min(cfg.burst_s, max(cfg.min_turn_s, abs(err) / cfg.turn_rate))
                 await self._cmd("turn", self.controls.turn, rate, dur, err=err, dist=dist)
                 continue
+            if capture and self._since_capture >= cfg.capture_min_m:
+                await self._capture(p)  # frame at rest, then at most one burst of travel
             speed = self._burst_speed(p, dist)
             await self._cmd(
                 "forward", self.controls.forward, speed, cfg.burst_s, err=err, dist=dist
