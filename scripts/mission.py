@@ -114,7 +114,11 @@ async def run(args: argparse.Namespace) -> int:
         settings = settings.model_copy(update={"data_dir": Path(args.data_dir)})
     # Headless default: fakes for the Go2 and voice (--real-go2 / --real-voice to opt in).
     settings = settings.model_copy(
-        update={"skypaw_fake_go2": not args.real_go2, "skypaw_fake_voice": not args.real_voice}
+        update={
+            "skypaw_fake_go2": not args.real_go2,
+            "skypaw_fake_voice": not args.real_voice,
+            "skypaw_realtime_fakes": args.realtime,
+        }
     )
     ev: Path = args.evidence_dir
     ev.mkdir(parents=True, exist_ok=True)
@@ -125,7 +129,7 @@ async def run(args: argparse.Namespace) -> int:
         from skypaw.mission.fakes import KinematicDrone
 
         rt = MissionRuntime(settings, autostart_survey=args.autostart_survey)
-        kd = KinematicDrone(-11.5, -5.5, 0.6)
+        kd = KinematicDrone(-11.5, -5.5, 0.6, realtime=args.realtime)
         rt.drone = SurveyDroneExecutor(kd, kd, kd, rt, rt.frames_dir, mission_t=rt.state.t)
     else:
         sim = SimSession(args.env, args.duration, settings=settings)
@@ -266,6 +270,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--autostart-survey", action="store_true")
     ap.add_argument("--offline", action="store_true", help="kinematic drone, no Cyberwave")
+    ap.add_argument(
+        "--realtime", action="store_true", help="offline robots move at real speed (demo video)"
+    )
     ap.add_argument("--real-go2", action="store_true", help="stream E Go2Controller on the sim")
     ap.add_argument("--real-voice", action="store_true", help="SarvamVoice (spends Sarvam credit)")
     ap.add_argument("--serve", action="store_true", help="also serve /ws and /api/state")

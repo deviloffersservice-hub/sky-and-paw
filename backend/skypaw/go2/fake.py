@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -40,6 +41,19 @@ class VirtualClock:
         """``asyncio.sleep`` replacement: advances the clock and yields once."""
         self.advance(dt)
         await asyncio.sleep(0)
+
+
+class WallClock(VirtualClock):
+    """Real time: ``advance`` blocks (bursts take their duration), ``sleep`` really waits."""
+
+    def __call__(self) -> float:
+        return time.monotonic()
+
+    def advance(self, dt: float) -> None:
+        time.sleep(max(0.0, float(dt)))
+
+    async def sleep(self, dt: float) -> None:
+        await asyncio.sleep(dt)
 
 
 @dataclass
@@ -124,7 +138,12 @@ class KinematicGo2:
             self.on_move(self)
 
     def latest(self) -> PoseReading | None:
-        """The last published pose (``PoseSource``)."""
+        """The last published pose (``PoseSource``).
+
+        In real time a standing robot keeps publishing, so the pose stays fresh.
+        """
+        if isinstance(self.clock, WallClock) and self._last_pose is not None:
+            self._publish()
         return self._last_pose
 
 
@@ -141,9 +160,14 @@ def fake_go2_executor(
     grid: OccupancyGrid | None = None,
     config: ControllerConfig | None = None,
     on_progress: ProgressCallback | None = None,
+    realtime: bool = False,
 ) -> tuple[Go2Controller, KinematicGo2]:
-    """A real controller driving a :class:`KinematicGo2` at ``start`` = (x, y, yaw)."""
-    robot = KinematicGo2(x=start[0], y=start[1], yaw=start[2])
+    """A real controller driving a :class:`KinematicGo2` at ``start`` = (x, y, yaw).
+
+    ``realtime``: bursts take their real duration (in a worker thread), for demos.
+    """
+    clock = WallClock() if realtime else VirtualClock()
+    robot = KinematicGo2(x=start[0], y=start[1], yaw=start[2], clock=clock)
     ctrl = Go2Controller(
         robot,
         robot,
@@ -152,9 +176,9 @@ def fake_go2_executor(
         on_progress=on_progress,
         clock=robot.clock,
         sleep=robot.clock.sleep,
-        run_blocking=run_inline,
+        run_blocking=asyncio.to_thread if realtime else run_inline,
     )
     return ctrl, robot
 
 
-__all__ = ["KinematicGo2", "VirtualClock", "fake_go2_executor", "run_inline"]
+__all__ = ["KinematicGo2", "VirtualClock", "WallClock", "fake_go2_executor", "run_inline"]

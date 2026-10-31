@@ -303,7 +303,9 @@ class MissionRuntime:
             return None  # the real controller is built when the simulation is ready
         from skypaw.go2.fake import fake_go2_executor
 
-        ctrl, _robot = fake_go2_executor(on_progress=self.go2_progress)
+        ctrl, _robot = fake_go2_executor(
+            on_progress=self.go2_progress, realtime=self.settings.skypaw_realtime_fakes
+        )
         return ctrl
 
     def go2_progress(self, progress: Any) -> None:

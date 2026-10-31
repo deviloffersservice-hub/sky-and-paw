@@ -201,8 +201,10 @@ class KinematicDrone:
         gain: float = 0.95,
         turn_gain: float = 0.8,
         freeze_after: int | None = None,
+        realtime: bool = False,
     ) -> None:
         self.x, self.y, self.z, self.yaw = x, y, z, yaw
+        self.realtime = realtime
         self.clock = clock
         self.gain = gain
         self.turn_gain = turn_gain
@@ -212,6 +214,11 @@ class KinematicDrone:
         self._t = clock()
         self._frozen: Pose | None = None
 
+    def _wait(self, seconds: float) -> None:
+        """In real-time mode a command takes as long as it would on the robot."""
+        if self.realtime and seconds > 0:
+            time.sleep(seconds)
+
     def _tick(self) -> None:
         self._t = self.clock()
         self.track.append((self.x, self.y, self.z))
@@ -219,16 +226,19 @@ class KinematicDrone:
     # FlightControls
     def takeoff(self, altitude: float) -> None:
         self.commands.append(("takeoff", altitude, 0.0))
+        self._wait(3.0)
         self.z = altitude
         self._tick()
 
     def turn(self, rate: float, duration: float) -> None:
         self.commands.append(("turn", rate, duration))
+        self._wait(duration)
         self.yaw = (self.yaw + rate * duration * self.turn_gain + math.pi) % (2 * math.pi) - math.pi
         self._tick()
 
     def forward(self, speed: float, duration: float) -> None:
         self.commands.append(("forward", speed, duration))
+        self._wait(duration)
         d = speed * duration * self.gain
         self.x += math.cos(self.yaw) * d
         self.y += math.sin(self.yaw) * d
@@ -239,11 +249,14 @@ class KinematicDrone:
 
     def land(self) -> None:
         self.commands.append(("land", 0.0, 0.0))
+        self._wait(3.0)
         self.z = 0.1
         self._tick()
 
     # PoseSource
     def latest(self) -> Pose | None:
+        if self.realtime and self.freeze_after is None:
+            self._t = self.clock()  # a hovering drone still publishes a fresh pose
         half = self.yaw / 2
         pose = Pose(
             self.x, self.y, self.z, self.yaw, (math.cos(half), 0.0, 0.0, math.sin(half)), self._t

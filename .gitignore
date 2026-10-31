@@ -32,3 +32,6 @@ tests/evidence/**/*.wav
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# demo video output (docs/VIDEO-BRIEF.md)
+video-out/
