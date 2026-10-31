@@ -1,0 +1,19 @@
+volume COM (world xy) [-1.56, 0.88]
+as_modelled
+    ('run1', 'first_overlap', None, 'stall_touch(inflated)', [])
+    ('run2', 'first_overlap', None, 'stall_touch(inflated)', [])
+mirror_y
+    ('run1', 'first_overlap', (43.28, 2.45, -6.14, [(2.0, -5.0, 0.9)]), 'stall_touch(inflated)', [])
+    ('run2', 'first_overlap', (39.999, 2.27, -6.14, [(2.0, -5.0, 0.9)]), 'stall_touch(inflated)', [])
+mirror_x
+    ('run1', 'first_overlap', None, 'stall_touch(inflated)', [])
+    ('run2', 'first_overlap', None, 'stall_touch(inflated)', [])
+rot180
+    ('run1', 'first_overlap', (41.38, 2.14, -6.52, [(-3.0, -6.0, 2.2)]), 'stall_touch(inflated)', [(-3.0, -6.0, 2.2)])
+    ('run2', 'first_overlap', (38.612, 1.86, -6.54, [(-3.0, -6.0, 2.2)]), 'stall_touch(inflated)', [(-3.0, -6.0, 2.2)])
+com_shift
+    ('run1', 'first_overlap', (46.036, 2.86, -5.96, [(1.5, 4.2, 0.8)]), 'stall_touch(inflated)', [(1.5, 4.2, 0.8)])
+    ('run2', 'first_overlap', (43.686, 2.88, -5.95, [(1.5, 4.2, 0.8)]), 'stall_touch(inflated)', [(1.5, 4.2, 0.8)])
+mirror_y_com_shift
+    ('run1', 'first_overlap', None, 'stall_touch(inflated)', [])
+    ('run2', 'first_overlap', None, 'stall_touch(inflated)', [])
