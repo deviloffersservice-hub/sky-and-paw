@@ -1,6 +1,6 @@
 # Sky & Paw — Product & UI Specification
 
-**Version:** 1.0 · **Status:** approved for build · **Track:** Hardwired (Cyberwave) with Sarvam AI for voice and language
+**Version:** 1.1 · **Status:** approved for build (rev 1.1: drone twin changed to `holybro/px4vision` per docs/RESEARCH.md D1; Sarvam parameter corrections per RESEARCH.md §4) · **Track:** Hardwired (Cyberwave) with Sarvam AI for voice and language
 **Interactive reference mockup:** `Sky & Paw Ops v2` (map-first console with phone view). This document describes that mockup as the system to build.
 
 ---
@@ -34,7 +34,7 @@ The product has one job: **help one human make good decisions fast while robots 
 | **Medic** (1–2) | Phone | Reaches a survivor first, stabilises them, reports back by voice. |
 | **Extraction specialist** (2, work in pairs) | Phone | Cuts and lifts once the medic has stabilised; reports structural concerns. |
 | **Survivor** | None | Hears the Go2 speak in their language; taps or speaks back. |
-| **Drone twin** (`dji/mini-4-pro`) | Cyberwave sim | Maps, searches, provides overwatch and light, re-maps on request. |
+| **Drone twin** (`holybro/px4vision`) | Cyberwave sim | Maps, searches, provides overwatch and light, re-maps on request. |
 | **Go2 twin** (`unitree/go2`) | Cyberwave sim | Navigates to survivors or teammates, scans with radar and CO₂, speaks, carries a payload. |
 
 Roles are fixed in v1: `lead`, `medic`, `extraction`. The demo team is one lead, one medic, two extraction specialists, with four languages between them (Hindi, Marathi, Tamil, English).
@@ -46,7 +46,7 @@ Roles are fixed in v1: `lead`, `medic`, `extraction`. The demo team is one lead,
 ```
  Lead console (web)  ──────┐                         ┌── Cyberwave Cloud (MuJoCo sim)
    map · cams · voice      │                         │     unitree/go2 twin
-                           ├──► Sky & Paw backend ───┤     dji/mini-4-pro twin
+                           ├──► Sky & Paw backend ───┤     holybro/px4vision twin
  Team phones (web, PWA)    │   (FastAPI + MQTT)      │     GLB scene · waypoints · frames
    feed · map · cam · talk ┘        │                └── MQTT: position / nav status / camera
                                     │
@@ -60,9 +60,9 @@ Roles are fixed in v1: `lead`, `medic`, `extraction`. The demo team is one lead,
 
 | Capability | Service | Identifier / endpoint | Notes |
 |---|---|---|---|
-| Speech to text (lead and team, live) | Sarvam | `wss://api.sarvam.ai/speech-to-text-realtime/ws`, model `saaras:v3-realtime`, `mode=codemix`, `language_code=auto` | Partials shown live; finals used for planning. |
+| Speech to text (lead and team, live) | Sarvam | `wss://api.sarvam.ai/speech-to-text-realtime/ws`, model `saaras:v3-realtime`, `mode=codemix`, `language_code=auto` | Partials shown live; finals used for planning. Odia is `or-IN` on this socket (`od-IN` everywhere else); close with `{"event":"end"}`. Account enablement for the realtime socket is unverified: fall back to REST `saaras:v4` if the handshake is refused. |
 | Speech to text (clips ≤30 s) | Sarvam | `POST /speech-to-text`, model `saaras:v4`, `keyterms` = victim IDs, team names, sector names | Fallback when the socket is unavailable. |
-| Command → plan | Sarvam | `POST /v1/chat/completions`, model `sarvam-105b`, `reasoning_effort=none`, `response_format={type:json_schema, strict:true}` | Guaranteed-valid plan JSON. `sarvam-30b` is deprecated and must not be used. |
+| Command → plan | Sarvam | `POST /v1/chat/completions`, model `sarvam-105b`, `reasoning_effort=low` (or `null` to disable; docs disagree on `none`), `max_tokens≥1024`, `response_format={type:json_schema, strict:true}` | Guaranteed-valid plan JSON. `sarvam-30b` is deprecated and must not be used. |
 | Go2 speech | Sarvam | `POST /text-to-speech`, model `bulbul:v3`, speakers `priya` (hi), `rohan` (mr), `kavitha` (ta), `shubh` (en) | 11 languages. v3 chosen over v4-flash for Malayalam/Odia coverage. |
 | Translation of commands, comms and log | Sarvam | `POST /translate`, model `sarvam-translate:v1` | 23 languages. Batch log lines; translate only on change. |
 | Twins, sim, waypoints, frames | Cyberwave | Python SDK ≥0.7.4, `CYBERWAVE_API_KEY`; `cw.affect("simulation")`; `twin.navigation.goto / follow_path / wait_for_completion`; `cw.environments.create_waypoint(s)`; `camera.get_frame("numpy")`; `cw.assets.upload_glb` | REST base `https://api.cyberwave.com`. MQTT `mqtt.cyberwave.com:8883` for position, rotation, `navigate/status`, camera. No webhooks: backend subscribes to MQTT and exposes a WebSocket to the browser. |
@@ -312,7 +312,7 @@ Four scripted phrases in Hindi, Marathi, Tamil and English, spoken with `bulbul:
 ## 8. Feature list
 
 ### 8.1 Essential (hackathon deliverable)
-- Cyberwave simulation with `unitree/go2` and `dji/mini-4-pro` twins in an uploaded GLB scene; drone survey and Go2 waypoint navigation through the SDK; live position via MQTT → WebSocket.
+- Cyberwave simulation with `unitree/go2` and `holybro/px4vision` twins in an uploaded GLB scene; drone survey and Go2 waypoint navigation through the SDK; live position via MQTT → WebSocket.
 - YOLOv8n person detection on drone frames; synthetic thermal, radar, acoustic and CO₂; fusion and suggested triage; one decoy that the system flags and the lead dismisses.
 - Occupancy grid with fog of war, route planner with climbs/hazard costs, egress routes.
 - Lead console as specified: map with layers, decision queue, camera tiles with focus mode, voice strip, context panel, pick menu, plan timeline overlay, log & comms overlay, 3D twin toggle, EVERYONE OUT.
@@ -350,7 +350,7 @@ Four scripted phrases in Hindi, Marathi, Tamil and English, spoken with `bulbul:
 | Drone survey speed / altitude / spacing | 2.2 m/s / 6 m / 2.5 m | similar |
 | Telemetry loss → man-down check | 20 s | 60–120 s |
 | Radar weakening threshold | <60 bpm, falling | per medical protocol |
-| Cyberwave cost | 0.01 credits/min MuJoCo; 50 free credits/month | — |
+| Cyberwave cost | 0.01 credits/min MuJoCo (SDK constant); free allocation not documented, check the dashboard balance | — |
 | Sarvam budget | ₹100 free ≈ 200 min STT or 33k TTS chars | — |
 
 Latency budget on stage: STT partials <300 ms, final + plan card <2.5 s, TTS first audio <1.5 s, translation per line <800 ms.
@@ -431,7 +431,8 @@ Latency budget on stage: STT partials <300 ms, final + plan card <2.5 s, TTS fir
 ## 12. Assumptions and open items
 - Obstacle-aware navigation inside Cyberwave's MuJoCo for the Go2 is **unverified**; v1 plans its own path on the grid and sends dense waypoints with `follow_path`. Verify on day one.
 - Collision geometry for an arbitrary rubble GLB in MuJoCo is **unverified**; fall back to a URDF with STL collision meshes if needed.
-- Cyberwave offers no webhooks; the backend bridges MQTT to the browser.
+- Cyberwave offers no webhooks; the backend bridges twin state to the browser over its own WebSocket. The twin-state source is pluggable: MQTT (`mqtt.cyberwave.com:8883`) where the host allows raw TLS, otherwise REST polling of twin pose, `latest-frame` and `events/live` at 2–5 Hz. `wait_for_completion` needs MQTT, so arrival is detected from pose when polling.
+- The drone is `holybro/px4vision` (MuJoCo-marked, RGB + depth). Whether its `front_depth_camera` renders in MuJoCo is unverified; fallback is an `intel/realsensed455` twin for depth.
 - Realtime STT WebSocket beta access on Sarvam is **unverified**; the REST fallback with `saaras:v4` is required.
 - Teammate positions, thermal, radar, acoustic and CO₂ are simulated in v1 and labelled as such in the UI and the pitch.
 
