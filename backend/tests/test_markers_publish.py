@@ -43,6 +43,9 @@ def test_marker_glb_is_deterministic_and_coloured() -> None:
     assert pos["max"] == pytest.approx([0.3, 0.3, 0.2]) and pos["min"] == pytest.approx(
         [-0.3, -0.3, -0.2]
     )
+    dacc = _gltf_json(build_marker_glb("decoy"))["accessors"]
+    dpos = next(x for x in dacc if x.get("type") == "VEC3" and "max" in x)
+    assert dpos["max"] == pytest.approx([0.6, 0.4, 0.075])  # flat sheet, not a square
 
 
 def test_marker_specs_come_from_site_yaml() -> None:

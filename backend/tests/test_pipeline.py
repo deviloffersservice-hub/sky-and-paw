@@ -110,17 +110,75 @@ def test_unknown_object_far_from_truth_gets_c_id(tmp_path: Path) -> None:
 
 
 LIVE = sorted((FIXTURES / "frames").glob("v1b_*.jpg"))
+FIXTURE_FRAMES = [M2, *LIVE]
+
+
+def _frame(p: Path) -> tuple[Frame, dict]:
+    meta = json.loads(p.with_suffix(".json").read_text())
+    f = Frame(p.stem, str(p), 0.0, meta["sensor_id"], meta["position"], meta["rotation"])
+    return f, meta
+
+
+def rgb_precision_recall(radius_m: float = 1.0) -> dict[str, float | int]:
+    """RGB (marker stand-in) detections on the real fixture frames vs ``visible_markers``.
+
+    Per frame: a projected person hit within ``radius_m`` of a visible marker's truth is a
+    TP (one per marker), other person hits are FPs, visible markers with no hit are FNs.
+    """
+    sensors = SyntheticSensors()
+    truth = {t.id: t for t in sensors.truths}
+    tp = fp = fn = 0
+    for p in FIXTURE_FRAMES:
+        f, meta = _frame(p)
+        pipe = DetectionPipeline(CompositeDetector(None), sensors)
+        pipe.process(f)
+        hits = [h for h in pipe.records[0].hits if h["kind"] == "person"]
+        visible = list(meta.get("visible_markers", []))
+        matched: set[str] = set()
+        for h in hits:
+            near = [
+                v
+                for v in visible
+                if v not in matched and math.dist(h["position"][:2], truth[v].world[:2]) <= radius_m
+            ]
+            if near:
+                matched.add(near[0])
+                tp += 1
+            else:
+                fp += 1
+        fn += len(set(visible) - matched)
+    return {
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "precision": tp / (tp + fp) if tp + fp else 1.0,
+        "recall": tp / (tp + fn) if tp + fn else 1.0,
+    }
 
 
 @pytest.mark.skipif(not LIVE, reason="no live V1-B frames committed")
-def test_live_v1b_frames_project_markers_near_truth() -> None:
+def test_live_v1b_frames_rgb_precision_recall_and_position() -> None:
+    """Live MuJoCo frames: the grey V-01 marker is found and projected within 0.3 m; no
+    false positives on any real fixture frame; V-02 (grey on a grey slab at the image edge)
+    is the known miss."""
+    pr = rgb_precision_recall()
+    assert pr["fp"] == 0 and pr["precision"] == 1.0
+    assert pr["tp"] >= 1 and pr["recall"] >= 0.5
     pipe = _pipeline()
-    cands = []
     for p in LIVE:
-        meta = json.loads(p.with_suffix(".json").read_text())
-        f = Frame(p.stem, str(p), 0.0, meta["sensor_id"], meta["position"], meta["rotation"])
-        cands = pipe.process(f)
-    assert cands, "live frame shows markers but nothing was detected"
-    for c in cands:
-        t = next(t for t in pipe.sensors.truths if t.id == c.victim_id)
-        assert math.hypot(c.position[0] - t.world[0], c.position[1] - t.world[1]) <= 1.0
+        pipe.process(_frame(p)[0])
+    v01 = next(c for c in pipe.candidates() if c.victim_id == "V-01")
+    assert v01.source["rgb"] == "marker" and v01.evidence["rgb"] > 0.9
+    assert truth_errors([v01], pipe.sensors)["V-01"] <= 0.3
+
+
+@pytest.mark.skipif(not LIVE, reason="no live V1-B frames committed")
+def test_live_static_frame_validates_projection_exactly() -> None:
+    """Static live drone at (0, 0, 6), exact MQTT pose: rubble IoU >= 0.9 with the default
+    mount and no fitted offset."""
+    from test_projection import _rubble_iou
+
+    for p in LIVE:
+        f, _ = _frame(p)
+        img = cv2.imread(str(p))
+        assert _rubble_iou(img, CameraPose.from_frame(f.position, f.rotation)) >= 0.9

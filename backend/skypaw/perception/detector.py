@@ -182,6 +182,16 @@ class MarkerDetector:
     where ``full_area_px`` is the expected pixel area of an unoccluded 0.6 m box top seen
     from about 6 m (35 x 35 px at f = 320 px). A full, compact blob scores ~0.95; small or
     ragged (partly occluded) blobs score towards 0.5. Blobs under ``min_area_px`` are noise.
+
+    **Shape fallback** (``shape_fallback=True``, used only when no colour blob is found):
+    the live V1-B runs showed that Cyberwave's MuJoCo import drops the GLB material colour,
+    so the markers render rubble-grey. The fallback finds bright (grey > ``bright_level``),
+    compact, square components whose sides are those of a 0.6 m box top at ~5-7 m range
+    (``shape_side_px``, 24-50 px at f = 320 px); every rubble block in the real frames is
+    >= 55 px and the slabs are far larger. Such squares are labelled ``marker_shape`` and
+    treated as person stand-ins (the decoy prop is a flat 1.2 x 0.8 m sheet, which fails the
+    square test). Pseudo-confidence: ``0.5 + 0.45 * fill * min(1, area / full_area_px)``.
+    Squares touching the image border are skipped (their size is unknown).
     """
 
     def __init__(
@@ -191,9 +201,19 @@ class MarkerDetector:
         full_area_px: float = 1200.0,
         victim: HsvRange = ORANGE,
         decoy: HsvRange = SLATE,
+        shape_fallback: bool = True,
+        bright_level: int = 160,
+        shape_side_px: tuple[float, float] = (24.0, 50.0),
+        shape_max_aspect: float = 1.3,
+        shape_min_fill: float = 0.85,
     ) -> None:
         self.min_area_px = float(min_area_px)
         self.full_area_px = float(full_area_px)
+        self.shape_fallback = bool(shape_fallback)
+        self.bright_level = int(bright_level)
+        self.shape_side_px = (float(shape_side_px[0]), float(shape_side_px[1]))
+        self.shape_max_aspect = float(shape_max_aspect)
+        self.shape_min_fill = float(shape_min_fill)
         self.ranges = {"victim_marker": victim, "decoy_marker": decoy}
         self.kernel = np.ones((3, 3), np.uint8)
 
@@ -229,7 +249,48 @@ class MarkerDetector:
                         person=label == "victim_marker",
                     )
                 )
+        if not boxes and self.shape_fallback:
+            boxes = self.detect_shapes(image)
         boxes.sort(key=lambda b: -b.conf)
+        return boxes
+
+    def detect_shapes(self, image: np.ndarray) -> list[Box]:
+        """Grey 0.6 m marker squares by size and shape (see class docstring)."""
+        grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        m = ((grey > self.bright_level) * 255).astype(np.uint8)
+        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, self.kernel)
+        contours, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        lo, hi = self.shape_side_px
+        img_h, img_w = grey.shape[:2]
+        boxes = []
+        for c in contours:
+            area = float(cv2.contourArea(c))
+            if area < lo * lo * self.shape_min_fill:
+                continue
+            (_cx, _cy), (w, h), _ang = cv2.minAreaRect(c)
+            if not (lo <= min(w, h) and max(w, h) <= hi):
+                continue
+            if max(w, h) / max(min(w, h), 1.0) > self.shape_max_aspect:
+                continue
+            fill = area / max(w * h, 1.0)
+            if fill < self.shape_min_fill:
+                continue
+            x, y, bw, bh = cv2.boundingRect(c)
+            if x <= 1 or y <= 1 or x + bw >= img_w - 1 or y + bh >= img_h - 1:
+                continue
+            conf = 0.5 + 0.45 * min(1.0, fill) * min(1.0, area / self.full_area_px)
+            boxes.append(
+                Box(
+                    float(x),
+                    float(y),
+                    float(x + bw),
+                    float(y + bh),
+                    round(min(0.95, conf), 3),
+                    "marker_shape",
+                    "marker",
+                    person=True,
+                )
+            )
         return boxes
 
 

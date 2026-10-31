@@ -1,0 +1,139 @@
+{
+  "target_world": [
+    0.0,
+    0.0,
+    6.0
+  ],
+  "yaw": -1.05,
+  "captures": [
+    {
+      "n": 0,
+      "ok": true,
+      "pose_before": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 5.99999999999999
+        },
+        "rotation": {
+          "w": 0.8653239416229412,
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.5012130046737979
+        }
+      },
+      "pose_after": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 5.99999999999999
+        },
+        "rotation": {
+          "w": 0.8653239416229412,
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.5012130046737979
+        }
+      }
+    },
+    {
+      "n": 1,
+      "ok": true,
+      "pose_before": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 5.99999999999999
+        },
+        "rotation": {
+          "w": 0.8653239416229412,
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.5012130046737979
+        }
+      },
+      "pose_after": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 5.99999999999999
+        },
+        "rotation": {
+          "w": 0.8653239416229412,
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.5012130046737979
+        }
+      }
+    }
+  ],
+  "markers": {
+    "assets": {
+      "decoy": "a3cbb532-3250-4d0a-9896-c32a39d0eada",
+      "victim": "de4f9f39-736b-40bf-a2ed-0603d3b850af"
+    },
+    "twins": {
+      "marker-V-01": "ad55af23-9abd-475b-a841-e97895b28ef9",
+      "marker-V-02": "cf1d651a-1891-4d06-a574-15fe088434e3",
+      "marker-V-03": "eecf76b0-2775-4c55-93ce-af25ae763835",
+      "marker-D-01": "b8382282-f2de-4c33-810c-ba5f6a9fff59"
+    },
+    "world": {
+      "marker-V-01": [
+        3.5,
+        2.0,
+        0.5
+      ],
+      "marker-V-02": [
+        -4.0,
+        -3.0,
+        0.6
+      ],
+      "marker-V-03": [
+        7.0,
+        -4.8,
+        0.5
+      ],
+      "marker-D-01": [
+        -7.5,
+        5.2,
+        0.4
+      ]
+    },
+    "steps": [
+      "reuse asset skypaw-marker-decoy",
+      "skip asset skypaw-marker-decoy GLB, backends and fixed_base already set",
+      "reuse asset skypaw-marker-victim",
+      "skip asset skypaw-marker-victim GLB, backends and fixed_base already set",
+      "reuse twin marker-V-01",
+      "skip place marker-V-01 already at world (3.5, 2.0, 0.5)",
+      "reuse twin marker-V-02",
+      "skip place marker-V-02 already at world (-4.0, -3.0, 0.6)",
+      "reuse twin marker-V-03",
+      "skip place marker-V-03 already at world (7.0, -4.8, 0.5)",
+      "reuse twin marker-D-01",
+      "skip place marker-D-01 already at world (-7.5, 5.2, 0.4)"
+    ],
+    "notes": {
+      "fixed_base_accepted": true,
+      "asset_backends": [
+        "playground",
+        "mujoco"
+      ],
+      "asset_glb_attached": true
+    }
+  },
+  "mqtt_connected": true,
+  "run": {
+    "environment_id": "ca89c8be-ed0b-41cd-aca1-a0a3e9cd9b0e",
+    "simulation_id": "269f2373-58e6-4997-ba13-f3293fe3f5fb",
+    "requested_duration_s": 110.0,
+    "estimated_credits": 0.0183,
+    "affect_s": 3.21,
+    "time_to_ready_s": 50.8,
+    "stopped_ids": [
+      "269f2373-58e6-4997-ba13-f3293fe3f5fb"
+    ],
+    "stop_verified": true
+  }
+}

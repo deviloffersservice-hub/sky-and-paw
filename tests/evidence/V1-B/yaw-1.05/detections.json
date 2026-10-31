@@ -1,0 +1,252 @@
+{
+  "candidates": [
+    {
+      "victim_id": "V-01",
+      "position": [
+        3.629,
+        2.017,
+        0.5
+      ],
+      "evidence": {
+        "rgb": 0.926,
+        "thermal": 5.8,
+        "radar": null,
+        "radar_negative": false,
+        "acoustic": null,
+        "co2": null,
+        "objects": [],
+        "sensors": {
+          "thermal": {
+            "delta_t": 5.8,
+            "source": "synthetic",
+            "truth_id": "V-01"
+          },
+          "radar": null
+        }
+      },
+      "fused": 0.9761,
+      "life_sign": false,
+      "suggested_triage": "unknown",
+      "frames": [
+        "live_0",
+        "live_1"
+      ],
+      "source": {
+        "rgb": "marker",
+        "thermal": "synthetic",
+        "radar": "synthetic",
+        "position": "rgb-projection",
+        "rgb_note": "marker box stands in for a person (no human models in the MuJoCo scene)"
+      }
+    },
+    {
+      "victim_id": "V-02",
+      "position": [
+        -4.258,
+        -2.826,
+        0.6
+      ],
+      "evidence": {
+        "rgb": null,
+        "thermal": 3.19,
+        "radar": null,
+        "radar_negative": false,
+        "acoustic": null,
+        "co2": null,
+        "objects": [],
+        "sensors": {
+          "thermal": {
+            "delta_t": 3.19,
+            "source": "synthetic",
+            "truth_id": "V-02"
+          },
+          "radar": null
+        }
+      },
+      "fused": 0.3722,
+      "life_sign": false,
+      "suggested_triage": "unknown",
+      "frames": [
+        "live_0",
+        "live_1"
+      ],
+      "source": {
+        "rgb": "none",
+        "thermal": "synthetic",
+        "radar": "synthetic",
+        "position": "synthetic-thermal"
+      }
+    }
+  ],
+  "frames": [
+    {
+      "frame_id": "live_0",
+      "fired": "marker",
+      "boxes": [
+        {
+          "box": [
+            538.0,
+            160.0,
+            585.0,
+            207.0
+          ],
+          "conf": 0.926,
+          "label": "marker_shape",
+          "detector": "marker",
+          "person": true
+        }
+      ],
+      "hits": [
+        {
+          "position": [
+            3.631,
+            2.013,
+            0.5
+          ],
+          "kind": "person",
+          "conf": 0.926,
+          "detector": "marker",
+          "label": "marker_shape"
+        },
+        {
+          "position": [
+            3.424,
+            2.094,
+            0.5
+          ],
+          "kind": "thermal",
+          "conf": null,
+          "detector": "synthetic",
+          "label": ""
+        },
+        {
+          "position": [
+            -4.258,
+            -2.826,
+            0.6
+          ],
+          "kind": "thermal",
+          "conf": null,
+          "detector": "synthetic",
+          "label": ""
+        }
+      ],
+      "footprint": [
+        [
+          -6.884,
+          -0.058
+        ],
+        [
+          3.526,
+          5.914
+        ],
+        [
+          6.884,
+          0.058
+        ],
+        [
+          -3.526,
+          -5.914
+        ]
+      ],
+      "detect_ms": 213.4,
+      "total_ms": 216.0,
+      "drone_position": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "frame_id": "live_1",
+      "fired": "marker",
+      "boxes": [
+        {
+          "box": [
+            538.0,
+            160.0,
+            585.0,
+            206.0
+          ],
+          "conf": 0.92,
+          "label": "marker_shape",
+          "detector": "marker",
+          "person": true
+        }
+      ],
+      "hits": [
+        {
+          "position": [
+            3.626,
+            2.021,
+            0.5
+          ],
+          "kind": "person",
+          "conf": 0.92,
+          "detector": "marker",
+          "label": "marker_shape"
+        },
+        {
+          "position": [
+            3.424,
+            2.094,
+            0.5
+          ],
+          "kind": "thermal",
+          "conf": null,
+          "detector": "synthetic",
+          "label": ""
+        },
+        {
+          "position": [
+            -4.258,
+            -2.826,
+            0.6
+          ],
+          "kind": "thermal",
+          "conf": null,
+          "detector": "synthetic",
+          "label": ""
+        }
+      ],
+      "footprint": [
+        [
+          -6.884,
+          -0.058
+        ],
+        [
+          3.526,
+          5.914
+        ],
+        [
+          6.884,
+          0.058
+        ],
+        [
+          -3.526,
+          -5.914
+        ]
+      ],
+      "detect_ms": 57.6,
+      "total_ms": 59.2,
+      "drone_position": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    }
+  ],
+  "latency_ms": {
+    "frames": 2,
+    "mean": 137.6,
+    "max": 216.0
+  },
+  "frames_dir": "tests/evidence/V1-B/yaw-1.05",
+  "yolo_loaded": true,
+  "truth_distance_m": {
+    "V-01": 0.13,
+    "V-02": 0.311
+  },
+  "seed": 0,
+  "note": "thermal/radar are synthetic (SPEC 3.2); marker boxes stand in for people"
+}

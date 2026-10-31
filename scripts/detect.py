@@ -160,7 +160,7 @@ def render_map(
         x += 120
     cv2.putText(
         img,
-        "ring = site.yaml truth; thermal/radar synthetic",
+        "ring = truth; dT/radar synthetic",
         (x, h + 25),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.4,
@@ -289,14 +289,15 @@ def run_live(args: argparse.Namespace, out_dir: Path) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     fp = site.footprint
     cx, cy = (fp["x_min"] + fp["x_max"]) / 2, -(fp["z_min"] + fp["z_max"]) / 2 + 0.0
-    report: dict[str, Any] = {"target_world": [cx, cy, args.alt], "captures": []}
+    report: dict[str, Any] = {"target_world": [cx, cy, args.alt], "yaw": args.yaw, "captures": []}
     cw = get_client(settings)
     ctx = SceneContext(cw)
     env_id = str(next(e for e in cw.environments.list() if e.name == args.env).uuid)
     report["markers"] = ensure_markers(cw, env_id, site)
     twins = {t.name: str(t.uuid) for t in cw.twins.list(environment_id=env_id)}
     drone_id = twins[TWIN_NAMES["drone"]]
-    place(ctx, env_id, drone_id, TWIN_NAMES["drone"], SitePose(world_to_site(cx, cy, args.alt)))
+    over = SitePose(world_to_site(cx, cy, args.alt), yaw=args.yaw)
+    place(ctx, env_id, drone_id, TWIN_NAMES["drone"], over)
     mqtt = SceneMqtt(settings)
     code = 0
 
@@ -371,6 +372,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--live", action="store_true", help="capture live frames first (billable)")
     ap.add_argument("--duration", type=float, default=240.0)
     ap.add_argument("--alt", type=float, default=6.0)
+    ap.add_argument("--yaw", type=float, default=0.0, help="drone spawn yaw (rad, about +Z)")
     ap.add_argument("--captures", type=int, default=2)
     ap.add_argument("--capture-gap", type=float, default=3.0)
     args = ap.parse_args(argv)

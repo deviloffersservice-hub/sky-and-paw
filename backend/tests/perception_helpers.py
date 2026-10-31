@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 from skypaw.perception.project import CameraPose, world_to_pixel
-from skypaw.scene.markers import DECOY_RGBA, MARKER_EXTENTS, VICTIM_RGBA
+from skypaw.scene.markers import DECOY_RGBA, VICTIM_RGBA, marker_extents
 from skypaw.sensors.synthetic import Truth
 
 REPO = Path(__file__).resolve().parents[2]
@@ -21,13 +21,13 @@ def bgr(rgba: tuple[int, int, int, int]) -> tuple[int, int, int]:
 
 
 def paint_markers(img: np.ndarray, pose: CameraPose, truths: list[Truth]) -> list[str]:
-    """Paint the top face of each truth's marker box (0.6 m, top at centre + 0.2 m) into
-    ``img`` where the camera at ``pose`` would see it; returns the ids painted."""
-    hx, hy, hz = (e / 2 for e in MARKER_EXTENTS)
+    """Paint the top face of each truth's marker (scene/markers.py sizes) into ``img`` where
+    the camera at ``pose`` would see it; returns the ids painted."""
     painted = []
     rng = np.random.default_rng(0)
     for t in truths:
         x, y, z = t.world
+        hx, hy, hz = (e / 2 for e in marker_extents("decoy" if t.decoy else "victim"))
         pts = [
             world_to_pixel(pose, (x + dx * hx, y + dy * hy, z + hz))
             for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1))

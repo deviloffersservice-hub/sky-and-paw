@@ -2,13 +2,19 @@
 
 The Cyberwave MuJoCo scene has no human models, so the drone camera can never see a person.
 For live runs every victim in ``site.yaml`` gets a 0.6 x 0.6 x 0.4 m box at its ground-truth
-position (site frame -> world frame via ``site_to_world``): **bright orange** for victims,
-**slate grey** for the decoy (``D-01``, the sun-heated sheet-metal pile). The orange boxes are
-found by :class:`skypaw.perception.detector.MarkerDetector` (an HSV colour heuristic); YOLO
-stays the production person detector. Candidates that came from a marker say so in
-``Candidate.source`` (``rgb = "marker"``, ``rgb_note = MARKER_NOTE``). The slate decoy box is
-a visual prop only: the colour detector reports it as a non-person object, so the decoy keeps
-the SPEC 6.3 decoy pattern (thermal only, radar negative, no RGB person).
+position (site frame -> world frame via ``site_to_world``), **bright orange**; the decoy
+(``D-01``, the sun-heated sheet-metal pile) gets a flat **slate-grey** 1.2 x 0.8 x 0.15 m
+sheet. The boxes are found by :class:`skypaw.perception.detector.MarkerDetector`; YOLO stays
+the production person detector. Candidates that came from a marker say so in
+``Candidate.source`` (``rgb = "marker"``, ``rgb_note = MARKER_NOTE``). The decoy sheet is a
+visual prop only: the colour detector reports it as a non-person object and the grey-square
+fallback rejects its 3:2 shape, so the decoy keeps the SPEC 6.3 decoy pattern (thermal only,
+radar negative, no RGB person).
+
+Live finding (V1-B, 2026-10-31): Cyberwave's MuJoCo import **drops the GLB material colour**;
+the markers render in the same light grey as the rubble, exactly at the projected positions.
+The colour is still written (it costs nothing and a later importer may keep it); the
+detector's grey-square fallback is what finds the markers live.
 
 Markers are built with trimesh exactly like ``build_glb.py`` (deterministic bytes, vertices in
 world Z-up metres, box centred on the twin origin) and uploaded / PATCHed with the same raw
@@ -45,6 +51,8 @@ log = get_logger(__name__)
 
 #: Marker box size in metres: (along X, along Y, height Z), world frame.
 MARKER_EXTENTS = (0.6, 0.6, 0.4)
+#: Decoy prop: a flat sheet (not square, so never a person stand-in).
+DECOY_EXTENTS = (1.2, 0.8, 0.15)
 #: RGBA colours. Orange = victim (person stand-in); slate grey = decoy prop.
 VICTIM_RGBA = (255, 110, 0, 255)
 DECOY_RGBA = (96, 112, 140, 255)
@@ -62,6 +70,11 @@ def marker_kind(victim: dict[str, Any]) -> str:
     return "decoy" if victim.get("decoy") else "victim"
 
 
+def marker_extents(kind: str) -> tuple[float, float, float]:
+    """Box size (X, Y, Z) in metres for ``"victim"`` or ``"decoy"``."""
+    return MARKER_EXTENTS if kind == "victim" else DECOY_EXTENTS
+
+
 def build_marker_glb(kind: str) -> bytes:
     """Deterministic GLB of one coloured marker box centred on the origin (world Z up).
 
@@ -69,7 +82,7 @@ def build_marker_glb(kind: str) -> bytes:
     MuJoCo import keeps it is checked live, see tests/evidence/V1-B).
     """
     rgba = VICTIM_RGBA if kind == "victim" else DECOY_RGBA
-    mesh = trimesh.creation.box(extents=MARKER_EXTENTS)
+    mesh = trimesh.creation.box(extents=marker_extents(kind))
     material = trimesh.visual.material.PBRMaterial(
         name=f"skypaw_marker_{kind}",
         baseColorFactor=list(rgba),
@@ -196,6 +209,7 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = [
     "ASSET_NAMES",
+    "DECOY_EXTENTS",
     "DECOY_RGBA",
     "MARKER_EXTENTS",
     "MARKER_NOTE",
@@ -204,6 +218,7 @@ __all__ = [
     "build_marker_glb",
     "ensure_marker_twin",
     "ensure_markers",
+    "marker_extents",
     "marker_kind",
     "marker_name",
     "marker_specs",
