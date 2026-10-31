@@ -119,10 +119,7 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
                 f"finish_reason={a['finish_reason']} latency_ms={a['latency_ms']}"
             )
             print(f"    usage={json.dumps(a['usage'], ensure_ascii=False)}")
-            print(
-                f"    content={a['content']!r}"
-                + (f" error={a['error']}" if a["error"] else "")
-            )
+            print(f"    content={a['content']!r}" + (f" error={a['error']}" if a["error"] else ""))
         plan_json = json.dumps(asdict(p), ensure_ascii=False)
         print(f"  plan JSON ({trace.source}): {plan_json}")
         (out_dir / "plan.json").write_text(
@@ -138,21 +135,15 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
             f"{used.model if used else '-'} {p.intent} {p.target} conf={p.confidence} "
             f"finish={used.finish_reason if used else '-'} attempts={len(trace.attempts)}"
         )
-        extra: dict[str, Any] = {
-            "ms": round(sum(a.latency_ms or 0 for a in trace.attempts))
-        }
+        extra: dict[str, Any] = {"ms": round(sum(a.latency_ms or 0 for a in trace.attempts))}
         if not trace.got_content:
-            extra["status"] = (
-                "empty"  # no attempt returned plan content: the check fails
-            )
+            extra["status"] = "empty"  # no attempt returned plan content: the check fails
         return note, extra
 
     clip: dict[str, bytes] = {}
 
     async def do_tts():
-        wav = await client.tts(
-            CMD.text, CMD.lang, speaker_for(CMD.lang), sample_rate=16000
-        )
+        wav = await client.tts(CMD.text, CMD.lang, speaker_for(CMD.lang), sample_rate=16000)
         clip["wav"] = wav
         (out_dir / "tts_hi_16k.wav").write_bytes(wav)
         secs = len(_pcm16k(wav)) / stt.BYTES_PER_S
@@ -206,9 +197,7 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
         await check("tts hi-IN priya (bulbul:v3)", meter.tts(len(CMD.text)), do_tts)
         if "wav" in clip:
             await check("stt REST (saaras:v4 codemix)", meter.stt(5), do_stt_rest)
-            await check(
-                "stt realtime (saaras:v3-realtime)", meter.stt(10), do_stt_realtime
-            )
+            await check("stt realtime (saaras:v3-realtime)", meter.stt(10), do_stt_realtime)
         if prewarm:
             cache = TtsCache(client, Path(get_settings().data_dir))
 
@@ -237,15 +226,9 @@ def print_table(rows: list[Row], meter: CreditMeter) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
-    )
-    ap.add_argument(
-        "--live", action="store_true", help="call the real API (SKYPAW_SARVAM_LIVE=1)"
-    )
-    ap.add_argument(
-        "--prewarm", action="store_true", help="also synthesise all scripted phrases"
-    )
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    ap.add_argument("--live", action="store_true", help="call the real API (SKYPAW_SARVAM_LIVE=1)")
+    ap.add_argument("--prewarm", action="store_true", help="also synthesise all scripted phrases")
     ap.add_argument("--out", type=Path, default=None, help="where to save raw outputs")
     args = ap.parse_args()
 

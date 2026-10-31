@@ -121,9 +121,7 @@ def build(dist: pathlib.Path) -> None:
     ):
         shutil.move(str(shell), str(dist / "app.html"))
     (dist / "index.html").write_text(doc, encoding="utf-8")
-    print(
-        f"demo page written to {dist / 'index.html'} ({len(doc)} bytes); frames: {len(frames)}"
-    )
+    print(f"demo page written to {dist / 'index.html'} ({len(doc)} bytes); frames: {len(frames)}")
 
 
 if __name__ == "__main__":
