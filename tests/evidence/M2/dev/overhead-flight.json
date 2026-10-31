@@ -1,0 +1,85 @@
+{
+  "mode": "flight",
+  "target_world": [
+    0.0,
+    0.0,
+    6.0
+  ],
+  "steps": {
+    "takeoff": {
+      "z": 5.665660698534323,
+      "s": 6.2
+    },
+    "lateral": {
+      "ok": true,
+      "s": 10.3
+    },
+    "camera_chasis_bottom": {
+      "ok": true,
+      "stats": {
+        "shape": [
+          360,
+          640,
+          3
+        ],
+        "mean": 150.5,
+        "std": 49.73
+      },
+      "since_ready_s": 17.5
+    },
+    "payload_color_camera": {
+      "ok": true,
+      "stats": {
+        "shape": [
+          360,
+          640,
+          3
+        ],
+        "mean": 15.37,
+        "std": 18.62
+      },
+      "since_ready_s": 17.8
+    },
+    "go2_front_moved": {
+      "shape": [
+        360,
+        640,
+        3
+      ],
+      "mean": 27.84,
+      "std": 39.6
+    }
+  },
+  "mqtt_connected": true,
+  "time_to_ready_s": 45.1,
+  "pose_at_capture": {
+    "position": {
+      "x": 0.3301830802649502,
+      "y": -0.03159125204753496,
+      "z": 5.996824151495882
+    },
+    "rotation": {
+      "w": 0.9764695512488882,
+      "x": 0.003022180525150283,
+      "y": -0.013713287716680511,
+      "z": 0.21519764786973858
+    }
+  },
+  "go2_pose_after_move": {
+    "x": -10.206174573767372,
+    "y": -7.496316267084095,
+    "z": 0.35363560793846677
+  },
+  "run": {
+    "environment_id": "3fef78b1-e01b-428f-b34c-b4370c8e3ea6",
+    "simulation_id": "7950e51a-08fd-4ad0-952d-3e891060783e",
+    "requested_duration_s": 120.0,
+    "estimated_credits": 0.02,
+    "affect_s": 3.62,
+    "time_to_ready_s": 45.1,
+    "stopped_ids": [
+      "7950e51a-08fd-4ad0-952d-3e891060783e"
+    ],
+    "stop_verified": true
+  }
+}
