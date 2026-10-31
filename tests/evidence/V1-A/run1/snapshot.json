@@ -1,0 +1,697 @@
+{
+ "api_state_mid_survey": {
+  "type": "snapshot",
+  "t": 82.78,
+  "ts": "2026-10-31T09:44:54.249Z",
+  "mission": {
+   "id": "SP-0417",
+   "phase": "mapping",
+   "since_collapse_s": 2603
+  },
+  "sim": {
+   "status": "ready",
+   "ready": true,
+   "env_id": "aa851dff-291a-4813-a541-6f04ba81f25a",
+   "requested_s": 300.0,
+   "elapsed_s": 62.6,
+   "credits_est": 0.05,
+   "error": null
+  },
+  "robots": {
+   "drone": {
+    "pos": [
+     -9.951,
+     1.494,
+     5.987
+    ],
+    "yaw": 1.142,
+    "mode": "survey",
+    "battery": 100,
+    "pose_age_s": 0.01,
+    "frame_id": "f_000005"
+   },
+   "go2": {
+    "pos": [
+     -10.946,
+     -7.486,
+     0.353
+    ],
+    "yaw": 0.088,
+    "mode": "idle",
+    "battery": 100,
+    "pose_age_s": 0.03,
+    "target": null,
+    "frame_id": null,
+    "path": []
+   }
+  },
+  "survey": {
+   "pct_mapped": 3,
+   "frames": 5,
+   "waypoint_idx": 0,
+   "waypoints": [
+    [
+     -8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -5.0,
+     6.0
+    ],
+    [
+     8.0,
+     -5.0,
+     6.0
+    ]
+   ]
+  },
+  "grid": {
+   "x0": -13.0,
+   "y0": -9.0,
+   "cs": 0.5,
+   "w": 52,
+   "h": 36,
+   "cls": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQIDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+   "seen": "////////////////////////////////////AAAAAMD/DwAAAAD8/wEAAADA/x8AAAAA/P8BAAAAwP8fAAAAAPz/AQAAAMD/HwAAAAD8/wEAAADA/x8AAAAA/P8BAAAAwP8/AAAAAPz/AwAAAMD/fwAAAAD8/wcAAADA/38AAAAA/P8DAAAAwP8/AAAAAPz/AQAAAMD/DwAAAAD8PwAAAADA/wMAAAAA/D8AAAAAwP8DAAAAAPw/AAAAAMD/AwAAAAD8PwAAAADA/wMAAAAA/P//////////////////////////////////"
+  },
+  "victims": [],
+  "decisions": [],
+  "transcript": {
+   "active": false,
+   "partial": "",
+   "final": "",
+   "lang": null,
+   "final_t": null
+  },
+  "tts": {
+   "playing": null
+  },
+  "log": [
+   {
+    "t": 0.34,
+    "src": "SYS",
+    "key": "mission_start",
+    "text": {
+     "en-IN": "Mission SP-0417 started",
+     "hi-IN": "Mission SP-0417 started",
+     "mr-IN": "Mission SP-0417 started",
+     "ta-IN": "Mission SP-0417 started"
+    }
+   },
+   {
+    "t": 0.39,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "Simulation starting",
+     "mr-IN": "Simulation starting",
+     "ta-IN": "Simulation starting"
+    }
+   },
+   {
+    "t": 16.55,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "Simulation starting",
+     "mr-IN": "Simulation starting",
+     "ta-IN": "Simulation starting"
+    }
+   },
+   {
+    "t": 20.21,
+    "src": "SIM",
+    "key": "sim_running",
+    "text": {
+     "en-IN": "Simulation running",
+     "hi-IN": "Simulation running",
+     "mr-IN": "Simulation running",
+     "ta-IN": "Simulation running"
+    }
+   },
+   {
+    "t": 60.89,
+    "src": "SIM",
+    "key": "sim_ready",
+    "text": {
+     "en-IN": "Simulation ready in 43.9 s",
+     "hi-IN": "Simulation ready in 43.9 s",
+     "mr-IN": "Simulation ready in 43.9 s",
+     "ta-IN": "Simulation ready in 43.9 s"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LLM",
+    "key": "plan_proposed",
+    "text": {
+     "en-IN": "Plan P-1: Drone: map the site, search for people",
+     "hi-IN": "Plan P-1: Drone: map the site, search for people",
+     "mr-IN": "Plan P-1: Drone: map the site, search for people",
+     "ta-IN": "Plan P-1: Drone: map the site, search for people"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LEAD",
+    "key": "auto_confirm",
+    "text": {
+     "en-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "hi-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "mr-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "ta-IN": "Survey plan auto-confirmed (--autostart-survey)"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LEAD",
+    "key": "plan_confirmed",
+    "text": {
+     "en-IN": "Plan P-1 confirmed: aerial_survey",
+     "hi-IN": "Plan P-1 confirmed: aerial_survey",
+     "mr-IN": "Plan P-1 confirmed: aerial_survey",
+     "ta-IN": "Plan P-1 confirmed: aerial_survey"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "NAV",
+    "key": "survey_start",
+    "text": {
+     "en-IN": "Drone survey started",
+     "hi-IN": "Drone survey started",
+     "mr-IN": "Drone survey started",
+     "ta-IN": "Drone survey started"
+    }
+   },
+   {
+    "t": 68.38,
+    "src": "NAV",
+    "key": "drone_takeoff",
+    "text": {
+     "en-IN": "Airborne at 6 m",
+     "hi-IN": "Airborne at 6 m",
+     "mr-IN": "Airborne at 6 m",
+     "ta-IN": "Airborne at 6 m"
+    }
+   }
+  ],
+  "team": [
+   {
+    "id": "t1",
+    "name": "Rohan Deshmukh",
+    "role": "lead",
+    "lang": "hi-IN"
+   },
+   {
+    "id": "t2",
+    "name": "Priya Kulkarni",
+    "role": "medic",
+    "lang": "mr-IN"
+   },
+   {
+    "id": "t3",
+    "name": "Arun Selvam",
+    "role": "extraction",
+    "lang": "ta-IN"
+   },
+   {
+    "id": "t4",
+    "name": "Meera Nair",
+    "role": "extraction",
+    "lang": "en-IN"
+   }
+  ]
+ },
+ "final": {
+  "type": "snapshot",
+  "t": 261.77,
+  "ts": "2026-10-31T09:47:53.239Z",
+  "mission": {
+   "id": "SP-0417",
+   "phase": "search",
+   "since_collapse_s": 2782
+  },
+  "sim": {
+   "status": "ready",
+   "ready": true,
+   "env_id": "aa851dff-291a-4813-a541-6f04ba81f25a",
+   "requested_s": 300.0,
+   "elapsed_s": 241.6,
+   "credits_est": 0.05,
+   "error": null
+  },
+  "robots": {
+   "drone": {
+    "pos": [
+     3.58,
+     1.653,
+     6.0
+    ],
+    "yaw": -2.713,
+    "mode": "hold",
+    "battery": 100,
+    "pose_age_s": 6.41,
+    "frame_id": "f_000053"
+   },
+   "go2": {
+    "pos": [
+     -10.95,
+     -7.486,
+     0.353
+    ],
+    "yaw": 0.049,
+    "mode": "idle",
+    "battery": 100,
+    "pose_age_s": 6.89,
+    "target": null,
+    "frame_id": null,
+    "path": []
+   }
+  },
+  "survey": {
+   "pct_mapped": 65,
+   "frames": 53,
+   "waypoint_idx": 5,
+   "waypoints": [
+    [
+     -8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -5.0,
+     6.0
+    ],
+    [
+     8.0,
+     -5.0,
+     6.0
+    ]
+   ]
+  },
+  "grid": {
+   "x0": -13.0,
+   "y0": -9.0,
+   "cs": 0.5,
+   "w": 52,
+   "h": 36,
+   "cls": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQECAgICAgEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgICAgICAgICAgICAQABAQAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgIBAQEBAQICAgIBAAAAAAABAQEBAQEBAQEBAQEBAQEBAQICAgEBAQICAgIBAQECAgICAgEBAQEBAQEBAQEBAQEBAQAAAQEBAQEBAQEBAQEBAQEBAgICAwIBAQECAwMCAQEBAQICAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIDAwMCAgEBAgMDAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgMDAwICAgICAgIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgIDAgICAgICAgICAgECAgICAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgICAgICAgICAgIBAgICAgICAgICAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAQICAgICAgICAgIBAQEBAgICAgICAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAgECAgICAgICAgICAQEBAQICAgICAgEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgIBAgICAgICAgICAgEBAQECAgICAgIBAQEBAQEBAQEBAQEBAQEBAQIDAwICAgICAgICAgICAgICAgICAgICAgIBAQEBAgICAgICAQEBAQEBAQEBAQEBAQEBAQECAwMCAgICAgICAgEBAQECAgICAgMDAwICAQEBAQICAgICAgEBAQEBAQEBAQEBAQEBAQEBAgICAgICAQEBAQEBAQEBAQEBAQICAwMDAgEBAQECAgICAgIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgICAgIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+   "seen": "////////////////////////////////////AAAAAMD/DwAAAAD8/wEAAADA/x8AAAAA/P8BAAAAwP8fAAAAAPz/AQAAAMD/HwAAAAD8/w8AAADA//8fAAAA/P///wcAwP////83APz//////8H////////8////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+  },
+  "victims": [
+   {
+    "id": "D-01",
+    "pos": [
+     -7.5,
+     5.2,
+     0.4
+    ],
+    "status": "located",
+    "fused": 0.7,
+    "life_sign": false,
+    "evidence": {
+     "rgb": null,
+     "thermal": 9.2,
+     "radar": null,
+     "acoustic": null,
+     "co2": null
+    },
+    "suggested_triage": "expectant",
+    "triage": null,
+    "frames": [
+     "f_000007",
+     "f_000008",
+     "f_000009",
+     "f_000010",
+     "f_000040",
+     "f_000041"
+    ],
+    "source": {
+     "rgb": "synthetic",
+     "thermal": "synthetic",
+     "radar": "synthetic"
+    }
+   },
+   {
+    "id": "V-01",
+    "pos": [
+     3.5,
+     2.0,
+     0.5
+    ],
+    "status": "located",
+    "fused": 1.0,
+    "life_sign": true,
+    "evidence": {
+     "rgb": 0.91,
+     "thermal": 5.8,
+     "radar": {
+      "bpm": 64,
+      "snr": "strong"
+     },
+     "acoustic": null,
+     "co2": null
+    },
+    "suggested_triage": "immediate",
+    "triage": null,
+    "frames": [
+     "f_000028",
+     "f_000029",
+     "f_000030",
+     "f_000051",
+     "f_000052",
+     "f_000053"
+    ],
+    "source": {
+     "rgb": "synthetic",
+     "thermal": "synthetic",
+     "radar": "synthetic"
+    }
+   }
+  ],
+  "decisions": [],
+  "transcript": {
+   "active": false,
+   "partial": "",
+   "final": "",
+   "lang": null,
+   "final_t": null
+  },
+  "tts": {
+   "playing": null
+  },
+  "log": [
+   {
+    "t": 0.34,
+    "src": "SYS",
+    "key": "mission_start",
+    "text": {
+     "en-IN": "Mission SP-0417 started",
+     "hi-IN": "Mission SP-0417 started",
+     "mr-IN": "Mission SP-0417 started",
+     "ta-IN": "Mission SP-0417 started"
+    }
+   },
+   {
+    "t": 0.39,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "Simulation starting",
+     "mr-IN": "Simulation starting",
+     "ta-IN": "Simulation starting"
+    }
+   },
+   {
+    "t": 16.55,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "Simulation starting",
+     "mr-IN": "Simulation starting",
+     "ta-IN": "Simulation starting"
+    }
+   },
+   {
+    "t": 20.21,
+    "src": "SIM",
+    "key": "sim_running",
+    "text": {
+     "en-IN": "Simulation running",
+     "hi-IN": "Simulation running",
+     "mr-IN": "Simulation running",
+     "ta-IN": "Simulation running"
+    }
+   },
+   {
+    "t": 60.89,
+    "src": "SIM",
+    "key": "sim_ready",
+    "text": {
+     "en-IN": "Simulation ready in 43.9 s",
+     "hi-IN": "Simulation ready in 43.9 s",
+     "mr-IN": "Simulation ready in 43.9 s",
+     "ta-IN": "Simulation ready in 43.9 s"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LLM",
+    "key": "plan_proposed",
+    "text": {
+     "en-IN": "Plan P-1: Drone: map the site, search for people",
+     "hi-IN": "Plan P-1: Drone: map the site, search for people",
+     "mr-IN": "Plan P-1: Drone: map the site, search for people",
+     "ta-IN": "Plan P-1: Drone: map the site, search for people"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LEAD",
+    "key": "auto_confirm",
+    "text": {
+     "en-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "hi-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "mr-IN": "Survey plan auto-confirmed (--autostart-survey)",
+     "ta-IN": "Survey plan auto-confirmed (--autostart-survey)"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "LEAD",
+    "key": "plan_confirmed",
+    "text": {
+     "en-IN": "Plan P-1 confirmed: aerial_survey",
+     "hi-IN": "Plan P-1 confirmed: aerial_survey",
+     "mr-IN": "Plan P-1 confirmed: aerial_survey",
+     "ta-IN": "Plan P-1 confirmed: aerial_survey"
+    }
+   },
+   {
+    "t": 61.15,
+    "src": "NAV",
+    "key": "survey_start",
+    "text": {
+     "en-IN": "Drone survey started",
+     "hi-IN": "Drone survey started",
+     "mr-IN": "Drone survey started",
+     "ta-IN": "Drone survey started"
+    }
+   },
+   {
+    "t": 68.38,
+    "src": "NAV",
+    "key": "drone_takeoff",
+    "text": {
+     "en-IN": "Airborne at 6 m",
+     "hi-IN": "Airborne at 6 m",
+     "mr-IN": "Airborne at 6 m",
+     "ta-IN": "Airborne at 6 m"
+    }
+   },
+   {
+    "t": 85.14,
+    "src": "DET",
+    "key": "detection",
+    "text": {
+     "en-IN": "D-01 located, fused 70%",
+     "hi-IN": "D-01 located, fused 70%",
+     "mr-IN": "D-01 located, fused 70%",
+     "ta-IN": "D-01 located, fused 70%"
+    }
+   },
+   {
+    "t": 85.77,
+    "src": "NAV",
+    "key": "drone_corner",
+    "text": {
+     "en-IN": "Survey corner 1/10 reached",
+     "hi-IN": "Survey corner 1/10 reached",
+     "mr-IN": "Survey corner 1/10 reached",
+     "ta-IN": "Survey corner 1/10 reached"
+    }
+   },
+   {
+    "t": 134.18,
+    "src": "NAV",
+    "key": "drone_corner",
+    "text": {
+     "en-IN": "Survey corner 2/10 reached",
+     "hi-IN": "Survey corner 2/10 reached",
+     "mr-IN": "Survey corner 2/10 reached",
+     "ta-IN": "Survey corner 2/10 reached"
+    }
+   },
+   {
+    "t": 151.05,
+    "src": "NAV",
+    "key": "drone_corner",
+    "text": {
+     "en-IN": "Survey corner 3/10 reached",
+     "hi-IN": "Survey corner 3/10 reached",
+     "mr-IN": "Survey corner 3/10 reached",
+     "ta-IN": "Survey corner 3/10 reached"
+    }
+   },
+   {
+    "t": 168.74,
+    "src": "DET",
+    "key": "detection",
+    "text": {
+     "en-IN": "V-01 located, fused 100%",
+     "hi-IN": "V-01 located, fused 100%",
+     "mr-IN": "V-01 located, fused 100%",
+     "ta-IN": "V-01 located, fused 100%"
+    }
+   },
+   {
+    "t": 207.91,
+    "src": "NAV",
+    "key": "drone_corner",
+    "text": {
+     "en-IN": "Survey corner 4/10 reached",
+     "hi-IN": "Survey corner 4/10 reached",
+     "mr-IN": "Survey corner 4/10 reached",
+     "ta-IN": "Survey corner 4/10 reached"
+    }
+   },
+   {
+    "t": 224.12,
+    "src": "NAV",
+    "key": "drone_corner",
+    "text": {
+     "en-IN": "Survey corner 5/10 reached",
+     "hi-IN": "Survey corner 5/10 reached",
+     "mr-IN": "Survey corner 5/10 reached",
+     "ta-IN": "Survey corner 5/10 reached"
+    }
+   },
+   {
+    "t": 258.67,
+    "src": "NAV",
+    "key": "drone_hold",
+    "text": {
+     "en-IN": "Drone holding (pose_stale_3.3s)",
+     "hi-IN": "Drone holding (pose_stale_3.3s)",
+     "mr-IN": "Drone holding (pose_stale_3.3s)",
+     "ta-IN": "Drone holding (pose_stale_3.3s)"
+    }
+   },
+   {
+    "t": 258.67,
+    "src": "DET",
+    "key": "survey_done",
+    "text": {
+     "en-IN": "Mapping complete: 65% seen, 2 candidates",
+     "hi-IN": "Mapping complete: 65% seen, 2 candidates",
+     "mr-IN": "Mapping complete: 65% seen, 2 candidates",
+     "ta-IN": "Mapping complete: 65% seen, 2 candidates"
+    }
+   }
+  ],
+  "team": [
+   {
+    "id": "t1",
+    "name": "Rohan Deshmukh",
+    "role": "lead",
+    "lang": "hi-IN"
+   },
+   {
+    "id": "t2",
+    "name": "Priya Kulkarni",
+    "role": "medic",
+    "lang": "mr-IN"
+   },
+   {
+    "id": "t3",
+    "name": "Arun Selvam",
+    "role": "extraction",
+    "lang": "ta-IN"
+   },
+   {
+    "id": "t4",
+    "name": "Meera Nair",
+    "role": "extraction",
+    "lang": "en-IN"
+   }
+  ]
+ }
+}

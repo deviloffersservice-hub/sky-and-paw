@@ -49,18 +49,28 @@ def test_root_serves_built_frontend(settings: Settings, tmp_path: Path) -> None:
         assert c.get("/healthz").json()["status"] == "ok"
 
 
-def test_ws_echoes_hello(client: TestClient) -> None:
+def _recv_until(ws, pred, limit: int = 50):  # noqa: ANN001, ANN202
+    for _ in range(limit):
+        msg = ws.receive_json()
+        if pred(msg):
+            return msg
+    raise AssertionError("expected message not received")
+
+
+def test_ws_hello_gets_snapshot(client: TestClient) -> None:
     with client.websocket_connect("/ws") as ws:
-        ws.send_json({"type": "hello"})
-        assert ws.receive_json() == {"type": "hello"}
-        ws.send_json({"type": "hello", "client": "ops", "n": 2})
-        assert ws.receive_json() == {"type": "hello", "client": "ops", "n": 2}
+        ws.send_json({"type": "hello", "role": "lead", "member": "t1"})
+        assert ws.receive_json()["type"] == "snapshot"
+        ws.send_json({"type": "ping"})
+        assert _recv_until(ws, lambda m: m["type"] == "pong") == {"type": "pong"}
 
 
 def test_ws_rejects_invalid_json(client: TestClient) -> None:
     with client.websocket_connect("/ws") as ws:
+        ws.send_json({"type": "hello", "role": "lead"})
         ws.send_text("not json")
-        assert ws.receive_json() == {"type": "error", "error": "invalid_json"}
+        msg = _recv_until(ws, lambda m: m["type"] == "event")
+        assert msg["name"] == "error" and msg["data"]["reason"] == "invalid_json"
 
 
 @pytest.mark.parametrize(
@@ -180,7 +190,9 @@ def test_docs_only_in_dev(settings: Settings) -> None:
 def test_ws_survives_deeply_nested_json(client: TestClient) -> None:
     """json.loads raises RecursionError on very deep nesting; the socket must stay usable."""
     with client.websocket_connect("/ws") as ws:
+        ws.send_json({"type": "hello", "role": "lead"})
         ws.send_text("[" * 200_000 + "]" * 200_000)
-        assert ws.receive_json() == {"type": "error", "error": "invalid_json"}
-        ws.send_json({"type": "hello"})
-        assert ws.receive_json() == {"type": "hello"}
+        msg = _recv_until(ws, lambda m: m["type"] == "event")
+        assert msg["data"]["reason"] == "invalid_json"
+        ws.send_json({"type": "ping"})
+        assert _recv_until(ws, lambda m: m["type"] == "pong") == {"type": "pong"}
