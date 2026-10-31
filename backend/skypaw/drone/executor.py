@@ -65,22 +65,22 @@ class DroneConfig:
     """Survey parameters (SPEC §6.3, M2 task, v1 task)."""
 
     alt: float = 6.0
-    speed: float = 3.0
+    speed: float = 2.2
     min_speed: float = 0.3
     #: 0.85 s at 2.2 m/s = 1.87 m commanded; live run 2 saw bursts carry up to 1.28x the
     #: commanded distance (momentum), so one burst stays under the 2.5 m capture spacing.
-    burst_s: float = 1.0
+    burst_s: float = 0.85
     #: Capture before a forward burst once this much travel accumulated since the last frame.
     capture_min_m: float = 0.2
-    tol: float = 0.8
-    heading_tol: float = 0.35
+    tol: float = 0.5
+    heading_tol: float = 0.25
     #: Wider heading tolerance while far from the target (pure pursuit re-aims every burst);
     #: live run 1 spent most of its time in small heading corrections at 0.25 rad.
-    heading_tol_far: float = 0.7
+    heading_tol_far: float = 0.45
     far_m: float = 2.5
-    turn_rate: float = 1.6
+    turn_rate: float = 1.0
     min_turn_s: float = 0.3
-    capture_spacing: float = 4.0
+    capture_spacing: float = 2.5
     reveal_r: float = 2.8
     stale_s: float = 3.0
     takeoff_timeout_s: float = 20.0
