@@ -64,6 +64,11 @@ class _Locomotion:
         **_: Any,
     ) -> None:
         """``locomotion.move``: ``move_sign`` models the sim's angular_z convention."""
+        if not self.robot.move_in_catalog:
+            raise ValueError(
+                "Command 'move' is not in the MQTT catalog for this twin. "
+                "Allowed: ['move_forward', 'stop', 'turn_left', 'turn_right']"
+            )
         v, w = float(linear_x or 0.0), float(angular_z or 0.0)
         name = "forward" if not w else ("turn_left" if w > 0 else "turn_right")
         if self.robot.move_sign == 0.0:
@@ -90,6 +95,7 @@ class KinematicGo2:
     blocked: bool = False
     publish_pose: bool = True
     move_sign: float = 1.0  # +1 angular_z>0 is CCW, -1 inverted, 0 move() has no effect
+    move_in_catalog: bool = True  # False: move() raises like cyberwave 0.7.4 for the Go2
     calls: list[str] = field(default_factory=list)
     _last_pose: PoseReading | None = None
     on_move: Callable[[KinematicGo2], None] | None = None

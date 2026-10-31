@@ -286,7 +286,7 @@ async def test_big_turns_then_small_turns_and_rates_logged() -> None:
 )
 async def test_turn_self_check(move_sign: float, verdict: str, api: str, sign: float) -> None:
     robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2, move_sign=move_sign)
-    ctrl = _ctrl(robot)
+    ctrl = _ctrl(robot, turn_api="move")
     res = await ctrl.navigate([-8.0, -7.5, 0.0], "T-8")
     assert res.status == "arrived"
     cal = res.turn_calibration
@@ -295,7 +295,18 @@ async def test_turn_self_check(move_sign: float, verdict: str, api: str, sign: f
     assert cal["requested"] == "turn_right"
 
 
-async def test_named_turn_api_still_supported() -> None:
-    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2)
-    res = await _ctrl(robot, turn_api="named").navigate([-8.0, -7.5, 0.0], "T-9")
+async def test_named_turns_are_the_default() -> None:
+    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2, move_sign=0.0)  # move() inert
+    ctrl = _ctrl(robot)
+    assert ctrl.config.turn_api == "named"
+    res = await ctrl.navigate([-8.0, -7.5, 0.0], "T-9")
     assert res.status == "arrived" and res.turn_calibration["verdict"] == "sign_ok"
+
+
+async def test_move_refused_by_sdk_catalog_falls_back_to_named() -> None:
+    # live run 4: cyberwave 0.7.4 raises ValueError("Command 'move' is not in the MQTT catalog")
+    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2, move_in_catalog=False)
+    ctrl = _ctrl(robot, turn_api="move")
+    res = await ctrl.navigate([-8.0, -7.5, 0.0], "T-10")
+    assert res.status == "arrived"
+    assert ctrl._turn_api == "named" and "turn_right" in robot.calls

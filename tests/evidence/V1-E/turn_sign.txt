@@ -1,0 +1,6 @@
+run1 turn_left n 27 mean rate 0.249 median 0.247 positive(CCW) 21 negative(CW) 6
+run1 turn_right n 5 mean rate -0.184 median -0.188 positive(CCW) 1 negative(CW) 4
+run2 turn_left n 20 mean rate 0.228 median 0.182 positive(CCW) 18 negative(CW) 2
+run2 turn_right n 3 mean rate -0.263 median -0.218 positive(CCW) 0 negative(CW) 3
+run3 turn_left n 46 mean rate 0.165 median 0.192 positive(CCW) 36 negative(CW) 10
+run3 turn_right n 60 mean rate -0.059 median -0.079 positive(CCW) 18 negative(CW) 42

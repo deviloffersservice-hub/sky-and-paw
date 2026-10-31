@@ -1,0 +1,458 @@
+{
+  "target": "V-01",
+  "goal_world": [
+    3.5,
+    2.0,
+    0.5
+  ],
+  "env": "skypaw-v1-dev-e",
+  "setup_steps": [
+    "reuse project skypaw",
+    "reuse environment skypaw-v1-dev-e",
+    "reuse asset skypaw-rubble-00",
+    "skip asset skypaw-rubble-00",
+    "reuse twin skypaw-rubble-00",
+    "skip place skypaw-rubble-00",
+    "reuse asset skypaw-rubble-01",
+    "skip asset skypaw-rubble-01",
+    "reuse twin skypaw-rubble-01",
+    "skip place skypaw-rubble-01",
+    "reuse asset skypaw-rubble-02",
+    "skip asset skypaw-rubble-02",
+    "reuse twin skypaw-rubble-02",
+    "skip place skypaw-rubble-02",
+    "reuse asset skypaw-rubble-03",
+    "skip asset skypaw-rubble-03",
+    "reuse twin skypaw-rubble-03",
+    "skip place skypaw-rubble-03",
+    "reuse asset skypaw-rubble-04",
+    "skip asset skypaw-rubble-04",
+    "reuse twin skypaw-rubble-04",
+    "skip place skypaw-rubble-04",
+    "reuse asset skypaw-rubble-05",
+    "skip asset skypaw-rubble-05",
+    "reuse twin skypaw-rubble-05",
+    "skip place skypaw-rubble-05",
+    "reuse asset skypaw-rubble-06",
+    "skip asset skypaw-rubble-06",
+    "reuse twin skypaw-rubble-06",
+    "skip place skypaw-rubble-06",
+    "reuse asset skypaw-rubble-07",
+    "skip asset skypaw-rubble-07",
+    "reuse twin skypaw-rubble-07",
+    "skip place skypaw-rubble-07",
+    "reuse asset skypaw-rubble-08",
+    "skip asset skypaw-rubble-08",
+    "reuse twin skypaw-rubble-08",
+    "skip place skypaw-rubble-08",
+    "reuse asset skypaw-rubble-09",
+    "skip asset skypaw-rubble-09",
+    "reuse twin skypaw-rubble-09",
+    "skip place skypaw-rubble-09",
+    "reuse asset skypaw-rubble-10",
+    "skip asset skypaw-rubble-10",
+    "reuse twin skypaw-rubble-10",
+    "skip place skypaw-rubble-10",
+    "reuse asset skypaw-rubble-11",
+    "skip asset skypaw-rubble-11",
+    "reuse twin skypaw-rubble-11",
+    "skip place skypaw-rubble-11",
+    "reuse asset skypaw-rubble-12",
+    "skip asset skypaw-rubble-12",
+    "reuse twin skypaw-rubble-12",
+    "skip place skypaw-rubble-12",
+    "reuse asset skypaw-rubble-13",
+    "skip asset skypaw-rubble-13",
+    "reuse twin skypaw-rubble-13",
+    "skip place skypaw-rubble-13",
+    "reuse asset skypaw-rubble-14",
+    "skip asset skypaw-rubble-14",
+    "reuse twin skypaw-rubble-14",
+    "skip place skypaw-rubble-14",
+    "reuse asset skypaw-rubble-15",
+    "skip asset skypaw-rubble-15",
+    "reuse twin skypaw-rubble-15",
+    "skip place skypaw-rubble-15",
+    "reuse asset skypaw-rubble-16",
+    "skip asset skypaw-rubble-16",
+    "reuse twin skypaw-rubble-16",
+    "skip place skypaw-rubble-16",
+    "reuse asset skypaw-rubble-17",
+    "skip asset skypaw-rubble-17",
+    "reuse twin skypaw-rubble-17",
+    "skip place skypaw-rubble-17",
+    "reuse twin skypaw-go2",
+    "reuse twin skypaw-drone",
+    "skip place skypaw-go2",
+    "skip place skypaw-drone",
+    "reuse waypoint staging-west",
+    "reuse waypoint survey-01",
+    "reuse waypoint survey-02",
+    "reuse waypoint survey-03",
+    "reuse waypoint survey-04",
+    "reuse waypoint survey-05",
+    "reuse waypoint survey-06",
+    "reuse waypoint survey-07",
+    "reuse waypoint survey-08",
+    "reuse waypoint survey-09",
+    "reuse waypoint survey-10"
+  ],
+  "handles": {
+    "environment": "b1aaca29-5d3a-40ff-a47b-9636a314d1ab",
+    "go2": "bff62aef-d211-4c82-a6af-cb7e8c9e26de",
+    "rubble": "4a533f48-b713-4615-8bed-8f88b4e670af"
+  },
+  "stopped_at_startup": [],
+  "mqtt_connected": true,
+  "time_to_ready_s": 41.7,
+  "go2_pose_wait_s": 0.0,
+  "go2_start_pose": {
+    "position": {
+      "x": -10.949897656968147,
+      "y": -7.485532457991811,
+      "z": 0.3540118219472333
+    },
+    "rotation": {
+      "x": -0.015547176234194451,
+      "y": 0.0015704554576720328,
+      "z": 0.02466823850961018,
+      "w": 0.9995735575682415
+    }
+  },
+  "rubble": {
+    "before": {
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "after": {
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "displacement_m": 0.0,
+    "rotation_changed": false
+  },
+  "goto": {
+    "status": "error",
+    "target_id": "V-01",
+    "goal": [
+      3.5,
+      2.0,
+      0.5
+    ],
+    "seconds": 21.19,
+    "final_pose": {
+      "x": -6.815,
+      "y": -7.698,
+      "z": 0.354,
+      "yaw": -0.156
+    },
+    "distance_error_m": 14.158,
+    "route_end_error_m": 14.158,
+    "turns": 1,
+    "forwards": 42,
+    "timeout_s": 123.89805794138641,
+    "turn_rate": null,
+    "turn_calibration": null,
+    "route": {
+      "profile": "go2",
+      "points": [
+        [
+          -10.948,
+          -7.484,
+          0.0
+        ],
+        [
+          1.25,
+          -7.25,
+          0.0
+        ],
+        [
+          3.25,
+          -5.25,
+          0.0
+        ],
+        [
+          3.75,
+          1.75,
+          0.0
+        ],
+        [
+          3.5,
+          2.0,
+          0.0
+        ]
+      ],
+      "length": 22.4,
+      "climbs": 0,
+      "seconds": 37.6,
+      "difficulty": "easy",
+      "hazards_near": 0,
+      "cost": 22.536,
+      "cells": [
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          13,
+          3
+        ],
+        [
+          14,
+          3
+        ],
+        [
+          15,
+          3
+        ],
+        [
+          16,
+          3
+        ],
+        [
+          17,
+          3
+        ],
+        [
+          18,
+          3
+        ],
+        [
+          19,
+          3
+        ],
+        [
+          20,
+          3
+        ],
+        [
+          21,
+          3
+        ],
+        [
+          22,
+          3
+        ],
+        [
+          23,
+          3
+        ],
+        [
+          24,
+          3
+        ],
+        [
+          25,
+          3
+        ],
+        [
+          26,
+          3
+        ],
+        [
+          27,
+          3
+        ],
+        [
+          28,
+          3
+        ],
+        [
+          29,
+          4
+        ],
+        [
+          30,
+          5
+        ],
+        [
+          31,
+          6
+        ],
+        [
+          32,
+          7
+        ],
+        [
+          32,
+          8
+        ],
+        [
+          32,
+          9
+        ],
+        [
+          32,
+          10
+        ],
+        [
+          32,
+          11
+        ],
+        [
+          32,
+          12
+        ],
+        [
+          32,
+          13
+        ],
+        [
+          32,
+          14
+        ],
+        [
+          32,
+          15
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          32,
+          17
+        ],
+        [
+          32,
+          18
+        ],
+        [
+          32,
+          19
+        ],
+        [
+          33,
+          20
+        ],
+        [
+          33,
+          21
+        ],
+        [
+          33,
+          22
+        ]
+      ],
+      "start_snapped": false,
+      "goal_snapped": false
+    },
+    "error": "ValueError(\"Command 'move' is not in the MQTT catalog for this twin. Allowed: ['hello', 'led_toggle', 'move_backward', 'move_forward', 'recovery_stand', 'sit_down', 'stand_up', 'stop', 'take_photo', 'turn_left', 'turn_right']\")"
+  },
+  "score": {
+    "mission_id": "go2-skypaw-v1-dev-e",
+    "victims": [
+      {
+        "victim_id": "V-01",
+        "status": "failed",
+        "detected_t": 0.28,
+        "dispatched_t": 0.28,
+        "arrived_t": null,
+        "wait_s": 0.0,
+        "travel_s": null,
+        "time_to_rescue_s": null,
+        "distance_error_m": null
+      }
+    ],
+    "totals": {
+      "victims": 1,
+      "detected": 1,
+      "reached": 0,
+      "unreached": [
+        "V-01"
+      ],
+      "time_to_rescue_total_s": null,
+      "time_to_rescue_mean_s": null,
+      "time_to_rescue_max_s": null
+    }
+  },
+  "go2_position_msgs_during_goto": 171,
+  "arrival_frame": {
+    "shape": [
+      360,
+      640,
+      3
+    ],
+    "mean": 23.96,
+    "std": 28.62
+  },
+  "run": {
+    "environment_id": "b1aaca29-5d3a-40ff-a47b-9636a314d1ab",
+    "simulation_id": "e006ba33-3077-4a20-911f-60df1393263e",
+    "requested_duration_s": 200.0,
+    "estimated_credits": 0.0333,
+    "affect_s": 3.13,
+    "time_to_ready_s": 41.7,
+    "stopped_ids": [
+      "e006ba33-3077-4a20-911f-60df1393263e"
+    ],
+    "stop_verified": true
+  },
+  "mqtt": {
+    "messages": 6087,
+    "error": null,
+    "topics": {
+      "webrtc-offer": 1,
+      "telemetry": 8,
+      "webrtc-answer": 1,
+      "link_poses": 1818,
+      "free_joint_state": 909,
+      "position": 1121,
+      "rotation": 1121,
+      "pointcloud": 322,
+      "lidar": 322,
+      "navigation": 1,
+      "command": 463
+    }
+  }
+}

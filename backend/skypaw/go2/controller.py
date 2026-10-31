@@ -14,11 +14,13 @@ Loop (one decision per burst, pose from MQTT ``position`` / ``rotation`` at ~8 H
    >= ``heading_tol_rad`` (0.2): ``turn_*(0.6, duration=0.3)``; else
    ``move_forward(0.4, duration=0.5)``. The achieved yaw rate of every turn burst is logged
    (``go2_turn_rate``) and kept in the trace: live run 3 measured ~0.07 rad/s for 0.6 commanded;
-   Turns go through ``locomotion.move(linear_x=0, angular_z=+-rate, duration=)`` (positive =
-   counter-clockwise, SDK convention). The first turn burst self-checks: if the yaw moved the
-   wrong way the sign flips; if it did not move at all the controller falls back to the
-   named ``turn_left`` / ``turn_right`` commands (which turned CCW / CW in live runs 1-3).
-   The outcome is logged as ``go2_turn_calibration``;
+   Turns use the named ``turn_left`` / ``turn_right`` commands by default: live runs 1-3
+   measured them turning CCW / CW respectively (the sim reads the command name; the SDK's
+   ``angular_z`` is ``+abs(rate)`` for both). ``turn_api="move"`` sends
+   ``locomotion.move(angular_z=+-rate)`` instead, but cyberwave 0.7.4 refuses it client-side
+   for the Go2 (run 4: "Command 'move' is not in the MQTT catalog for this twin"), so that
+   error falls back to the named commands. The first turn burst self-checks the direction
+   (sign flip for ``move``; logged only for named) as ``go2_turn_calibration``;
 5. abort ``timeout`` after ``timeout_s`` (default from the route:
    ``max(120, 2.5 * route.seconds + 30)`` capped at 300 s), and ``stuck`` when over the last
    ``stuck_window`` bursts the Go2 neither moved ``stuck_min_m`` nor turned ``stuck_min_yaw``
@@ -114,7 +116,7 @@ class ControllerConfig:
     big_turn_rad: float = 0.6  # above this heading error use the big turn burst
     big_turn_rate: float = 0.8
     big_turn_burst_s: float = 0.5
-    turn_api: str = "move"  # "move" (signed angular_z) or "named" (turn_left / turn_right)
+    turn_api: str = "named"  # "named" (turn_left / turn_right) or "move" (signed angular_z)
     turn_check_min_rad: float = 0.02  # first-burst yaw change below this = no effect
     forward_speed: float = 0.4  # m/s
     forward_burst_s: float = 0.5
@@ -416,14 +418,27 @@ class Go2Controller:
         """One turn burst toward ``action`` (``turn_left`` = CCW) with the current API."""
         if self._turn_api == "move":
             sign = 1.0 if action == "turn_left" else -1.0
-            await self._run(
-                self.twin.locomotion.move,
-                linear_x=0.0,
-                angular_z=sign * self._turn_sign * abs(rate),
-                duration=dur,
-            )
-        else:
-            await self._run(getattr(self.twin.locomotion, action), abs(rate), duration=dur)
+            try:
+                await self._run(
+                    self.twin.locomotion.move,
+                    linear_x=0.0,
+                    angular_z=sign * self._turn_sign * abs(rate),
+                    duration=dur,
+                )
+                return
+            except ValueError as exc:  # SDK catalog check, raised before anything is published
+                if "not in the MQTT catalog" not in str(exc):
+                    raise
+                self._turn_api = "named"
+                log_event(
+                    log,
+                    "go2_turn_calibration",
+                    level=30,
+                    api="move",
+                    verdict="move_not_in_catalog_fallback_named",
+                    error=str(exc)[:200],
+                )
+        await self._run(getattr(self.twin.locomotion, action), abs(rate), duration=dur)
 
     def _check_turn(self, result: GotoResult, before: PoseReading, action: str) -> None:
         """After the first turn burst: keep, flip the sign, or fall back to named turns."""
