@@ -43,7 +43,7 @@ Five parallel streams, each on its own branch and worktree, 120-minute time box:
 |---|---|---|---|
 | A | `feat/v1-runtime` | sim-engineer | mission runtime, live state, WebSocket server, drone survey executor |
 | B | `feat/v1-detection` | vision-engineer | victim markers in the scene, YOLO + marker detector, projection, fusion, waypoints/alerts |
-| C | `feat/v1-voice` | voice-engineer | SarvamClient, realtime STT relay, sarvam-105b planner + rule fallback, Bulbul cache, translate cache (offline-first; key in this session has ₹0) |
-| D | `feat/v1-console` | frontend-engineer | console on live snapshots, mic capture, TTS playback, mock server, Playwright |
-| E | `feat/v1-go2` | sim-engineer | occupancy grid, Dijkstra planner, Go2 velocity controller, time-to-rescue |
+| C | `feat/v1-voice` (+`-2`) | voice-engineer | **MERGED.** SarvamClient, realtime STT relay, planner chain (`sarvam-105b-conversations` → `sarvam-105b` → rules), Bulbul cache, translate cache. **Live-verified via GitHub Actions with the new key** (plan 404 ms, realtime STT works, ₹0.20/run). |
+| D | `feat/v1-console` | frontend-engineer | **MERGED.** console on live snapshots, mic capture + 16 kHz PCM, TTS playback, mock server, 20 Playwright e2e tests |
+| E | `feat/v1-go2` | sim-engineer | **Part 1 MERGED** (grid, planner, controller, scoring; controller followed 14 m live). Go2 stopped 8 m short at an invisible obstacle: rubble mesh placement in MuJoCo ≠ site.yaml (centroid recentring suspected). Part 2 in progress: read the server's MuJoCo XML, fix build_glb/placement, re-verify. |
 Integration after all five land: merge A → E → B → C → D, wire real executors, one live end-to-end run, QA, deploy (Codespace backend + Pages console).
