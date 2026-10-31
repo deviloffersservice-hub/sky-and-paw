@@ -1,5 +1,5 @@
 # Sky & Paw: one entry point for setup, run, test, build.
-#   make setup     create .venv (Python >= 3.11, prefers python3.11) + npm ci   (idempotent)
+#   make setup     .venv (Python >= 3.11, prefers python3.11) + npm ci + frontend build (idempotent)
 #   make run       backend on :7860, serving frontend/dist at / when built
 #   make test      ruff + pytest + frontend typecheck
 #   make build     build the frontend into frontend/dist (honours VITE_BASE)
@@ -25,13 +25,19 @@ export DATA_DIR GIT_SHA
 PY_STAMP := $(VENV)/.skypaw-setup
 ML_STAMP := $(VENV)/.skypaw-setup-ml
 NODE_STAMP := frontend/node_modules/.skypaw-setup
+DIST := frontend/dist/index.html
+FRONTEND_SRC := $(wildcard frontend/src/*) frontend/index.html frontend/vite.config.ts frontend/tsconfig.json
 
 .PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean
 
 help:
 	@sed -n '2,9p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
 
-setup: $(PY_STAMP) $(NODE_STAMP)
+setup: $(PY_STAMP) $(NODE_STAMP) $(DIST)
+
+# Built once by setup (and again only when sources change) so `make run` serves the console.
+$(DIST): $(NODE_STAMP) $(FRONTEND_SRC)
+	cd frontend && npm run build
 
 $(PY_STAMP): backend/requirements-dev.txt backend/pyproject.toml
 	@test -n "$(PYTHON)" || { echo "python3 not found" >&2; exit 1; }
@@ -85,7 +91,11 @@ lock:
 	"$$tmp/bin/pip-compile" -q --strip-extras --no-emit-index-url -o requirements.txt pyproject.toml && \
 	"$$tmp/bin/pip-compile" -q --strip-extras --no-emit-index-url --extra dev -o requirements-dev.txt pyproject.toml && \
 	"$$tmp/bin/pip-compile" -q --strip-extras --emit-index-url --unsafe-package opencv-python \
-		-o requirements-ml.txt requirements-ml.in
+		-o requirements-ml.txt requirements-ml.in && \
+	sed -i -e '/^numpy==1\.26\.4 ; python_version < "3\.13"$$/a numpy==2.1.3 ; python_version >= "3.13"' \
+		requirements.txt requirements-dev.txt requirements-ml.txt
+# pip-compile resolves for the running interpreter (3.11) and drops the numpy pin whose marker
+# does not match it; the sed above re-adds the Python 3.13 line from pyproject.toml.
 
 clean:
 	rm -rf frontend/dist frontend/test-results backend/.pytest_cache backend/.ruff_cache backend/*.egg-info
