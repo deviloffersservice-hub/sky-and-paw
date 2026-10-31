@@ -27,7 +27,7 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 | # | Milestone | Status | Evidence |
 |---|---|---|---|
 | T0 | Repository scaffold (backend, frontend shell, Makefile, Docker, devcontainer, CI, Pages) | **DONE** · merged `main` 2026-10-31 | `tests/evidence/T0/REPORT.md` |
-| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | **DONE (demo-grade)** · merged 2026-10-31 · live: MuJoCo ready in 48–55 s, 3 cameras captured, MQTT-WSS pose, clean stop, 0.035 credits · **gaps:** 2nd run duplicates the asset (`assets.list()` omits user assets), no M1 unit tests, RUNBOOK missing, A6/A7-abort not run live, review+QA loop skipped for the 15:45 deadline | `tests/evidence/M1/dev/` |
+| M1 | Scene: environment + GLB + drone + Go2 by idempotent script | **DONE (demo-grade)** · merged 2026-10-31 · live: MuJoCo ready in 48–55 s, 3 cameras captured, MQTT-WSS pose, clean stop, 0.035 credits · **follow-up merged:** repeat run = 0 writes (asset found via twin or `assets.search`), orphan deleted, 15 offline tests (107 total) · **remaining gaps:** RUNBOOK, A6/A7-abort not run live, formal review+QA loop skipped for the 15:45 deadline | `tests/evidence/M1/dev/` |
 | M2 | Drone mission: takeoff, scan, camera down, frame capture | not started | — |
 | M3 | Vision: YOLO → waypoints with priority + alerts | not started | — |
 | M4 | Dog mission: Go2 to waypoints by priority; time-to-rescue | not started | — |
