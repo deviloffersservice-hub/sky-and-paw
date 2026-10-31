@@ -1,0 +1,34 @@
+# Secrets and local runtime data
+.env
+.env.*
+!.env.example
+data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Frontend
+node_modules/
+dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# Model weights downloaded at runtime (M3)
+*.pt
+
+# Evidence audio is large; keep reports and screenshots only
+tests/evidence/**/*.wav
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
