@@ -135,7 +135,7 @@ h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:.02em}
 (function () {
   'use strict';
   const SP = {}; window.SP = SP;
-  SP.MODELS = { stt: 'saaras:v4', sttRealtime: 'saaras:v3-realtime', llm: 'sarvam-105b', tts: 'bulbul:v3', translate: 'sarvam-translate:v1', detector: 'YOLOv8n', sim: 'Cyberwave MuJoCo', go2: 'unitree/go2', drone: 'holybro/px4vision' };
+  SP.MODELS = { stt: 'saaras:v4', sttRealtime: 'saaras:v3-realtime', llm: 'sarvam-105b', tts: 'bulbul:v3', translate: 'sarvam-translate:v1', detector: 'YOLOv8n', sim: 'Cyberwave MuJoCo', go2: 'unitree/go2', drone: 'skydio/skydio-x2' };
   SP.LANGS = [{ code: 'hi-IN', native: 'हिन्दी' }, { code: 'mr-IN', native: 'मराठी' }, { code: 'ta-IN', native: 'தமிழ்' }, { code: 'en-IN', native: 'English' }];
   SP.langName = c => (SP.LANGS.find(l => l.code === c) || { native: c }).native;
   SP.VOICES = { 'hi-IN': 'priya', 'mr-IN': 'rohan', 'ta-IN': 'kavitha', 'en-IN': 'shubh' };
