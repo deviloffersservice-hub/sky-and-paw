@@ -20,12 +20,21 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MOCKUP = ROOT / "docs" / "mockups" / "ops-v2.html"
-EVIDENCE_DIRS = [ROOT / "tests" / "evidence" / "M1" / "dev", ROOT / "tests" / "evidence" / "M1"]
+EVIDENCE_DIRS = [
+    ROOT / "tests" / "evidence" / "M2" / "dev",
+    ROOT / "tests" / "evidence" / "M1" / "dev",
+    ROOT / "tests" / "evidence" / "M1",
+]
+# key substring in the filename -> caption; the first match per key across EVIDENCE_DIRS wins
 FRAME_LABELS = {
-    "drone_bottom": "Skydio X2 · downward camera",
+    "overhead_bottom": "Skydio X2 at 6 m · downward camera over the rubble",
+    "go2_front_moved": "Unitree Go2 · front camera, approaching the rubble",
+    "overhead_payload": "Skydio X2 at 6 m · forward camera",
     "drone_payload": "Skydio X2 · forward camera",
     "go2_front": "Unitree Go2 · front camera",
+    "drone_bottom": "Skydio X2 · downward camera (ground)",
 }
+MAX_FRAMES = 4
 
 STRIP_CSS = """
 .evidence{position:absolute;right:10px;bottom:10px;z-index:7;background:rgba(17,24,32,.95);border:1px solid #3ddc84;border-radius:6px;padding:8px 10px;display:grid;gap:6px;max-width:min(560px,calc(100% - 20px))}
@@ -41,17 +50,20 @@ STRIP_CSS = """
 
 
 def find_frames() -> list[tuple[str, pathlib.Path]]:
-    for d in EVIDENCE_DIRS:
-        if not d.is_dir():
-            continue
-        found = []
-        for key, label in FRAME_LABELS.items():
-            for p in sorted(d.glob(f"*{key}*.jpg")) + sorted(d.glob(f"*{key}*.png")):
-                found.append((label, p))
+    found: list[tuple[str, pathlib.Path]] = []
+    used: set[str] = set()
+    for key, label in FRAME_LABELS.items():
+        for d in EVIDENCE_DIRS:
+            if not d.is_dir():
+                continue
+            hits = [p for p in sorted(d.glob(f"*{key}*.jpg")) + sorted(d.glob(f"*{key}*.png")) if p.name not in used]
+            if hits:
+                found.append((label, hits[0]))
+                used.add(hits[0].name)
                 break
-        if found:
-            return found
-    return []
+        if len(found) >= MAX_FRAMES:
+            break
+    return found
 
 
 def build(dist: pathlib.Path) -> None:
