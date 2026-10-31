@@ -8,13 +8,12 @@ from typing import Any
 
 import pytest
 
-from skypaw.scene.build_glb import build_glb_bytes, sha256
+from skypaw.scene.build_glb import build_glb_bytes, build_piece_glbs, piece_name, sha256
 from skypaw.scene.site import load_site
 from skypaw.sim.guard import SimulationOnlyViolation
 from skypaw.sim.scene import (
     DRONE_SLUG,
     GO2_SLUG,
-    RUBBLE_ASSET_NAME,
     TWIN_NAMES,
     SceneContext,
     build_scene,
@@ -123,6 +122,10 @@ class FakeCyberwave:
                 fake.twins_db.append(t)
                 return t
 
+            def delete(self, uuid: str) -> None:
+                fake.writes.append("DELETE twin")
+                fake.twins_db = [t for t in fake.twins_db if t.uuid != uuid]
+
             def update_state(self, uuid: str, data: dict) -> None:
                 fake.writes.append("PATCH twin state")
                 t = next(t for t in fake.twins_db if t.uuid == uuid)
@@ -150,15 +153,25 @@ def _build(cw: FakeCyberwave, site_glb: tuple[Any, bytes, str], *, dry_run: bool
     return ctx, handles
 
 
+N_BOXES = 18
+
+
 def test_first_run_creates_everything(site_glb: tuple[Any, bytes, str]) -> None:
     cw = FakeCyberwave()
     ctx, h = _build(cw, site_glb)
-    assert cw.writes.count("POST twin") == 3
-    assert cw.writes.count("POST asset") == 1
-    assert "POST glb-file" in cw.writes and "PUT asset" in cw.writes
+    assert cw.writes.count("POST twin") == 2 + N_BOXES  # go2, drone, one per rubble box
+    assert cw.writes.count("POST asset") == N_BOXES
+    assert cw.writes.count("POST glb-file") == N_BOXES and "PUT asset" in cw.writes
     assert len(h.waypoints) == 11 and all(h.waypoints.values())
-    asset = cw.assets_db[0]
-    assert "mujoco" in asset.supported_simulation_backends and asset.fixed_base is True
+    assert list(h.rubble_pieces) == [piece_name(i) for i in range(N_BOXES)]
+    assert all(h.rubble_pieces.values())
+    assert h.rubble_twin_uuid == h.rubble_pieces[piece_name(0)]
+    for asset in cw.assets_db:
+        assert "mujoco" in asset.supported_simulation_backends and asset.fixed_base is True
+    pieces = [t for t in cw.twins_db if t.name.startswith("skypaw-rubble-")]
+    assert len(pieces) == N_BOXES
+    assert all(t.fixed_base is True and t.position_x == 0.0 for t in pieces)
+    assert not [t for t in cw.twins_db if t.name == TWIN_NAMES["rubble"]]
     drone = next(t for t in cw.twins_db if t.name == TWIN_NAMES["drone"])
     assert drone.position_z == pytest.approx(0.6)  # RESEARCH §6: black frames at z = 0
     assert ctx.notes["fixed_base_accepted"] is True
@@ -172,13 +185,14 @@ def test_second_run_makes_zero_writes_and_same_handles(site_glb: tuple[Any, byte
     _, second = _build(cw, site_glb)
     assert cw.writes == []
     assert second.as_dict() == first.as_dict()
-    assert len([a for a in cw.assets_db if a.name == RUBBLE_ASSET_NAME]) == 1
+    for i in range(N_BOXES):
+        assert len([a for a in cw.assets_db if a.name == piece_name(i)]) == 1
 
 
 def test_asset_found_by_search_when_twin_missing(site_glb: tuple[Any, bytes, str]) -> None:
     cw = FakeCyberwave()
     _build(cw, site_glb)
-    cw.twins_db = [t for t in cw.twins_db if t.name != TWIN_NAMES["rubble"]]
+    cw.twins_db = [t for t in cw.twins_db if t.name != piece_name(3)]
     cw.writes.clear()
     _build(cw, site_glb)
     assert "POST asset" not in cw.writes
@@ -199,3 +213,35 @@ def test_refuses_client_not_in_simulation(site_glb: tuple[Any, bytes, str]) -> N
     with pytest.raises(SimulationOnlyViolation):
         _build(cw, site_glb)
     assert cw.writes == []
+
+
+def test_legacy_single_mesh_rubble_twin_is_deleted(site_glb: tuple[Any, bytes, str]) -> None:
+    """V1-E: one merged rubble mesh collides as one convex hull; the pieces replace it."""
+    cw = FakeCyberwave()
+    _build(cw, site_glb)
+    env = cw.envs[0].uuid
+    cw.twins_db.append(
+        NS(uuid=next(_ids), name=TWIN_NAMES["rubble"], environment_uuid=env, asset_uuid="legacy")
+    )
+    cw.writes.clear()
+    _build(cw, site_glb)
+    assert cw.writes == ["DELETE twin"]
+    assert not [t for t in cw.twins_db if t.name == TWIN_NAMES["rubble"]]
+
+
+def test_piece_glbs_one_box_each_in_world_frame(site_glb: tuple[Any, bytes, str]) -> None:
+    import io
+
+    import trimesh
+
+    site = site_glb[0]
+    pieces = build_piece_glbs(site)
+    assert [n for n, _ in pieces] == [piece_name(i) for i in range(len(site.rubble))]
+    assert build_piece_glbs(site) == pieces  # deterministic
+    for (_, data), box in zip(pieces, site.rubble, strict=True):
+        scene = trimesh.load(io.BytesIO(data), file_type="glb")
+        assert len(scene.geometry) == 1
+        (x0, y0, z0), (x1, y1, z1) = scene.bounds
+        assert (x0 + x1) / 2 == pytest.approx(box.x, abs=1e-6)
+        assert (y0 + y1) / 2 == pytest.approx(-box.z, abs=1e-6)
+        assert (z0, z1) == (pytest.approx(0.0, abs=1e-6), pytest.approx(box.sy, abs=1e-6))

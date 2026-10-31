@@ -1,0 +1,853 @@
+{
+  "started_utc": "20261031T095211Z",
+  "args": {
+    "project": "skypaw",
+    "env": "skypaw-v1-dev-e",
+    "duration": "120.0",
+    "capture": "False",
+    "dry_run": "False",
+    "no_sim": "True",
+    "fail_after_ready": "False",
+    "push_test": "False",
+    "evidence_dir": "tests/evidence/V1-E/scene-setup",
+    "ready_timeout": "120.0",
+    "frame_timeout": "40.0",
+    "pose_timeout": "60.0"
+  },
+  "checks": {},
+  "glb": {
+    "bytes": 9488,
+    "sha256": "6bb2bd34acd62aea87da666efdf1b6e81c0170c001779f1db14558e77e757bcc",
+    "boxes": 18
+  },
+  "setup_http": {
+    "total": 192,
+    "by_method": {
+      "DELETE": 1,
+      "GET": 119,
+      "POST": 54,
+      "PUT": 18
+    },
+    "writes": 73,
+    "write_calls": [
+      "DELETE /api/v1/twins/5926b3af-ef80-479b-87dc-45197700f41a",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/fab0e80a-238d-4ced-881a-483e8abe097b/glb-file",
+      "PUT /api/v1/assets/fab0e80a-238d-4ced-881a-483e8abe097b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/3e78fdc4-5f42-41ad-ad15-fcc8af960beb/glb-file",
+      "PUT /api/v1/assets/3e78fdc4-5f42-41ad-ad15-fcc8af960beb",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/56c0239a-3278-4c75-9df1-acac59ee23a8/glb-file",
+      "PUT /api/v1/assets/56c0239a-3278-4c75-9df1-acac59ee23a8",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/024bde5a-c875-49e7-b9ae-6db264560e07/glb-file",
+      "PUT /api/v1/assets/024bde5a-c875-49e7-b9ae-6db264560e07",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/ba2d9aa7-93a3-4110-abce-6ce11f6149aa/glb-file",
+      "PUT /api/v1/assets/ba2d9aa7-93a3-4110-abce-6ce11f6149aa",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/78e145ee-9461-4f6d-a177-6263285d2979/glb-file",
+      "PUT /api/v1/assets/78e145ee-9461-4f6d-a177-6263285d2979",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/4db5782b-2368-4c52-b8c3-7b7568ef0eda/glb-file",
+      "PUT /api/v1/assets/4db5782b-2368-4c52-b8c3-7b7568ef0eda",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/4d308bcf-d6a4-408d-a5ed-7da6a9f62002/glb-file",
+      "PUT /api/v1/assets/4d308bcf-d6a4-408d-a5ed-7da6a9f62002",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/7ce05283-6a29-4c74-b236-6ffaf16d0e6b/glb-file",
+      "PUT /api/v1/assets/7ce05283-6a29-4c74-b236-6ffaf16d0e6b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/aac7396f-137c-4189-8841-62eba5d9105b/glb-file",
+      "PUT /api/v1/assets/aac7396f-137c-4189-8841-62eba5d9105b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/f6a75cb4-f5cd-4245-80ee-1fa740a7d6e6/glb-file",
+      "PUT /api/v1/assets/f6a75cb4-f5cd-4245-80ee-1fa740a7d6e6",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/bc3d898e-9e38-4328-b5d4-119f82d86425/glb-file",
+      "PUT /api/v1/assets/bc3d898e-9e38-4328-b5d4-119f82d86425",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/12f11807-728b-4ca5-9d96-d309ebcf7ccd/glb-file",
+      "PUT /api/v1/assets/12f11807-728b-4ca5-9d96-d309ebcf7ccd",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/35dd7363-357e-414d-b829-ed8b3e40329f/glb-file",
+      "PUT /api/v1/assets/35dd7363-357e-414d-b829-ed8b3e40329f",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/aeb28d1c-5ff2-4869-9b09-5034c7329246/glb-file",
+      "PUT /api/v1/assets/aeb28d1c-5ff2-4869-9b09-5034c7329246",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/3009ba44-6eb5-4384-9662-32e16fd045de/glb-file",
+      "PUT /api/v1/assets/3009ba44-6eb5-4384-9662-32e16fd045de",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/6ab231e4-f22b-482e-a0a3-ff476ecae75f/glb-file",
+      "PUT /api/v1/assets/6ab231e4-f22b-482e-a0a3-ff476ecae75f",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/6db0abc0-85bf-4fde-9df0-ebf83d93efb2/glb-file",
+      "PUT /api/v1/assets/6db0abc0-85bf-4fde-9df0-ebf83d93efb2",
+      "POST /api/v1/twins"
+    ]
+  },
+  "notes": {
+    "workspace_uuid": "0a003362-ee60-4152-aeb7-05783591e311",
+    "fixed_base_accepted": true,
+    "asset_backends": [
+      "playground",
+      "mujoco"
+    ],
+    "asset_glb_attached": true
+  },
+  "plan": [
+    {
+      "action": "reuse",
+      "kind": "project",
+      "name": "skypaw",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "environment",
+      "name": "skypaw-v1-dev-e",
+      "detail": ""
+    },
+    {
+      "action": "delete",
+      "kind": "twin",
+      "name": "skypaw-rubble",
+      "detail": "single-mesh convex hull replaced"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-00",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-00",
+      "detail": "1028 bytes sha256 c4538f59be80"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-00",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-00",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-00",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-01",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-01",
+      "detail": "1028 bytes sha256 f8057bfef8fd"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-01",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-01",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-01",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-02",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-02",
+      "detail": "1028 bytes sha256 c39b45cc63a3"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-02",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-02",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-02",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-03",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-03",
+      "detail": "1032 bytes sha256 82f1eb2765fa"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-03",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-03",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-03",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-04",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-04",
+      "detail": "1024 bytes sha256 df8f9ee976e8"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-04",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-04",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-04",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-05",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-05",
+      "detail": "1028 bytes sha256 716b27944214"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-05",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-05",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-05",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-06",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-06",
+      "detail": "1032 bytes sha256 a138a8612279"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-06",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-06",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-06",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-07",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-07",
+      "detail": "1000 bytes sha256 445bfaef16cf"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-07",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-07",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-07",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-08",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-08",
+      "detail": "996 bytes sha256 a22b24bdf8d3"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-08",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-08",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-08",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-09",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-09",
+      "detail": "996 bytes sha256 54fe77582d49"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-09",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-09",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-09",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-10",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-10",
+      "detail": "1016 bytes sha256 34aab5d28ca3"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-10",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-10",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-10",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-11",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-11",
+      "detail": "1032 bytes sha256 2741c8466774"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-11",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-11",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-11",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-12",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-12",
+      "detail": "1024 bytes sha256 d9b7c68fd2c9"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-12",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-12",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-12",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-13",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-13",
+      "detail": "1032 bytes sha256 05505de72861"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-13",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-13",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-13",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-14",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-14",
+      "detail": "1028 bytes sha256 9b702d336a52"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-14",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-14",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-14",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-15",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-15",
+      "detail": "1028 bytes sha256 96dc228264c7"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-15",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-15",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-15",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-16",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-16",
+      "detail": "1028 bytes sha256 33d1743dbc73"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-16",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-16",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-16",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "create",
+      "kind": "asset",
+      "name": "skypaw-rubble-17",
+      "detail": ""
+    },
+    {
+      "action": "upload",
+      "kind": "asset",
+      "name": "skypaw-rubble-17",
+      "detail": "1012 bytes sha256 bb9ba1c93504"
+    },
+    {
+      "action": "patch",
+      "kind": "asset",
+      "name": "skypaw-rubble-17",
+      "detail": "backends playground+mujoco, fixed_base=True"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-17",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-17",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "twin",
+      "name": "skypaw-go2",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "twin",
+      "name": "skypaw-drone",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-go2",
+      "detail": "already at world (-11.0, -7.5, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-drone",
+      "detail": "already at world (-11.5, -5.5, 0.6)"
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "staging-west",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-01",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-02",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-03",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-04",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-05",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-06",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-07",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-08",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-09",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-10",
+      "detail": ""
+    }
+  ],
+  "http": {
+    "total": 192,
+    "by_method": {
+      "DELETE": 1,
+      "GET": 119,
+      "POST": 54,
+      "PUT": 18
+    },
+    "writes": 73,
+    "write_calls": [
+      "DELETE /api/v1/twins/5926b3af-ef80-479b-87dc-45197700f41a",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/fab0e80a-238d-4ced-881a-483e8abe097b/glb-file",
+      "PUT /api/v1/assets/fab0e80a-238d-4ced-881a-483e8abe097b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/3e78fdc4-5f42-41ad-ad15-fcc8af960beb/glb-file",
+      "PUT /api/v1/assets/3e78fdc4-5f42-41ad-ad15-fcc8af960beb",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/56c0239a-3278-4c75-9df1-acac59ee23a8/glb-file",
+      "PUT /api/v1/assets/56c0239a-3278-4c75-9df1-acac59ee23a8",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/024bde5a-c875-49e7-b9ae-6db264560e07/glb-file",
+      "PUT /api/v1/assets/024bde5a-c875-49e7-b9ae-6db264560e07",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/ba2d9aa7-93a3-4110-abce-6ce11f6149aa/glb-file",
+      "PUT /api/v1/assets/ba2d9aa7-93a3-4110-abce-6ce11f6149aa",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/78e145ee-9461-4f6d-a177-6263285d2979/glb-file",
+      "PUT /api/v1/assets/78e145ee-9461-4f6d-a177-6263285d2979",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/4db5782b-2368-4c52-b8c3-7b7568ef0eda/glb-file",
+      "PUT /api/v1/assets/4db5782b-2368-4c52-b8c3-7b7568ef0eda",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/4d308bcf-d6a4-408d-a5ed-7da6a9f62002/glb-file",
+      "PUT /api/v1/assets/4d308bcf-d6a4-408d-a5ed-7da6a9f62002",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/7ce05283-6a29-4c74-b236-6ffaf16d0e6b/glb-file",
+      "PUT /api/v1/assets/7ce05283-6a29-4c74-b236-6ffaf16d0e6b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/aac7396f-137c-4189-8841-62eba5d9105b/glb-file",
+      "PUT /api/v1/assets/aac7396f-137c-4189-8841-62eba5d9105b",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/f6a75cb4-f5cd-4245-80ee-1fa740a7d6e6/glb-file",
+      "PUT /api/v1/assets/f6a75cb4-f5cd-4245-80ee-1fa740a7d6e6",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/bc3d898e-9e38-4328-b5d4-119f82d86425/glb-file",
+      "PUT /api/v1/assets/bc3d898e-9e38-4328-b5d4-119f82d86425",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/12f11807-728b-4ca5-9d96-d309ebcf7ccd/glb-file",
+      "PUT /api/v1/assets/12f11807-728b-4ca5-9d96-d309ebcf7ccd",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/35dd7363-357e-414d-b829-ed8b3e40329f/glb-file",
+      "PUT /api/v1/assets/35dd7363-357e-414d-b829-ed8b3e40329f",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/aeb28d1c-5ff2-4869-9b09-5034c7329246/glb-file",
+      "PUT /api/v1/assets/aeb28d1c-5ff2-4869-9b09-5034c7329246",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/3009ba44-6eb5-4384-9662-32e16fd045de/glb-file",
+      "PUT /api/v1/assets/3009ba44-6eb5-4384-9662-32e16fd045de",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/6ab231e4-f22b-482e-a0a3-ff476ecae75f/glb-file",
+      "PUT /api/v1/assets/6ab231e4-f22b-482e-a0a3-ff476ecae75f",
+      "POST /api/v1/twins",
+      "POST /api/v1/assets",
+      "POST /api/v1/assets/6db0abc0-85bf-4fde-9df0-ebf83d93efb2/glb-file",
+      "PUT /api/v1/assets/6db0abc0-85bf-4fde-9df0-ebf83d93efb2",
+      "POST /api/v1/twins"
+    ]
+  },
+  "exit_code": 0
+}
