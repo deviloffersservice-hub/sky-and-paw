@@ -1,0 +1,92 @@
+# Sky & Paw: one entry point for setup, run, test, build.
+#   make setup     create .venv (Python >= 3.11, prefers python3.11) + npm ci   (idempotent)
+#   make run       backend on :7860, serving frontend/dist at / when built
+#   make test      ruff + pytest + frontend typecheck
+#   make build     build the frontend into frontend/dist (honours VITE_BASE)
+#   make smoke     build, start the backend, Playwright smoke (healthz, title, /ws)
+#   make setup-ml  optional ML stack (ultralytics 8.3 + torch CPU), needed from M3
+#   make docker    build the optional Docker image
+#   make lock      regenerate backend/requirements*.txt from backend/pyproject.toml
+
+SHELL := /bin/bash
+.DEFAULT_GOAL := help
+
+PYTHON ?= $(shell command -v python3.11 2>/dev/null || command -v python3 2>/dev/null)
+VENV := .venv
+VPY := $(VENV)/bin/python
+PIP := $(VPY) -m pip --disable-pip-version-check
+HOST ?= 0.0.0.0
+PORT ?= 7860
+DATA_DIR ?= $(CURDIR)/data
+IMAGE ?= skypaw:dev
+GIT_SHA ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+export DATA_DIR GIT_SHA
+
+PY_STAMP := $(VENV)/.skypaw-setup
+ML_STAMP := $(VENV)/.skypaw-setup-ml
+NODE_STAMP := frontend/node_modules/.skypaw-setup
+
+.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean
+
+help:
+	@sed -n '2,9p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
+
+setup: $(PY_STAMP) $(NODE_STAMP)
+
+$(PY_STAMP): backend/requirements-dev.txt backend/pyproject.toml
+	@test -n "$(PYTHON)" || { echo "python3 not found" >&2; exit 1; }
+	@$(PYTHON) -c 'import sys; sys.exit(sys.version_info < (3, 11))' \
+		|| { echo "Python >= 3.11 required (found $$($(PYTHON) --version))" >&2; exit 1; }
+	@test -x $(VPY) || $(PYTHON) -m venv $(VENV)
+	$(PIP) install -q -r backend/requirements-dev.txt
+	$(PIP) install -q --no-deps -e backend
+	@touch $@
+
+$(NODE_STAMP): frontend/package.json frontend/package-lock.json
+	cd frontend && npm ci --no-audit --no-fund
+	@touch $@
+
+# Full lock installed with --no-deps: keeps opencv-python-headless (ultralytics would
+# otherwise pull the GUI opencv-python next to it).
+setup-ml: $(ML_STAMP)
+$(ML_STAMP): $(PY_STAMP) backend/requirements-ml.txt
+	$(PIP) install -q --no-deps -r backend/requirements-ml.txt
+	$(VPY) -c "import torch, ultralytics; print('torch', torch.__version__, 'ultralytics', ultralytics.__version__)"
+	@touch $@
+
+run: $(PY_STAMP)
+	$(VENV)/bin/uvicorn skypaw.app:create_app --factory --host $(HOST) --port $(PORT)
+
+test: lint pytest typecheck
+
+lint: $(PY_STAMP)
+	$(VENV)/bin/ruff check backend
+	$(VENV)/bin/ruff format --check backend
+
+pytest: $(PY_STAMP)
+	$(VENV)/bin/pytest backend
+
+typecheck: $(NODE_STAMP)
+	cd frontend && npm run --silent typecheck
+
+build: $(NODE_STAMP)
+	cd frontend && npm run build
+
+smoke: $(PY_STAMP) build
+	scripts/smoke.sh
+
+docker:
+	docker build --build-arg GIT_SHA=$(GIT_SHA) -t $(IMAGE) .
+
+lock:
+	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
+	$(PYTHON) -m venv "$$tmp" && "$$tmp/bin/pip" install -q pip-tools==7.4.1 && \
+	cd backend && export CUSTOM_COMPILE_COMMAND="make lock" && \
+	"$$tmp/bin/pip-compile" -q --strip-extras --no-emit-index-url -o requirements.txt pyproject.toml && \
+	"$$tmp/bin/pip-compile" -q --strip-extras --no-emit-index-url --extra dev -o requirements-dev.txt pyproject.toml && \
+	"$$tmp/bin/pip-compile" -q --strip-extras --emit-index-url --unsafe-package opencv-python \
+		-o requirements-ml.txt requirements-ml.in
+
+clean:
+	rm -rf frontend/dist frontend/test-results backend/.pytest_cache backend/.ruff_cache backend/*.egg-info
+	find backend -name __pycache__ -type d -prune -exec rm -rf {} +

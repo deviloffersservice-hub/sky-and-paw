@@ -6,6 +6,8 @@
  *
  * Checks: GET /healthz -> 200 {"status":"ok"}; GET / -> title "Sky & Paw Ops";
  * the shell's /ws hello round-trip turns the status to "connected".
+ * With SMOKE_STATIC_URL (frontend/dist served from another origin): ?api=<backend> connects,
+ * the cross-origin /healthz fetch passes CORS, and the URL is remembered in localStorage.
  *
  * Playwright: uses the project's @playwright/test (CI installs its Chromium); if that
  * Chromium is not installed, falls back to a machine-wide `playwright` found on NODE_PATH,
@@ -18,6 +20,8 @@ const path = require("node:path");
 
 const BASE = (process.env.SMOKE_URL || "http://127.0.0.1:7860").replace(/\/+$/, "");
 const SHOT = process.env.SMOKE_SCREENSHOT || "";
+// Optional: a static server on another origin serving frontend/dist (simulates GitHub Pages).
+const STATIC = (process.env.SMOKE_STATIC_URL || "").replace(/\/+$/, "");
 const TITLE = "Sky & Paw Ops";
 
 function candidates() {
@@ -78,6 +82,28 @@ async function main() {
     if (SHOT) {
       await page.screenshot({ path: SHOT, fullPage: true });
       console.log(`info screenshot: ${SHOT}`);
+    }
+
+    if (STATIC) {
+      // Console on another origin (as on GitHub Pages) pointed at the backend with ?api=.
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+      const other = await ctx.newPage();
+      await other.goto(`${STATIC}/?api=${encodeURIComponent(BASE)}`, { waitUntil: "load" });
+      await other.waitForSelector('body[data-conn="connected"]', { timeout: 10_000 });
+      check(true, `cross-origin ${STATIC} with ?api= connects over /ws`);
+      await other.waitForFunction(() => {
+        const dd = document.querySelectorAll(".meta dd")[1];
+        return dd && dd.textContent !== "…";
+      });
+      const version = await other.textContent(".meta dd:nth-of-type(2)");
+      check(version === healthBody.version, `cross-origin fetch /healthz allowed by CORS (version "${version}")`);
+      const stored = await other.evaluate(() => localStorage.getItem("skypaw_api"));
+      check(stored === BASE, `?api= remembered in localStorage.skypaw_api = "${stored}"`);
+      await other.goto(`${STATIC}/`, { waitUntil: "load" });
+      await other.waitForSelector('body[data-conn="connected"]', { timeout: 10_000 });
+      const backendLine = await other.textContent(".meta dd:nth-of-type(1)");
+      check(backendLine === `${BASE} (storage)`, `reload without ?api= uses stored backend: "${backendLine}"`);
+      await ctx.close();
     }
   } finally {
     await browser.close();
