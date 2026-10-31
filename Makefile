@@ -28,16 +28,25 @@ NODE_STAMP := frontend/node_modules/.skypaw-setup
 DIST := frontend/dist/index.html
 FRONTEND_SRC := $(wildcard frontend/src/*) frontend/index.html frontend/vite.config.ts frontend/tsconfig.json
 
-.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean
+.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean FORCE
 
 help:
 	@sed -n '2,9p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
 
 setup: $(PY_STAMP) $(NODE_STAMP) $(DIST)
 
-# Built once by setup (and again only when sources change) so `make run` serves the console.
+# Built by setup/run when missing, when sources change, or when the base it was built with
+# (frontend/dist/.vite-base, written by vite.config.ts) differs from the requested VITE_BASE
+# (default /). So after `VITE_BASE=/sky-and-paw/ make build`, `make run` rebuilds for /.
+WANT_BASE := $(if $(filter-out /,$(strip $(VITE_BASE))),$(strip $(VITE_BASE)),/)
+BUILT_BASE := $(strip $(shell cat frontend/dist/.vite-base 2>/dev/null))
+ifneq ($(BUILT_BASE),$(WANT_BASE))
+$(DIST): FORCE
+endif
 $(DIST): $(NODE_STAMP) $(FRONTEND_SRC)
 	cd frontend && npm run build
+
+FORCE:
 
 $(PY_STAMP): backend/requirements-dev.txt backend/pyproject.toml
 	@test -n "$(PYTHON)" || { echo "python3 not found" >&2; exit 1; }
