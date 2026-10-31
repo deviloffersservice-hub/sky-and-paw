@@ -60,7 +60,7 @@ $(ML_STAMP): $(PY_STAMP) backend/requirements-ml.txt
 	$(VPY) -c "import torch, ultralytics; print('torch', torch.__version__, 'ultralytics', ultralytics.__version__)"
 	@touch $@
 
-run: $(PY_STAMP)
+run: $(PY_STAMP) $(DIST)
 	$(VENV)/bin/uvicorn skypaw.app:create_app --factory --host $(HOST) --port $(PORT)
 
 test: lint pytest typecheck
@@ -92,11 +92,19 @@ lock:
 	"$$tmp/bin/pip-compile" -q --strip-extras --no-emit-index-url --extra dev -o requirements-dev.txt pyproject.toml && \
 	"$$tmp/bin/pip-compile" -q --strip-extras --emit-index-url --unsafe-package opencv-python \
 		-o requirements-ml.txt requirements-ml.in && \
-	sed -i -e '/^numpy==1\.26\.4 ; python_version < "3\.13"$$/a numpy==2.1.3 ; python_version >= "3.13"' \
-		requirements.txt requirements-dev.txt requirements-ml.txt
+	sed -i.bak -e '/^numpy==1\.26\.4 ; python_version < "3\.13"$$/a\' \
+		-e 'numpy==2.1.3 ; python_version >= "3.13"' \
+		requirements.txt requirements-dev.txt requirements-ml.txt && \
+	sed -i.bak -e '/^--extra-index-url https:\/\/download\.pytorch\.org\/whl\/cpu$$/i\' \
+		-e '$(ML_INDEX_NOTE)' requirements-ml.txt && \
+	rm -f ./*.bak
 # pip-compile resolves for the running interpreter (3.11) and drops the numpy pin whose marker
-# does not match it; the sed above re-adds the Python 3.13 line from pyproject.toml.
+# does not match it; the first sed re-adds the Python 3.13 line from pyproject.toml. The second
+# re-adds the note on the CPU index (pip-compile does not copy comments from the .in file).
+# `sed -i.bak` + `rm` works with both GNU and BSD sed.
+ML_INDEX_NOTE := \# torch/torchvision are pinned to exact +cpu builds, which only this index serves.
 
 clean:
-	rm -rf frontend/dist frontend/test-results backend/.pytest_cache backend/.ruff_cache backend/*.egg-info
+	rm -rf frontend/dist frontend/test-results backend/.pytest_cache backend/.ruff_cache .ruff_cache \
+		backend/*.egg-info
 	find backend -name __pycache__ -type d -prune -exec rm -rf {} +

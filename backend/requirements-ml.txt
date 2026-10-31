@@ -4,6 +4,7 @@
 #
 #    make lock
 #
+# torch/torchvision are pinned to exact +cpu builds, which only this index serves.
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 certifi==2026.10.23
