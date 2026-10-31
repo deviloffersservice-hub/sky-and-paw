@@ -45,21 +45,17 @@ class SessionInfo:
 def ensure_scene_handles(cw: Any, settings: Settings, env_name: str) -> dict[str, str | None]:
     """Environment + twin uuids for ``env_name``, creating the scene if it is missing.
 
-    Uses ``skypaw.sim.scene.build_scene`` (idempotent; a repeat run only sends GETs).
+    Uses ``skypaw.sim.scene.build_scene`` (idempotent; a repeat run only sends GETs): 18 rubble
+    pieces, Go2, drone, survey waypoints and stream B's victim markers.
     """
-    from skypaw.scene.build_glb import build_glb_bytes, sha256
     from skypaw.scene.site import load_site
     from skypaw.sim.scene import SceneContext, build_scene
 
-    site = load_site()
-    glb = build_glb_bytes(site)
     handles = build_scene(
         SceneContext(cw),
-        site,
+        load_site(),
         project=settings.cw_project_name,
         environment=env_name,
-        glb=glb,
-        glb_sha256=sha256(glb),
     )
     return {
         "env_id": handles.environment_uuid,

@@ -77,6 +77,7 @@ class SceneHandles:
     rubble_twin_uuid: str | None = None  # piece 00 (MQTT rubble-pose probe)
     waypoints: dict[str, str | None] = field(default_factory=dict)
     rubble_pieces: dict[str, str | None] = field(default_factory=dict)  # name -> twin uuid
+    markers: dict[str, str | None] = field(default_factory=dict)  # marker-<id> -> twin uuid
 
     def as_dict(self) -> dict[str, Any]:
         """uuids only (safe for evidence/handles.json)."""
@@ -477,8 +478,11 @@ def build_scene(
     glb: bytes | None = None,
     glb_sha256: str | None = None,
     go2_pose: SitePose | None = None,
+    with_markers: bool = True,
 ) -> SceneHandles:
     """Ensure the whole scene; returns the handles. ``go2_pose`` overrides the staging spawn.
+
+    ``with_markers`` also ensures stream B's victim marker twins (``ensure_markers``).
 
     Rubble = one asset and fixed twin per box (:func:`ensure_rubble_pieces`); a legacy
     single-mesh ``skypaw-rubble`` twin is deleted from the environment. ``glb`` /
@@ -503,6 +507,13 @@ def build_scene(
     place(ctx, h.environment_uuid, h.go2_twin_uuid, TWIN_NAMES["go2"], go2_target)
     place(ctx, h.environment_uuid, h.drone_twin_uuid, TWIN_NAMES["drone"], spawn["drone"])
     h.waypoints = ensure_waypoints(ctx, h.environment_uuid, waypoint_specs(site))
+    if with_markers and h.environment_uuid:
+        # Stream B victim markers (marker-V-01 ...); local import: markers imports this module.
+        from skypaw.scene.markers import ensure_markers
+
+        h.markers = dict(
+            ensure_markers(ctx.cw, h.environment_uuid, site, dry_run=ctx.dry_run)["twins"]
+        )
     ws = ctx.notes.get("workspace_uuid")
     h.workspace_uuid = str(ws) if ws else None
     return h

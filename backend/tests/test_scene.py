@@ -144,13 +144,37 @@ def site_glb() -> tuple[Any, bytes, str]:
     return site, glb, sha256(glb)
 
 
-def _build(cw: FakeCyberwave, site_glb: tuple[Any, bytes, str], *, dry_run: bool = False) -> Any:
+def _build(
+    cw: FakeCyberwave,
+    site_glb: tuple[Any, bytes, str],
+    *,
+    dry_run: bool = False,
+    with_markers: bool = False,
+) -> Any:
     site, glb, digest = site_glb
     ctx = SceneContext(cw, dry_run=dry_run)
     handles = build_scene(
-        ctx, site, project="skypaw", environment="skypaw-m1", glb=glb, glb_sha256=digest
+        ctx,
+        site,
+        project="skypaw",
+        environment="skypaw-m1",
+        glb=glb,
+        glb_sha256=digest,
+        with_markers=with_markers,
     )
     return ctx, handles
+
+
+def test_build_scene_ensures_victim_markers_idempotently(
+    site_glb: tuple[Any, bytes, str],
+) -> None:
+    cw = FakeCyberwave()
+    _ctx, h = _build(cw, site_glb, with_markers=True)
+    assert sorted(h.markers) == ["marker-D-01", "marker-V-01", "marker-V-02", "marker-V-03"]
+    assert all(h.markers.values())
+    first = len(cw.writes)
+    _build(cw, site_glb, with_markers=True)
+    assert len(cw.writes) == first  # second run: no writes
 
 
 N_BOXES = 18
