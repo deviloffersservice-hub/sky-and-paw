@@ -1,0 +1,33 @@
+{
+  "env": "skypaw-v1-dev",
+  "offline": false,
+  "duration_s": 300.0,
+  "wall_s": 99.4,
+  "survey": null,
+  "frames": 0,
+  "pct_mapped": 0,
+  "victims": [],
+  "sim": {
+    "status": "error",
+    "ready": false,
+    "env_id": "aa851dff-291a-4813-a541-6f04ba81f25a",
+    "requested_s": 300.0,
+    "elapsed_s": 19.2,
+    "credits_est": 0.05,
+    "error": "SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random"
+  },
+  "sim_session": {
+    "run": {},
+    "mqtt_connected": true,
+    "error": "SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random",
+    "env_id": "aa851dff-291a-4813-a541-6f04ba81f25a"
+  },
+  "final_missing_keys": [],
+  "detection_frames": [],
+  "detection_latency_ms": {
+    "frames": 0,
+    "mean": null,
+    "max": null
+  },
+  "published": null
+}

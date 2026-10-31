@@ -1,0 +1,202 @@
+{
+ "final": {
+  "type": "snapshot",
+  "t": 103.02,
+  "ts": "2026-10-31T10:18:01.687Z",
+  "mission": {
+   "id": "SP-0417",
+   "phase": "idle",
+   "since_collapse_s": 2623
+  },
+  "sim": {
+   "status": "error",
+   "ready": false,
+   "env_id": "aa851dff-291a-4813-a541-6f04ba81f25a",
+   "requested_s": 300.0,
+   "elapsed_s": 19.2,
+   "credits_est": 0.05,
+   "error": "SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random"
+  },
+  "robots": {
+   "drone": {
+    "pos": null,
+    "yaw": 0.0,
+    "mode": "landed",
+    "battery": 100,
+    "pose_age_s": null,
+    "frame_id": null
+   },
+   "go2": {
+    "pos": null,
+    "yaw": 0.0,
+    "mode": "idle",
+    "battery": 100,
+    "pose_age_s": null,
+    "target": null,
+    "frame_id": null,
+    "path": []
+   }
+  },
+  "survey": {
+   "pct_mapped": 0,
+   "frames": 0,
+   "waypoint_idx": 0,
+   "waypoints": [
+    [
+     -8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     5.0,
+     6.0
+    ],
+    [
+     8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     0.0,
+     6.0
+    ],
+    [
+     8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -2.5,
+     6.0
+    ],
+    [
+     -8.0,
+     -5.0,
+     6.0
+    ],
+    [
+     8.0,
+     -5.0,
+     6.0
+    ]
+   ]
+  },
+  "grid": {
+   "x0": -13.0,
+   "y0": -9.0,
+   "cs": 0.5,
+   "w": 52,
+   "h": 36,
+   "cls": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+   "seen": "///////////////////////////////////8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP/wAAAAAA//AAAAAAD/8AAAAAAP///////////////////////////////////"
+  },
+  "victims": [],
+  "decisions": [],
+  "transcript": {
+   "active": false,
+   "partial": "",
+   "final": "",
+   "lang": null,
+   "final_t": null
+  },
+  "tts": {
+   "playing": null
+  },
+  "log": [
+   {
+    "t": 3.77,
+    "src": "SYS",
+    "key": "mission_start",
+    "text": {
+     "en-IN": "Mission SP-0417 started",
+     "hi-IN": "[hi-IN] Mission SP-0417 started",
+     "mr-IN": "[mr-IN] Mission SP-0417 started",
+     "ta-IN": "[ta-IN] Mission SP-0417 started"
+    }
+   },
+   {
+    "t": 3.82,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "[hi-IN] Simulation starting",
+     "mr-IN": "[mr-IN] Simulation starting",
+     "ta-IN": "[ta-IN] Simulation starting"
+    }
+   },
+   {
+    "t": 79.99,
+    "src": "SIM",
+    "key": "sim_starting",
+    "text": {
+     "en-IN": "Simulation starting",
+     "hi-IN": "[hi-IN] Simulation starting",
+     "mr-IN": "[mr-IN] Simulation starting",
+     "ta-IN": "[ta-IN] Simulation starting"
+    }
+   },
+   {
+    "t": 83.85,
+    "src": "SIM",
+    "key": "sim_running",
+    "text": {
+     "en-IN": "Simulation running",
+     "hi-IN": "[hi-IN] Simulation running",
+     "mr-IN": "[mr-IN] Simulation running",
+     "ta-IN": "[ta-IN] Simulation running"
+    }
+   },
+   {
+    "t": 102.57,
+    "src": "SIM",
+    "key": "sim_error",
+    "text": {
+     "en-IN": "Simulation error: SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random",
+     "hi-IN": "[hi-IN] Simulation error: SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random",
+     "mr-IN": "[mr-IN] Simulation error: SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random",
+     "ta-IN": "[ta-IN] Simulation error: SimulationFailed: simulation f727aac5-d278-4bd3-bf9a-6a5ee5e85d24 failed (status failed) before ready: 2026-10-31 10:17:55,074 - sim_workload_runner - ERROR - Simulation sim_aa851dff-291a-4813-a541-6f04ba81f25a_2313 failed: Simulation worker exited with code 1 (failed during startup \u2014 failed to initialize simulator: [Errno 24] Too many open files: '/usr/local/lib/python3.12/site-packages/numpy/random"
+    }
+   }
+  ],
+  "team": [
+   {
+    "id": "t1",
+    "name": "Rohan Deshmukh",
+    "role": "lead",
+    "lang": "hi-IN"
+   },
+   {
+    "id": "t2",
+    "name": "Priya Kulkarni",
+    "role": "medic",
+    "lang": "mr-IN"
+   },
+   {
+    "id": "t3",
+    "name": "Arun Selvam",
+    "role": "extraction",
+    "lang": "ta-IN"
+   },
+   {
+    "id": "t4",
+    "name": "Meera Nair",
+    "role": "extraction",
+    "lang": "en-IN"
+   }
+  ]
+ }
+}

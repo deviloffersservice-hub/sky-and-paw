@@ -1,0 +1,643 @@
+{
+  "started_utc": "20261031T101206Z",
+  "args": {
+    "project": "skypaw",
+    "env": "skypaw-v1-dev",
+    "duration": "120.0",
+    "capture": "False",
+    "dry_run": "False",
+    "no_sim": "True",
+    "fail_after_ready": "False",
+    "push_test": "False",
+    "evidence_dir": "tests/evidence/V1-INT/scene",
+    "ready_timeout": "120.0",
+    "frame_timeout": "40.0",
+    "pose_timeout": "60.0"
+  },
+  "checks": {},
+  "glb": {
+    "bytes": 9488,
+    "sha256": "6bb2bd34acd62aea87da666efdf1b6e81c0170c001779f1db14558e77e757bcc",
+    "boxes": 18
+  },
+  "setup_http": {
+    "total": 138,
+    "by_method": {
+      "DELETE": 1,
+      "GET": 115,
+      "POST": 22
+    },
+    "writes": 23,
+    "write_calls": [
+      "DELETE /api/v1/twins/92b063ba-a4f0-48db-8fcd-44d4ba9d6bfa",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins"
+    ]
+  },
+  "notes": {
+    "workspace_uuid": "0a003362-ee60-4152-aeb7-05783591e311",
+    "fixed_base_accepted": true,
+    "asset_backends": [
+      "playground",
+      "mujoco"
+    ],
+    "asset_glb_attached": true
+  },
+  "plan": [
+    {
+      "action": "reuse",
+      "kind": "project",
+      "name": "skypaw",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "environment",
+      "name": "skypaw-v1-dev",
+      "detail": ""
+    },
+    {
+      "action": "delete",
+      "kind": "twin",
+      "name": "skypaw-rubble",
+      "detail": "single-mesh convex hull replaced"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-00",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-00",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-00",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-00",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-01",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-01",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-01",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-01",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-02",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-02",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-02",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-02",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-03",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-03",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-03",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-03",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-04",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-04",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-04",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-04",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-05",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-05",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-05",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-05",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-06",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-06",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-06",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-06",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-07",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-07",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-07",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-07",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-08",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-08",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-08",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-08",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-09",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-09",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-09",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-09",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-10",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-10",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-10",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-10",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-11",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-11",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-11",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-11",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-12",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-12",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-12",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-12",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-13",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-13",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-13",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-13",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-14",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-14",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-14",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-14",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-15",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-15",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-15",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-15",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-16",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-16",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-16",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-16",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "asset",
+      "name": "skypaw-rubble-17",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "asset",
+      "name": "skypaw-rubble-17",
+      "detail": "GLB, backends and fixed_base already set"
+    },
+    {
+      "action": "create",
+      "kind": "twin",
+      "name": "skypaw-rubble-17",
+      "detail": "at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-rubble-17",
+      "detail": "already at world (0.0, 0.0, 0.0)"
+    },
+    {
+      "action": "reuse",
+      "kind": "twin",
+      "name": "skypaw-go2",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "twin",
+      "name": "skypaw-drone",
+      "detail": ""
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-go2",
+      "detail": "already at world (-11.0, -7.5, 0.0)"
+    },
+    {
+      "action": "skip",
+      "kind": "place",
+      "name": "skypaw-drone",
+      "detail": "already at world (-11.5, -5.5, 0.6)"
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "staging-west",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-01",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-02",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-03",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-04",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-05",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-06",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-07",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-08",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-09",
+      "detail": ""
+    },
+    {
+      "action": "reuse",
+      "kind": "waypoint",
+      "name": "survey-10",
+      "detail": ""
+    }
+  ],
+  "http": {
+    "total": 138,
+    "by_method": {
+      "DELETE": 1,
+      "GET": 115,
+      "POST": 22
+    },
+    "writes": 23,
+    "write_calls": [
+      "DELETE /api/v1/twins/92b063ba-a4f0-48db-8fcd-44d4ba9d6bfa",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins",
+      "POST /api/v1/twins"
+    ]
+  },
+  "exit_code": 0
+}

@@ -1,0 +1,48 @@
+{
+  "workspace_uuid": "0a003362-ee60-4152-aeb7-05783591e311",
+  "project_uuid": "402fe32e-382f-403a-8a69-6cabf96150b2",
+  "environment_uuid": "aa851dff-291a-4813-a541-6f04ba81f25a",
+  "rubble_asset_uuid": "fab0e80a-238d-4ced-881a-483e8abe097b",
+  "go2_twin_uuid": "a7d31d6b-cacb-438a-893d-89b29d448ebc",
+  "drone_twin_uuid": "41c7e147-af47-4557-806d-3baa87cc087a",
+  "rubble_twin_uuid": "89a9ab36-4da7-4caf-a314-47ac12930faa",
+  "waypoints": {
+    "staging-west": "9e94c046-df79-4d81-8162-612bfc8d8860",
+    "survey-01": "f88bc7aa-6ab5-4d45-a68a-bb062b70e4ee",
+    "survey-02": "55961b68-c66b-4dc2-bf95-57f659927eff",
+    "survey-03": "e79d26cc-9eb5-4aad-9a2c-bc0330f821c4",
+    "survey-04": "c9155538-8a37-4490-83de-1b143c93b444",
+    "survey-05": "ab5c49ec-edd2-4efc-b5e5-98206a2ff85f",
+    "survey-06": "58ff4abd-7651-4643-8ae5-2d247be0fb35",
+    "survey-07": "88bcf80b-7f7f-47b2-b0bc-293adea07cd9",
+    "survey-08": "4af586c8-9eb1-4203-82e1-e7f70067bce4",
+    "survey-09": "9d32580c-b2fd-4729-838b-b6335ed493f9",
+    "survey-10": "3340bbc1-7e01-46c5-8168-9a73ba34cbe6"
+  },
+  "rubble_pieces": {
+    "skypaw-rubble-00": "89a9ab36-4da7-4caf-a314-47ac12930faa",
+    "skypaw-rubble-01": "00620212-f230-4b28-bd2f-103a4881a89b",
+    "skypaw-rubble-02": "d52157af-3ea4-4712-b74b-815132893479",
+    "skypaw-rubble-03": "154d007e-6685-4680-b9ce-8c77bf5d1d7c",
+    "skypaw-rubble-04": "44e9d841-10ef-4f04-b7b4-4660dcf4e728",
+    "skypaw-rubble-05": "8eeec88b-419c-44fc-bc36-67972125820d",
+    "skypaw-rubble-06": "fe392f58-2710-4bc8-bfe1-8def42293b04",
+    "skypaw-rubble-07": "55362045-fc29-4720-9534-af429fb1f38e",
+    "skypaw-rubble-08": "f3222208-5f85-4a7e-9118-36be1a6db80b",
+    "skypaw-rubble-09": "49de36ec-847f-49f0-be37-d8ec3120487e",
+    "skypaw-rubble-10": "23079799-131e-44d0-b07e-b1b1eed58ce1",
+    "skypaw-rubble-11": "87fc662e-f335-4828-9f50-2f4f782c1996",
+    "skypaw-rubble-12": "1c0fa7a5-e53d-41d1-80ef-d28675e02e2a",
+    "skypaw-rubble-13": "27fd9ee9-5165-4d1f-ab15-ad5243b81b8a",
+    "skypaw-rubble-14": "e1e1fe4b-7f44-4d3a-a7df-6fb4fae075a5",
+    "skypaw-rubble-15": "adba71dd-0149-4c5a-8b59-67b0ba435f5f",
+    "skypaw-rubble-16": "227d4514-539b-4c1e-9ce7-e215cf25ee52",
+    "skypaw-rubble-17": "5f04b06c-c125-4f3c-9e92-f49aca435381"
+  },
+  "markers": {
+    "marker-V-01": "b3c2dfce-19b7-4562-bfbf-8c862623c8b4",
+    "marker-V-02": "f302c2fc-03c5-4a1a-ac47-8a8818c0e660",
+    "marker-V-03": "41c20e6b-fc83-4b71-8abb-0b632d8addfe",
+    "marker-D-01": "13ca978f-8946-4c03-8010-4511d9cc5fa3"
+  }
+}
