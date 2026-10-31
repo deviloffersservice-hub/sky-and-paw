@@ -39,3 +39,6 @@ All latencies are wall-clock round trips from this cloud environment through the
 - Strict json_schema output from `sarvam-105b`, `usage` token counts, reasoning-token overhead at `low`.
 - TTS WAV length and duration for mr/hi/ta/en with rohan/priya/kavitha/shubh; speaker/language compatibility.
 - Translate output quality and the handling of "V-01", "Go2" and "64 bpm" tokens.
+
+## Rerun after reported top-up (2026-10-31, later the same day)
+The coordinator reported that credits had been added. I reran check 1 (realtime socket) once with no changes: **still refused.** Handshake **101** at 1011 ms, then the same `error` / `quota_exceeded` / `status_code: 402` event at 1031 ms, then close **1003** "Credits exhausted". As instructed, I stopped after this first refusal; checks 2–6 were not rerun. Spend: **₹0.00**. Possible causes: the credits went to a different key or organisation than the `SARVAM_API_KEY` this session holds, the top-up hasn't taken effect yet, or this session's environment still has an older key.
