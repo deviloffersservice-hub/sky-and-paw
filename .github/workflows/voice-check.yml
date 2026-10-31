@@ -19,7 +19,7 @@ jobs:
           if [ -z "$SARVAM_API_KEY" ]; then echo "::error::SARVAM_API_KEY is not set as an Actions secret (Settings → Secrets and variables → Actions)"; exit 2; fi
           python -c "import hashlib,os;print('key sha256 prefix', hashlib.sha256(os.environ['SARVAM_API_KEY'].encode()).hexdigest()[:12])"
           pip install -q sarvamai==0.1.41 websockets httpx
-          cd scripts/checks/sarvam
+          cd scripts/checks/sarvam && mkdir -p out
           python rest.py tr && python rest.py stt && python rest.py llm && python rest.py tts && python probe.py && python c1_ws.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
