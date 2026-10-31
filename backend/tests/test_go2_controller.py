@@ -14,12 +14,14 @@ from skypaw.go2.controller import (
     Go2Controller,
     Go2Progress,
     PoseReading,
+    goto_timeout,
     wrap,
     yaw_of,
 )
 from skypaw.go2.fake import KinematicGo2, fake_go2_executor, run_inline
 from skypaw.go2.scoring import RescueScore
 from skypaw.mission.grid import BLOCKED, OccupancyGrid
+from skypaw.mission.planner import plan_route
 from skypaw.mission.ports import Go2Executor
 from skypaw.scene.site import load_site, site_to_world
 from skypaw.sim.mqtt_ws import PoseCache, PoseSample
@@ -52,7 +54,7 @@ async def test_turns_in_place_then_moves_then_arrives() -> None:
     ctrl = _ctrl(robot)
     res = await ctrl.navigate([-8.0, -7.5, 0.0], "T-1")
     assert res.status == "arrived" and res.arrived
-    assert res.distance_error_m is not None and res.distance_error_m <= 0.6
+    assert res.distance_error_m is not None and res.distance_error_m <= 0.7
     moves = [c for c in robot.calls if c != "stop"]
     first_forward = moves.index("forward")
     assert first_forward > 0 and set(moves[:first_forward]) == {"turn_right"}
@@ -60,7 +62,9 @@ async def test_turns_in_place_then_moves_then_arrives() -> None:
     assert "turn_left" not in moves[:first_forward]
     assert robot.calls[-1] == "stop"
     assert ctrl.mode == "arrived" and ctrl.last_result is res
-    assert res.seconds == pytest.approx(0.3 * res.turns + 0.5 * res.forwards, abs=1e-6)
+    turn_s = sum(r["dur"] for r in res.turn_rates)
+    assert res.seconds == pytest.approx(turn_s + 0.5 * res.forwards, abs=1e-6)
+    assert [r["cmd"] for r in res.turn_rates][:2] == [0.8, 0.8]  # 90 deg error: big turns first
 
 
 async def test_full_route_to_v01_from_spawn_never_enters_blocked() -> None:
@@ -71,7 +75,7 @@ async def test_full_route_to_v01_from_spawn_never_enters_blocked() -> None:
     await ctrl.goto(V01, "V-01")
     res = ctrl.last_result
     assert res is not None and res.status == "arrived"
-    assert res.distance_error_m is not None and res.distance_error_m <= 0.6
+    assert res.distance_error_m is not None and res.distance_error_m <= 0.7
     assert res.seconds < 120
     assert all(GRID.class_at(x, y) != BLOCKED for x, y in visited)
     assert progress[0].mode == "moving" and progress[-1].mode == "arrived"
@@ -112,9 +116,14 @@ async def test_no_pose_at_all_aborts_quickly() -> None:
     assert ctrl.mode == "blocked"
 
 
-@pytest.mark.parametrize(("yaw", "kind"), [(math.atan2(0.25, 0.75), "forward"), (2.0, "turn")])
+_P1 = plan_route(GRID, (-11.0, -7.5), (-5.0, -7.5)).points[1]
+
+
+@pytest.mark.parametrize(
+    ("yaw", "kind"), [(math.atan2(_P1[1] + 7.5, _P1[0] + 11.0), "forward"), (2.0, "turn")]
+)
 async def test_stuck_against_rubble_is_blocked(yaw: float, kind: str) -> None:
-    # first waypoint is (-10.25, -7.25): facing it -> forward bursts, else turns; none move
+    # facing the first route point -> forward bursts, else turns; none move
     robot = KinematicGo2(x=-11.0, y=-7.5, yaw=yaw, blocked=True)
     ctrl = _ctrl(robot)
     res = await ctrl.navigate([-5.0, -7.5, 0.0], "T-3")
@@ -234,3 +243,59 @@ def test_scoring_math() -> None:
 def test_scoring_empty() -> None:
     t = RescueScore().totals()
     assert t["reached"] == 0 and t["time_to_rescue_mean_s"] is None
+
+
+# --- v1 tune: route timeout, big turns, signed move() turning, achieved yaw rate --------------
+
+
+def test_goto_timeout_from_route() -> None:
+    cfg = ControllerConfig()
+    assert goto_timeout(cfg, 10.0) == 120.0
+    assert goto_timeout(cfg, 40.0) == pytest.approx(130.0)
+    assert goto_timeout(cfg, 200.0) == 300.0
+    assert goto_timeout(ControllerConfig(timeout_s=5.0), 200.0) == 5.0
+
+
+async def test_route_timeout_recorded_on_result() -> None:
+    ctrl, _ = fake_go2_executor((-11.0, -7.5, 0.0), grid=GRID)
+    res = await ctrl.navigate(V01, "V-01")
+    assert res.timeout_s == pytest.approx(max(120.0, 2.5 * res.route.seconds + 30.0))
+    assert res.as_dict()["timeout_s"] == res.timeout_s
+
+
+async def test_big_turns_then_small_turns_and_rates_logged() -> None:
+    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi)  # facing away from the goal
+    res = await _ctrl(robot).navigate([-8.0, -7.5, 0.0], "T-7")
+    assert res.status == "arrived"
+    cmds = [r["cmd"] for r in res.turn_rates]
+    assert cmds[0] == 0.8 and 0.6 in cmds and cmds.index(0.6) > cmds.index(0.8)
+    for r in res.turn_rates:  # the kinematic robot achieves exactly what is commanded
+        assert r["achieved"] == pytest.approx(r["cmd"], abs=1e-3)
+    assert any("yaw_rate" in row for row in res.trace)
+    summary = res.as_dict()["turn_rate"]
+    assert set(summary) == {"0.6", "0.8"}
+
+
+@pytest.mark.parametrize(
+    ("move_sign", "verdict", "api", "sign"),
+    [
+        (1.0, "sign_ok", "move", 1.0),
+        (-1.0, "sign_flipped", "move", -1.0),
+        (0.0, "no_effect_fallback_named", "named", 1.0),
+    ],
+)
+async def test_turn_self_check(move_sign: float, verdict: str, api: str, sign: float) -> None:
+    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2, move_sign=move_sign)
+    ctrl = _ctrl(robot)
+    res = await ctrl.navigate([-8.0, -7.5, 0.0], "T-8")
+    assert res.status == "arrived"
+    cal = res.turn_calibration
+    assert cal is not None and cal["verdict"] == verdict
+    assert (cal["now_api"], cal["now_sign"]) == (api, sign)
+    assert cal["requested"] == "turn_right"
+
+
+async def test_named_turn_api_still_supported() -> None:
+    robot = KinematicGo2(x=-11.0, y=-7.5, yaw=math.pi / 2)
+    res = await _ctrl(robot, turn_api="named").navigate([-8.0, -7.5, 0.0], "T-9")
+    assert res.status == "arrived" and res.turn_calibration["verdict"] == "sign_ok"

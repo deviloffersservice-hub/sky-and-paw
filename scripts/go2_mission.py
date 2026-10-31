@@ -136,7 +136,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--env", default="skypaw-v1-dev-e")
     p.add_argument("--target", default="V-01")
     p.add_argument("--duration", type=float, default=240.0)
-    p.add_argument("--goto-timeout", type=float, default=120.0)
+    p.add_argument("--goto-timeout", type=float, default=None, help="default: from the route")
     p.add_argument("--forward-burst", type=float, default=0.5, help="move_forward duration (s)")
     p.add_argument("--turn-burst", type=float, default=0.3, help="turn_* duration (s)")
     p.add_argument("--detected-before", type=float, default=0.0)

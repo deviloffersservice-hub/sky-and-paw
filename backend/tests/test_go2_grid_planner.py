@@ -17,7 +17,14 @@ from skypaw.mission.grid import (
     OccupancyGrid,
     polygons_overlap,
 )
-from skypaw.mission.planner import GO2, PERSON, NoRoute, plan_route, simplify
+from skypaw.mission.planner import (
+    GO2,
+    PERSON,
+    NoRoute,
+    plan_route,
+    segment_clear,
+    simplify,
+)
 from skypaw.scene.site import load_site, site_to_world
 
 SITE = load_site()
@@ -221,3 +228,39 @@ def test_simplify_removes_collinear_points() -> None:
     pts = [[0, 0], [1, 0], [2, 0], [3, 1], [4, 2], [4, 3]]
     assert simplify(pts) == [[0, 0], [2, 0], [4, 2], [4, 3]]
     assert simplify([[0, 0], [1, 1]]) == [[0, 0], [1, 1]]
+
+
+# --- line-of-sight smoothing ------------------------------------------------------------------
+
+
+def test_los_removes_v01_slab_edge_zigzag(grid: OccupancyGrid) -> None:
+    raw = plan_route(grid, STAGING, VICTIMS["V-01"], smooth=False)
+    smooth = plan_route(grid, STAGING, VICTIMS["V-01"])
+    assert len(smooth.points) < len(raw.points)
+    assert [3.25, 0.75, 0.0] in raw.points and [3.25, 0.75, 0.0] not in smooth.points
+    assert smooth.points[0] == raw.points[0] and smooth.points[-1] == raw.points[-1]
+    assert smooth.length <= raw.length + 1e-9
+    assert smooth.cells == raw.cells  # metrics still come from the Dijkstra cells
+
+
+@pytest.mark.parametrize("victim", ["V-01", "V-02", "V-03", "D-01"])
+def test_smoothed_segments_keep_clearance(grid: OccupancyGrid, victim: str) -> None:
+    raw = plan_route(grid, STAGING, VICTIMS[victim], smooth=False)
+    r = plan_route(grid, STAGING, VICTIMS[victim])
+    cells = set(r.cells)
+    for a, b in zip(r.points, r.points[1:], strict=False):
+        consecutive = any(
+            a == raw.points[k] and b == raw.points[k + 1] for k in range(len(raw.points) - 1)
+        )
+        assert consecutive or segment_clear(grid, a, b, cells)
+    assert all(grid.class_at(x, y) != BLOCKED for x, y in _cells_along(r.points))
+
+
+def test_segment_clear_rejects_blocked_clearance_and_foreign_slabs(grid: OccupancyGrid) -> None:
+    # x = -9.75 runs through the wall's difficult buffer, 0.25 m from blocked cells
+    buffer = {grid.spec.cell_of(-9.75, y / 4) for y in range(-8, 9)}
+    assert not segment_clear(grid, (-9.75, -2.0), (-9.75, 2.0), set())  # foreign difficult
+    assert not segment_clear(grid, (-9.75, -2.0), (-9.75, 2.0), buffer)  # < 0.3 m clearance
+    assert segment_clear(grid, (-10.2, -2.0), (-10.2, 2.0), set())  # 0.7 m from blocked
+    # crosses the slab around (-5, 3): difficult cells not on the path are refused
+    assert not segment_clear(grid, (-5.0, 0.5), (-5.0, 5.5), set())
