@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E501  (embedded HTML/JS template lines)
 """Build the public demo page for GitHub Pages.
 
 The approved interactive mockup (docs/mockups/ops-v2.html) is authored in the
@@ -11,6 +12,7 @@ Usage: build_demo_page.py <dist_dir>
   - writes <dist_dir>/index.html   (the demo)
   - moves an existing <dist_dir>/index.html (the backend console shell) to app.html
 """
+
 from __future__ import annotations
 
 import html
@@ -56,7 +58,11 @@ def find_frames() -> list[tuple[str, pathlib.Path]]:
         for d in EVIDENCE_DIRS:
             if not d.is_dir():
                 continue
-            hits = [p for p in sorted(d.glob(f"*{key}*.jpg")) + sorted(d.glob(f"*{key}*.png")) if p.name not in used]
+            hits = [
+                p
+                for p in sorted(d.glob(f"*{key}*.jpg")) + sorted(d.glob(f"*{key}*.png"))
+                if p.name not in used
+            ]
             if hits:
                 found.append((label, hits[0]))
                 used.add(hits[0].name)
@@ -92,19 +98,25 @@ def build(dist: pathlib.Path) -> None:
             f'<div class="row">{"".join(figs)}</div></div>'
         )
         head = head.replace("</style>", STRIP_CSS + "</style>", 1)
-        body = body.replace('<main class="stage" id="stage">', '<main class="stage" id="stage">' + strip, 1)
+        body = body.replace(
+            '<main class="stage" id="stage">', '<main class="stage" id="stage">' + strip, 1
+        )
 
     doc = (
-        "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
-        "<meta name=\"description\" content=\"Sky & Paw — map-first operator console for drone + Go2 "
-        "disaster response, interactive demo.\">\n"
+        '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+        '<meta name="description" content="Sky & Paw — map-first operator console for drone + Go2 '
+        'disaster response, interactive demo.">\n'
         f"{head}\n</head>\n<body>\n{body}\n</body>\n</html>\n"
     )
 
     dist.mkdir(parents=True, exist_ok=True)
     shell = dist / "index.html"
-    if shell.exists() and "Sky &amp; Paw Ops" in shell.read_text(encoding="utf-8", errors="replace") and "SP.Map2D" not in shell.read_text(encoding="utf-8", errors="replace"):
+    if (
+        shell.exists()
+        and "Sky &amp; Paw Ops" in shell.read_text(encoding="utf-8", errors="replace")
+        and "SP.Map2D" not in shell.read_text(encoding="utf-8", errors="replace")
+    ):
         shutil.move(str(shell), str(dist / "app.html"))
     (dist / "index.html").write_text(doc, encoding="utf-8")
     print(f"demo page written to {dist / 'index.html'} ({len(doc)} bytes); frames: {len(frames)}")
