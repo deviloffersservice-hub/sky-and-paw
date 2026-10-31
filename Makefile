@@ -9,7 +9,7 @@
 #   make lock      regenerate backend/requirements*.txt from backend/pyproject.toml
 #   make scene     create/reuse the Cyberwave scene, run MuJoCo (120 s), save frames (billable)
 #   make scene-dry print the scene plan (GET requests only, no simulation)
-#   make mission   headless v1 runtime: MuJoCo (<= 300 s) + drone survey, fakes elsewhere (billable)
+#   make mission   headless v1 runtime: MuJoCo (<= 600 s) + drone survey, fakes elsewhere (billable)
 #   make go2       Go2 to V-01 on our grid route in MuJoCo (240 s, billable)
 
 SHELL := /bin/bash
@@ -109,7 +109,7 @@ scene-dry: $(PY_STAMP)
 
 # v1 mission runtime, headless. MISSION_ARGS overrides the defaults, e.g.
 # MISSION_ARGS="--env skypaw-v1-dev --duration 240 --autostart-survey --serve".
-MISSION_ARGS ?= --env skypaw-v1 --duration 300 --autostart-survey
+MISSION_ARGS ?= --env skypaw-v1 --duration 600 --autostart-survey
 mission: $(PY_STAMP)
 	$(VPY) scripts/mission.py $(MISSION_ARGS)
 

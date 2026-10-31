@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Sky & Paw v1: run the mission runtime headless (fakes for Go2, detector and voice).
 
-    scripts/mission.py --env skypaw-v1 --duration 300 --autostart-survey [--serve]
+    scripts/mission.py --env skypaw-v1 --duration 600 --autostart-survey [--serve]
     scripts/mission.py --offline --autostart-survey      # kinematic drone, no Cyberwave
 
 Live mode: create/reuse the scene (look up by name), start MuJoCo through
-``run_simulation`` (``duration`` <= 300 s, always stopped in ``finally``), MQTT pose over
+``run_simulation`` (``duration`` <= 600 s, always stopped in ``finally``), MQTT pose over
 WSS, and the real drone executor. ``--autostart-survey`` proposes and auto-confirms the
 aerial survey as soon as the simulation is ready; the run ends when the survey is over
 (``--linger`` s later), when the simulation ends, or on Ctrl-C. ``--serve`` also runs the
@@ -41,7 +41,7 @@ from skypaw.mission.sim_session import SimSession  # noqa: E402
 from skypaw.mission.state import SNAPSHOT_KEYS  # noqa: E402
 
 log = get_logger("skypaw.scripts.mission")
-MAX_DURATION_S = 300.0
+MAX_DURATION_S = 600.0
 
 
 def summary(snap: dict[str, Any]) -> dict[str, Any]:
