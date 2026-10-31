@@ -9,6 +9,8 @@
     SKYPAW_SARVAM_LIVE=1 .venv/bin/python scripts/voice_check.py --live --prewarm
 
 Order (cheapest first, stops at the first 402): translate → plan → TTS → STT REST → STT realtime.
+The plan row prints every chat attempt (model, finish_reason, usage, content) and the plan JSON;
+the script exits non-zero when any check fails, including a plan with no content from any model.
 The TTS clip (16 kHz) is reused as the STT input, so the STT rows are a real round trip.
 Measured: translate latency; plan latency; TTS time to first byte; REST STT latency; realtime
 first-partial latency (from the first audio chunk) and final latency (from the end of audio).
@@ -23,6 +25,7 @@ import os
 import sys
 import time
 import wave
+from dataclasses import asdict
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -41,6 +44,7 @@ from skypaw.voice.client import (  # noqa: E402
     SarvamError,
 )
 from skypaw.voice.phrases import LEAD_SAMPLES  # noqa: E402
+from skypaw.voice.settings import VoiceSettings  # noqa: E402
 from skypaw.voice.tts import TtsCache, speaker_for  # noqa: E402
 
 CA_BUNDLE = Path("/root/.ccr/ca-bundle.crt")  # the cloud sandbox proxy CA, when present
@@ -95,19 +99,43 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
         return out, {"ms": rec and round(rec.latency_ms), "ttfb_ms": rec and round(rec.ttfb_ms)}
 
     async def do_plan():
-        resp = await client.chat(
-            planner.build_messages(CMD.text, CMD.lang),
-            response_format=planner.RESPONSE_FORMAT,
-            reasoning_effort="low",
-            max_tokens=planner.PLAN_MAX_TOKENS,
+        vs = VoiceSettings()
+        p, trace = await planner.plan_with_trace(
+            client,
+            CMD.text,
+            CMD.lang,
+            model=vs.sarvam_plan_model,
+            fallback_model=vs.sarvam_plan_fallback_model,
         )
-        content = resp["choices"][0]["message"].get("content")
-        p = planner.parse_plan(content, CMD.lang)
-        rec = client.last.get("llm")
-        usage = resp.get("usage") or {}
-        note = f"{p.intent} {p.target} conf={p.confidence} usage={usage}"
-        (out_dir / "plan.json").write_text(json.dumps(resp, ensure_ascii=False, indent=2))
-        return note, {"ms": rec and round(rec.latency_ms), "ttfb_ms": rec and round(rec.ttfb_ms)}
+        attempts = [asdict(a) for a in trace.attempts]
+        print(f"plan command: {CMD.text!r} ({CMD.lang})")
+        for a in attempts:
+            print(
+                f"  attempt model={a['model']} max_tokens={a['max_tokens']} "
+                f"reasoning_effort={a['reasoning_effort']} status={a['status']} "
+                f"finish_reason={a['finish_reason']} latency_ms={a['latency_ms']}"
+            )
+            print(f"    usage={json.dumps(a['usage'], ensure_ascii=False)}")
+            print(f"    content={a['content']!r}" + (f" error={a['error']}" if a["error"] else ""))
+        plan_json = json.dumps(asdict(p), ensure_ascii=False)
+        print(f"  plan JSON ({trace.source}): {plan_json}")
+        (out_dir / "plan.json").write_text(
+            json.dumps(
+                {"plan": asdict(p), "source": trace.source, "attempts": attempts},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        last = trace.attempts[-1] if trace.attempts else None
+        used = next((a for a in trace.attempts if a.status == "ok"), last)
+        note = (
+            f"{used.model if used else '-'} {p.intent} {p.target} conf={p.confidence} "
+            f"finish={used.finish_reason if used else '-'} attempts={len(trace.attempts)}"
+        )
+        extra: dict[str, Any] = {"ms": round(sum(a.latency_ms or 0 for a in trace.attempts))}
+        if not trace.got_content:
+            extra["status"] = "empty"  # no attempt returned plan content: the check fails
+        return note, extra
 
     clip: dict[str, bytes] = {}
 
@@ -154,7 +182,9 @@ async def run(client: Any, out_dir: Path, *, prewarm: bool) -> list[Row]:
             "translate en→mr (sarvam-translate:v1)", meter.translate(len(TR_TEXT)), do_translate
         )
         await check(
-            "plan (sarvam-105b, strict, low)", meter.llm(2000, planner.PLAN_MAX_TOKENS), do_plan
+            "plan (105b-conversations → 105b)",
+            meter.llm(4000, planner.PLAN_MAX_TOKENS + planner.PLAN_FALLBACK_MAX_TOKENS),
+            do_plan,
         )
         await check("tts hi-IN priya (bulbul:v3)", meter.tts(len(CMD.text)), do_tts)
         if "wav" in clip:

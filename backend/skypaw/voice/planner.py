@@ -1,9 +1,12 @@
-"""Command → mission plan with sarvam-105b (strict JSON schema), plus a rule-based fallback.
+"""Command → mission plan with Sarvam chat (strict JSON schema), plus a rule-based fallback.
 
-Call (SPEC §3.1, RESEARCH §2.3): ``POST /v1/chat/completions``, ``model=sarvam-105b``,
-``reasoning_effort="low"`` (the server accepts only low|medium|high), ``response_format``
-``json_schema`` with ``strict: true``. Reasoning tokens count toward ``max_tokens``; SPEC §3.1
-asks for ``max_tokens ≥ 1024`` so a low-effort reasoning pass cannot starve the JSON.
+Call (SPEC §3.1, RESEARCH §2.3 and §6): ``POST /v1/chat/completions`` with ``response_format``
+``json_schema`` and ``strict: true``. Live 2026-10-31: ``sarvam-105b`` at
+``reasoning_effort=low``/``max_tokens=512`` returned ``finish_reason=length``, ``content=null``
+(511 reasoning tokens). So the planner asks ``sarvam-105b-conversations`` first (no reasoning,
+no ``reasoning_effort`` sent, ``max_tokens=1024``) and ``sarvam-105b`` (``reasoning_effort=low``,
+``max_tokens=2048``) only when the first attempt returns no content; then the rule-based plan.
+Models come from ``SARVAM_PLAN_MODEL`` / ``SARVAM_PLAN_FALLBACK_MODEL`` (skypaw.voice.settings).
 
 Plan schema: docs/PROTOCOL.md "Mission plan JSON".
 """
@@ -12,19 +15,31 @@ from __future__ import annotations
 
 import json
 import re
+import time
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from pydantic import BaseModel, ValidationError, field_validator
 
 from skypaw.logging import get_logger, log_event
 from skypaw.mission.ports import Plan
-from skypaw.voice.client import SarvamError, SarvamUnavailable
+from skypaw.voice.client import (
+    MODEL_PLAN,
+    MODEL_PLAN_REASONING,
+    REASONING_MODELS,
+    QuotaExhausted,
+    SarvamError,
+    SarvamUnavailable,
+)
 from skypaw.voice.phrases import PHRASES, TEAM_LANGS
 
 log = get_logger(__name__)
 
 INTENTS = ("aerial_survey", "navigate_go2", "speak", "stop_all", "land", "unknown")
 PLAN_MAX_TOKENS = 1024
+PLAN_FALLBACK_MAX_TOKENS = 2048  # the reasoning model needs room for reasoning + JSON
+DEFAULT_PLAN_MODEL = MODEL_PLAN
+DEFAULT_PLAN_FALLBACK_MODEL = MODEL_PLAN_REASONING
 FALLBACK_CONFIDENCE = 0.3
 
 PLAN_SCHEMA: dict[str, Any] = {
@@ -275,26 +290,116 @@ def rule_based_plan(text: str, lang: str | None = None) -> Plan:
 # ---------------------------------------------------------------- the planner
 
 
-async def plan(
-    client: Any, text: str, lang: str | None, *, max_tokens: int = PLAN_MAX_TOKENS
-) -> Plan:
-    """Plan with sarvam-105b; fall back to ``rule_based_plan`` (confidence 0.3) when the API
-    is unavailable (no key, no credits, network). A malformed reply is intent "unknown"."""
+@dataclass
+class PlanAttempt:
+    """One chat call made while planning (for logs and scripts/voice_check.py)."""
+
+    model: str
+    max_tokens: int
+    reasoning_effort: str | None
+    status: str = "ok"  # ok | empty | error
+    finish_reason: str | None = None
+    usage: dict[str, Any] = field(default_factory=dict)
+    content: str | None = None
+    latency_ms: float | None = None
+    error: str | None = None
+
+
+@dataclass
+class PlanTrace:
+    attempts: list[PlanAttempt] = field(default_factory=list)
+    source: str = "rules"  # llm | rules
+
+    @property
+    def got_content(self) -> bool:
+        return any(a.status == "ok" for a in self.attempts)
+
+
+def _attempt_params(model: str, max_tokens: int) -> tuple[int, str | None]:
+    """Reasoning models get reasoning_effort=low; others get no reasoning_effort at all."""
+    return max_tokens, ("low" if model in REASONING_MODELS else None)
+
+
+def _content_of(resp: Any) -> tuple[str | None, str | None]:
+    try:
+        choice = resp["choices"][0]
+        content = choice["message"].get("content")
+        return (content if isinstance(content, str) else None), choice.get("finish_reason")
+    except (KeyError, IndexError, TypeError, AttributeError):
+        return None, None
+
+
+async def plan_with_trace(
+    client: Any,
+    text: str,
+    lang: str | None,
+    *,
+    model: str | None = None,
+    fallback_model: str | None = None,
+    max_tokens: int = PLAN_MAX_TOKENS,
+    fallback_max_tokens: int = PLAN_FALLBACK_MAX_TOKENS,
+) -> tuple[Plan, PlanTrace]:
+    """Plan a command; returns the plan and every chat attempt made.
+
+    1. ``model`` (default ``sarvam-105b-conversations``, no reasoning, max_tokens 1024).
+    2. Only if that returned no content (or a non-quota API error):
+       ``fallback_model`` (default ``sarvam-105b``, reasoning_effort=low, max_tokens 2048).
+    3. Still no content, or no key / no credits / network down: ``rule_based_plan`` (0.3).
+    Content that is present but not a valid plan is intent "unknown" (confidence 0).
+    """
     src = normalise_lang(lang) if lang and lang != "auto" else detect_lang(text)
+    trace = PlanTrace()
     if client is None or not getattr(client, "available", False):
-        return rule_based_plan(text, src)
-    try:
-        resp = await client.chat(
-            build_messages(text, src),
-            response_format=RESPONSE_FORMAT,
-            reasoning_effort="low",
-            max_tokens=max_tokens,
-        )
-    except (SarvamError, SarvamUnavailable) as exc:
-        log_event(log, "plan_fallback", reason=type(exc).__name__, status=exc.status)
-        return rule_based_plan(text, src)
-    try:
-        content = resp["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, TypeError):
-        content = None
-    return parse_plan(content, src)
+        return rule_based_plan(text, src), trace
+    model = model or DEFAULT_PLAN_MODEL
+    fallback_model = fallback_model or DEFAULT_PLAN_FALLBACK_MODEL
+    chain = [(model, max_tokens)]
+    if fallback_model and fallback_model != model:
+        chain.append((fallback_model, fallback_max_tokens))
+    messages = build_messages(text, src)
+    for m, tokens in chain:
+        tokens, effort = _attempt_params(m, tokens)
+        att = PlanAttempt(model=m, max_tokens=tokens, reasoning_effort=effort)
+        trace.attempts.append(att)
+        t0 = time.perf_counter()
+        try:
+            resp = await client.chat(
+                messages,
+                model=m,
+                response_format=RESPONSE_FORMAT,
+                reasoning_effort=effort,
+                max_tokens=tokens,
+            )
+        except (QuotaExhausted, SarvamUnavailable) as exc:
+            att.status, att.error = "error", f"{type(exc).__name__}: {exc}"[:200]
+            log_event(log, "plan_fallback", reason=type(exc).__name__, status=exc.status)
+            return rule_based_plan(text, src), trace
+        except SarvamError as exc:
+            att.status, att.error = "error", f"{type(exc).__name__}: {exc}"[:200]
+            log_event(log, "plan_attempt_failed", model=m, status=exc.status)
+            continue
+        finally:
+            att.latency_ms = round((time.perf_counter() - t0) * 1000, 1)
+        att.content, att.finish_reason = _content_of(resp)
+        att.usage = dict(resp.get("usage") or {}) if isinstance(resp, dict) else {}
+        if not (att.content or "").strip():
+            att.status = "empty"
+            log_event(log, "plan_empty", model=m, finish_reason=att.finish_reason)
+            continue
+        trace.source = "llm"
+        return parse_plan(att.content, src), trace
+    log_event(log, "plan_fallback", reason="no_content")
+    return rule_based_plan(text, src), trace
+
+
+async def plan(
+    client: Any,
+    text: str,
+    lang: str | None,
+    *,
+    model: str | None = None,
+    fallback_model: str | None = None,
+) -> Plan:
+    """Plan a command (see ``plan_with_trace``)."""
+    p, _ = await plan_with_trace(client, text, lang, model=model, fallback_model=fallback_model)
+    return p
