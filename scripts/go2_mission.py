@@ -69,6 +69,38 @@ def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, default=str) + "\n", encoding="utf-8")
 
 
+class RawStateMqtt(SceneMqtt):
+    """SceneMqtt that also keeps decimated raw ``free_joint_state`` / ``link_poses`` payloads.
+
+    These topics come from the physics engine (day-one round 2, check C), so they give the
+    Go2's simulated ground-truth pose to compare with the nav stack's ``position`` topic.
+    """
+
+    KINDS = ("free_joint_state", "link_poses")
+
+    def __init__(self, *args: Any, twin_uuid: str = "", every: int = 5, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.raw: dict[str, list[dict[str, Any]]] = {k: [] for k in self.KINDS}
+        self._seen = dict.fromkeys(self.KINDS, 0)
+        self._uuid = twin_uuid.lower()
+        self._every = every
+
+    def _on_message(self, client: Any, userdata: Any, msg: Any) -> None:
+        super()._on_message(client, userdata, msg)
+        parts = str(msg.topic).split("/")
+        if len(parts) != 4 or parts[2].lower() != self._uuid or parts[3] not in self.KINDS:
+            return
+        kind = parts[3]
+        self._seen[kind] += 1
+        if self._seen[kind] % self._every:
+            return
+        try:
+            body = json.loads(msg.payload)
+        except ValueError:
+            return
+        self.raw[kind].append({"t": round(time.time(), 3), "body": body})
+
+
 def wait_pose(mqtt: SceneMqtt, uid: str, timeout_s: float) -> dict[str, Any] | None:
     """Block until the twin has both position and rotation in the cache (or time out)."""
     t_end = time.monotonic() + timeout_s
@@ -109,6 +141,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--turn-burst", type=float, default=0.3, help="turn_* duration (s)")
     p.add_argument("--detected-before", type=float, default=0.0)
     p.add_argument("--plan-only", action="store_true", help="plan and write route.json only")
+    p.add_argument(
+        "--record-raw",
+        action="store_true",
+        help="also save Go2 free_joint_state / link_poses (sim ground truth) to raw_state.json",
+    )
     p.add_argument("--evidence-dir", type=Path, default=REPO_ROOT / "tests" / "evidence" / "V1-E")
     args = p.parse_args(argv)
     if not 0 < args.duration <= min(300, s.sim_max_duration_s):
@@ -163,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     report: dict[str, Any] = {"target": args.target, "goal_world": goal, "env": args.env}
     code = EXIT_ERROR
-    mqtt = SceneMqtt(settings)
+    mqtt: SceneMqtt = SceneMqtt(settings)
     try:
         cw = get_client(settings)
         ctx = SceneContext(cw)
@@ -176,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
         if not (env_id and go2_id and rubble_id):
             raise RuntimeError(f"scene incomplete: {h.as_dict()}")
         report["handles"] = {"environment": env_id, "go2": go2_id, "rubble": rubble_id}
+        if args.record_raw:
+            mqtt = RawStateMqtt(settings, twin_uuid=go2_id)
         report["stopped_at_startup"] = stop_active(cw, env_id, reason="startup")
         preflight(cw, env_id)
 
@@ -253,6 +292,8 @@ def main(argv: list[str] | None = None) -> int:
                     "controller": result.trace,
                 },
             )
+            if isinstance(mqtt, RawStateMqtt):
+                write_json(ev / "raw_state.json", {"go2": go2_id, **mqtt.raw})
             frame = wait_for_frame(go2, "front_camera", timeout_s=15)
             if frame.frame is not None:
                 save_jpeg(frame.frame, ev / "go2_front_arrival.jpg")
@@ -273,7 +314,11 @@ def main(argv: list[str] | None = None) -> int:
         code = EXIT_ERROR
     finally:
         mqtt.close()
-        report["mqtt"] = {"messages": mqtt.stats.messages, "error": mqtt.stats.error}
+        report["mqtt"] = {
+            "messages": mqtt.stats.messages,
+            "error": mqtt.stats.error,
+            "topics": dict(mqtt.stats.topics),
+        }
         write_json(ev / "timings.json", report)
         log_event(log, "go2_mission_end", exit_code=code)
     return code
