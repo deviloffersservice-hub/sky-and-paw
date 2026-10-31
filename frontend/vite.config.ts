@@ -12,7 +12,8 @@ function normaliseBase(raw: string | undefined): string {
   return `/${value.replace(/^\/+|\/+$/g, "")}/`;
 }
 
-const BACKEND = "http://localhost:7860";
+/** Backend for `npm run dev` (FastAPI via `make run`, or `npm run mock` with SKYPAW_BACKEND=http://127.0.0.1:7861). */
+const BACKEND = process.env.SKYPAW_BACKEND || "http://localhost:7860";
 
 /**
  * Writes the base the bundle was built with to dist/.vite-base, so `make run` / `make setup`
@@ -46,6 +47,10 @@ export default defineConfig(({ mode }) => {
       proxy: {
         "/healthz": BACKEND,
         "/version": BACKEND,
+        "/api": BACKEND,
+        "/frames": BACKEND,
+        "/tts": BACKEND,
+        "/evidence": BACKEND,
         "/ws": { target: BACKEND, ws: true },
       },
     },
