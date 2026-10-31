@@ -26,8 +26,9 @@ Sky & Paw is cloud-only and simulation-only. The backend must talk to Cyberwave 
 | Frontend | **Vite 5 + TypeScript**, no UI framework; the mockup's Canvas 2D map, decision queue, panels and phone view ported module-by-module; **Three.js** r160-class pinned for the 3D twin; built assets served by FastAPI from `/static` | vite 5.4.x, typescript 5.6.x, three 0.169.x |
 | Browser audio | Web Audio API: `AudioWorklet` capture → int16 PCM → WebSocket; TTS playback via `<audio>` from `/tts/<id>.wav` after a user gesture | — |
 | Packaging / run | Single **Docker** image (backend + built frontend + YOLO weights); `make run` (or `docker compose up`) runs everything locally; `.env.example` lists every variable | — |
-| Hosting | **Fly.io**: one app, one machine (`shared-cpu-2x`, 2 GB), region `bom` (Mumbai) for Sarvam latency; outbound TCP 8883 allowed so `CW_STATE_SOURCE=mqtt` in production, `rest` in the dev environment; Fly secrets for keys; persistent volume (1 GB) for SQLite and the TTS cache | flyctl, `fly.toml` in repo |
-| CI | GitHub Actions: lint (ruff), unit tests (pytest), frontend build, Playwright UI tests; deploy on push to `main` with `flyctl deploy` | — |
+| Hosting | **Hugging Face Spaces (Docker Space, free "CPU basic": 2 vCPU, 16 GB RAM, no card)**. One Space runs the whole image (backend + built frontend + YOLO weights) on port 7860 with WebSockets; secrets in Space settings; outbound network open so `CW_STATE_SOURCE=mqtt` in production, `rest` in the dev environment. Disk is ephemeral: SQLite and the TTS cache live in `/data` inside the container and are rebuilt on restart (TTS phrases are pre-warmed at startup from a committed phrase list to spend credits once per deploy). The free Space sleeps after 48 h without visitors; the demo script includes "open the Space 3 minutes before the demo". | Space SDK `docker`, `README.md` front-matter in repo |
+| Cost | **₹0 / $0.** Open-weight YOLOv8n; Sarvam ₹100 signup credit (metered, cached); Cyberwave credits as available in the account; GitHub Actions free minutes; HF Spaces free tier. No paid service anywhere. | — |
+| CI | GitHub Actions (free): lint (ruff), unit tests (pytest), frontend build, Playwright UI tests; deploy on push to `main` by pushing the repo to the Space's git remote with `HF_TOKEN` | — |
 | Secrets | `CYBERWAVE_API_KEY`, `CYBERWAVE_ENVIRONMENT_ID`, `SARVAM_API_KEY`, `SKYPAW_LEAD_TOKEN`, `SKYPAW_TEAM_TOKEN` from environment only | — |
 
 ### Request flow
@@ -45,6 +46,10 @@ Browser (lead/phone) ──WS JSON+PCM──► FastAPI ──► Sarvam realtim
 
 | Option | Why not |
 |---|---|
+| Fly.io / Railway / Render paid tiers | Project constraint: **no paid services**. Fly requires a card and bills per machine; the others' usable tiers are paid. |
+| Render / Koyeb free tiers | 512 MB RAM is below what PyTorch + YOLOv8n + OpenCV need at import time; Render free sleeps after 15 min and kills the sim loop mid-mission. |
+| Oracle Cloud Always-Free VM | Genuinely free and powerful, but sign-up needs a card for identity verification and a day of setup; keep as plan B if HF Spaces proves too slow. |
+| Google Cloud Run free tier | Needs a billing account (card) even within the free quota. |
 | Node/TypeScript backend | Cyberwave has only a preview JS SDK (0.1.0, "may not include preview APIs"); YOLO would need ONNX Runtime and a reimplementation of the SDK's REST/MQTT contracts. Python keeps three vendor SDKs first-class. |
 | React / Next.js frontend | The approved UI is imperative canvas drawing with precise tokens; a component framework adds a translation layer without helping fidelity. Vite + TS keeps the mockup code nearly verbatim and typed. |
 | Vercel / Netlify for the app | No long-lived Python WebSocket backend; serverless functions time out on sim polling and realtime STT relays. Could host the static frontend only, but one origin is simpler. |
@@ -58,12 +63,13 @@ Browser (lead/phone) ──WS JSON+PCM──► FastAPI ──► Sarvam realtim
 ## Consequences
 - Everything runs from one container with one command; a stranger follows README → `make run`.
 - Dev in this cloud environment uses `CW_STATE_SOURCE=rest`; production on Fly uses `mqtt`. QA must run the live suite in both modes once.
-- SQLite plus a Fly volume means a single machine; horizontal scaling is out of scope (one mission, one lead).
+- One free Space, one process, ephemeral disk: horizontal scaling and durable history are out of scope (one mission, one lead). The mission log is also written to the browser console/evidence files by QA, so nothing needed for judging depends on disk surviving a restart.
+- Free-tier cold start after sleep is 1–3 minutes (image pull + YOLO weights load); the demo runbook wakes the Space in advance.
 - Three.js is bundled by Vite rather than loaded from a CDN, so the deployed console has no third-party runtime dependency.
 
-## Accounts and access the owner must provide before M1
-1. **Fly.io** account with a payment method on file (required to create apps; expected spend < $10 for the hackathon), org name shared with Fable, and a `FLY_API_TOKEN` as a GitHub Actions secret.
-2. **Cyberwave** account with an API key (`cyberwave.com/profile → Access`), a credit balance confirmed in the dashboard, and the key set as `CYBERWAVE_API_KEY` in this cloud environment's secrets and in Fly.
-3. **Sarvam** account with an API key (`indus.sarvam.ai/key-management`), the ₹100 free credits visible, set as `SARVAM_API_KEY` in both places.
-4. **GitHub**: this repository already connected; allow Actions to run; `main` branch created from `claude/spec-and-mockup` when you approve this ADR.
-5. Optional: if the cloud environment's network policy can allow `mqtt.cyberwave.com:8883` (raw TLS), add it so dev and prod use the same state source.
+## Accounts and access the owner must provide (all free, no card)
+1. **Hugging Face** account (free). Create a **Docker Space** named `sky-and-paw` (public or private), and a **write-scope access token**; add the token as the GitHub Actions secret `HF_TOKEN` and tell Fable the Space URL (`https://huggingface.co/spaces/<user>/sky-and-paw`). Fable adds `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` as Space secrets via the UI instructions in the README, or you paste them in *Settings → Variables and secrets*.
+2. **Cyberwave** API key: DONE (in the environment). Please also confirm the **credit balance** in the dashboard; MuJoCo costs 0.01 credits/min and there is no documented free allocation.
+3. **Sarvam** API key: DONE (in the environment). ₹100 free credit assumed.
+4. **GitHub**: Actions allowed: DONE. `main` will be created from `claude/spec-and-mockup` on approval.
+5. Network: the dev environment still blocks raw TLS on 8883 (its proxy is HTTPS-only), so dev uses `CW_STATE_SOURCE=rest`; the Space uses `mqtt`. No action needed.

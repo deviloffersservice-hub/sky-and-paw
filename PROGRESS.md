@@ -9,8 +9,9 @@ Governor: Fable. One entry per phase/milestone/task: what is done, the evidence,
 - **Open items carried forward:** API keys not yet in the environment (D3); Cyberwave credit balance unverified (D4); MQTT 8883 blocked in dev (D2 → ADR-001); GLB collision readiness (D6 → M1 task).
 
 ## Phase 1 — Stack decision · PROPOSED
-- **Done:** `docs/ADR-001-stack.md` written (FastAPI + Python 3.11, Vite + TypeScript + Three.js, one WebSocket, SQLite, single Docker image, Fly.io `bom`).
-- **Waiting on owner:** approval of ADR-001 and the five account/access items listed at its end.
+- **Done:** `docs/ADR-001-stack.md` written (FastAPI + Python 3.11, Vite + TypeScript + Three.js, one WebSocket, SQLite, single Docker image). Hosting revised to **Hugging Face Spaces free Docker tier** after the owner's zero-cost constraint; Fly.io rejected.
+- **Done by owner:** `CYBERWAVE_API_KEY` and `SARVAM_API_KEY` in the environment; GitHub Actions allowed.
+- **Waiting on owner:** approval of revised ADR-001; HF Space + `HF_TOKEN`; Cyberwave credit balance.
 - **Next:** on approval, create `main` from `claude/spec-and-mockup`, scaffold the repo (backend, frontend, Makefile, Dockerfile, `.env.example`, CI), then start M1.
 
 ## Milestones
