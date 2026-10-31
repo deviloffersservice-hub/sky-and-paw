@@ -112,10 +112,16 @@ async def run(args: argparse.Namespace) -> int:
     settings = get_settings()
     if args.data_dir:
         settings = settings.model_copy(update={"data_dir": Path(args.data_dir)})
-    # Headless default: fakes for the Go2 and voice (--real-go2 / --real-voice to opt in).
+    # Headless default: fakes for the Go2, voice and detector (--real-* to opt in).
     settings = settings.model_copy(
-        update={"skypaw_fake_go2": not args.real_go2, "skypaw_fake_voice": not args.real_voice}
+        update={
+            "skypaw_fake_go2": not args.real_go2,
+            "skypaw_fake_voice": not args.real_voice,
+            "skypaw_fake_detector": not args.real_detector,
+        }
     )
+    if args.stop_file is not None:
+        args.stop_file.unlink(missing_ok=True)
     ev: Path = args.evidence_dir
     ev.mkdir(parents=True, exist_ok=True)
     sim: SimSession | None = None
@@ -192,7 +198,11 @@ async def run(args: argparse.Namespace) -> int:
             if survey_seen and rt.surveys_finished and done_at is None:
                 done_at = now
                 log_event(log, "survey_finished", **summary(snap))
-            if done_at is not None and now - done_at >= args.linger:
+            if args.stop_file is not None:
+                if args.stop_file.exists():  # an external driver (drive_mission.py) is done
+                    log_event(log, "stop_file_seen", path=str(args.stop_file))
+                    break
+            elif done_at is not None and now - done_at >= args.linger:
                 break
             if rt.sim_done.is_set() or (not args.offline and rt.state.sim.status == "error"):
                 break
@@ -240,6 +250,20 @@ async def run(args: argparse.Namespace) -> int:
             for f in dict.fromkeys(picks):
                 shutil.copy2(f, ev / f.name)
             report["evidence_frames"] = [f.name for f in dict.fromkeys(picks)]
+        det_report = getattr(rt.detector, "report", None)
+        if callable(det_report):  # stream B pipeline: per-frame records + candidates
+            det = det_report()
+            (ev / "detections.json").write_text(
+                json.dumps(det, indent=1, default=str) + "\n", "utf-8"
+            )
+            hit_ids = [r["frame_id"] for r in det.get("frames", []) if r.get("hits")]
+            for fid in hit_ids[:8]:
+                src = rt.frames_dir / f"{fid}.jpg"
+                if src.is_file():
+                    shutil.copy2(src, ev / f"det_{fid}.jpg")
+            report["detection_frames"] = hit_ids
+            report["detection_latency_ms"] = det.get("latency_ms")
+        report["published"] = rt.published
         (ev / "snapshot.json").write_text(json.dumps(snapshots, indent=1) + "\n", "utf-8")
         (ev / "timings.json").write_text(json.dumps(report, indent=2, default=str) + "\n", "utf-8")
         log_event(
@@ -266,6 +290,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--offline", action="store_true", help="kinematic drone, no Cyberwave")
     ap.add_argument("--real-go2", action="store_true", help="stream E Go2Controller on the sim")
     ap.add_argument("--real-voice", action="store_true", help="SarvamVoice (spends Sarvam credit)")
+    ap.add_argument("--real-detector", action="store_true", help="stream B YOLO + markers")
+    ap.add_argument(
+        "--stop-file",
+        type=Path,
+        default=None,
+        help="keep running after the survey until this file exists (or the sim ends)",
+    )
     ap.add_argument("--serve", action="store_true", help="also serve /ws and /api/state")
     ap.add_argument("--port", type=int, default=7860)
     ap.add_argument("--every", type=float, default=5.0, help="snapshot log period (s)")

@@ -25,7 +25,9 @@ PROTOCOL = Path(__file__).resolve().parents[2] / "docs" / "PROTOCOL.md"
 @pytest.fixture
 def settings(settings: Settings) -> Settings:
     """The shared settings with the offline fakes (stream C FakeVoice, stream E kinematic Go2)."""
-    return settings.model_copy(update={"skypaw_fake_go2": True, "skypaw_fake_voice": True})
+    return settings.model_copy(
+        update={"skypaw_fake_go2": True, "skypaw_fake_voice": True, "skypaw_fake_detector": True}
+    )
 
 
 @pytest.fixture
@@ -331,6 +333,14 @@ async def test_default_runtime_uses_stream_fakes_go2_progress_and_phrases(
         snap = rt.snapshot()["robots"]["go2"]
         assert snap["mode"] == "arrived", snap
         assert snap["pos"] is not None and snap["target"] == "V-01"
+        # arrival raises a speaker card whose actions are phrase ids; decide p_help speaks
+        await settle()
+        card = next(d for d in rt.snapshot()["decisions"] if d["kind"] == "speak")
+        assert "p_help" in [a["id"] for a in card["actions"]]
+        r = await rt.apply({"type": "decide", "decision_id": card["id"], "action": "p_help"})
+        assert r["accepted"]
+        await settle(10)
+        assert rt.snapshot()["tts"]["playing"]["lang"] == "mr-IN"  # V-01 speaks Marathi
         # tts with a phrase id uses the console's language and stream C's phrase table
         assert (await rt.apply({"type": "tts", "phrase_id": "p_help", "lang": "ta-IN"}))["accepted"]
         await settle(10)
@@ -365,3 +375,33 @@ def test_ws_snapshot_right_after_hello_and_tts_route(client: TestClient) -> None
         ws.send_json({"type": "hello", "role": "lead", "member": "t1"})
         assert ws.receive_json()["type"] == "snapshot"
     assert client.get("/tts/" + "0" * 64 + ".wav").status_code == 404
+
+
+class FullSetDetector:
+    """Mimics stream B's pipeline: returns the whole running set; ids may be re-assigned."""
+
+    def __init__(self) -> None:
+        self.n = 0
+
+    def candidates(self) -> list[Any]:
+        return []
+
+    async def on_frame(self, frame: Frame) -> list[Any]:
+        from skypaw.mission.ports import Candidate
+
+        self.n += 1
+        vid = "C-01" if self.n == 1 else "V-01"  # cluster later matched to a truth id
+        return [
+            Candidate(vid, [3.4, 2.1, 0.5], {"rgb": 0.8}, 0.8 + self.n / 100, True, "immediate")
+        ]
+
+
+async def test_full_set_detector_replaces_reassigned_ids(settings: Settings) -> None:
+    rt = runtime(settings)
+    rt.detector = FullSetDetector()  # type: ignore[assignment]
+    f = Frame("f_000001", "x.jpg", 1.0, "cam", [3.5, 2.0, 6.0], [1, 0, 0, 0])
+    await rt.drone_frame(f)
+    assert [v["id"] for v in rt.state.victims] == ["C-01"]
+    await rt.drone_frame(f)
+    assert [v["id"] for v in rt.state.victims] == ["V-01"]  # C-01 dropped, untouched by lead
+    assert abs(rt.state.victims[0]["fused"] - 0.82) < 1e-9

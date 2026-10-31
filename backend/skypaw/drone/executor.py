@@ -181,6 +181,8 @@ class SurveyDroneExecutor:
         self._last_pose: Pose | None = None
         self._since_capture = 0.0
         self._intrinsics = camera_intrinsics()
+        self.turn_sign_checked = False
+        self.turn_sign_ok: bool | None = None
 
     # --- public port ----------------------------------------------------------------
     @property
@@ -351,6 +353,8 @@ class SurveyDroneExecutor:
                 rate = cfg.turn_rate if err > 0 else -cfg.turn_rate
                 dur = min(cfg.burst_s, max(cfg.min_turn_s, abs(err) / cfg.turn_rate))
                 await self._cmd("turn", self.controls.turn, rate, dur, err=err, dist=dist)
+                if not self.turn_sign_checked:
+                    await self._check_turn_sign(p.yaw, rate)
                 continue
             if capture and self._since_capture >= cfg.capture_min_m:
                 await self._capture(p)  # frame at rest, then at most one burst of travel
@@ -359,6 +363,27 @@ class SurveyDroneExecutor:
                 "forward", self.controls.forward, speed, cfg.burst_s, err=err, dist=dist
             )
         return False
+
+    async def _check_turn_sign(self, yaw_before: float, rate: float) -> None:
+        """Log whether the first turn burst rotated the way ``rate`` asked (once per executor)."""
+        await asyncio.sleep(0.3)  # let a fresh rotation sample arrive
+        p = self.pose.latest()
+        if p is None:
+            return
+        dyaw = wrap(p.yaw - yaw_before)
+        self.turn_sign_checked = True
+        self.turn_sign_ok = abs(dyaw) >= 0.02 and (dyaw > 0) == (rate > 0)
+        log_event(
+            log,
+            "turn_sign_check",
+            level=20 if self.turn_sign_ok else 40,
+            commanded_rate=round(rate, 3),
+            measured_dyaw=round(dyaw, 3),
+            ok=self.turn_sign_ok,
+        )
+        self.sink.drone_log(
+            "turn_sign", f"Turn sign check: rate {rate:+.2f} -> dyaw {dyaw:+.2f} rad"
+        )
 
     async def _cmd(self, kind: str, fn: Callable[..., None], *args: float, **ctx: float) -> None:
         """Run a blocking flight command in a thread and log it with its wall time."""

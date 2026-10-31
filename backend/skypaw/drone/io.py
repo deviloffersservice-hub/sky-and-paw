@@ -142,11 +142,14 @@ class SdkFlight:
         self.twin.takeoff(altitude=altitude)
 
     def turn(self, rate: float, duration: float) -> None:
-        """``locomotion.turn_left/turn_right(|rate|, duration=)`` burst (verified live)."""
+        """``locomotion.move(linear_x=0, angular_z=rate, duration=)``: signed yaw-rate burst.
+
+        Not ``turn_right``: in cyberwave 0.7.4 it publishes ``angular_z=+|angle|`` (same sign
+        as ``turn_left``) and the simulated X2 turns counter-clockwise for both (V1-A run 2).
+        The executor logs the measured yaw change of the first burst (``turn_sign_check``).
+        """
         assert_client_simulation(self.twin.client)
-        loco = self.twin.locomotion
-        fn = loco.turn_left if rate > 0 else loco.turn_right
-        fn(abs(rate), duration=duration)
+        self.twin.locomotion.move(linear_x=0.0, angular_z=float(rate), duration=duration)
 
     def forward(self, speed: float, duration: float) -> None:
         """``locomotion.move_forward(speed, duration=)`` burst (verified live)."""

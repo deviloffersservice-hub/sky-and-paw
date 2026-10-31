@@ -78,7 +78,7 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
-LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py scripts/go2_mission.py scripts/detect.py scripts/voice_check.py scripts/build_demo_page.py
+LINT_SCRIPTS := scripts/scene.py scripts/overhead.py scripts/mission.py scripts/go2_mission.py scripts/detect.py scripts/voice_check.py scripts/build_demo_page.py scripts/drive_mission.py
 
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend

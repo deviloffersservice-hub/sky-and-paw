@@ -51,6 +51,35 @@ def phrase_text(phrase_id: str, lang: str) -> str | None:
     return None
 
 
+def _jsonable(obj: Any) -> Any:
+    """Deep copy with numpy scalars/arrays turned into plain JSON types."""
+    import json
+
+    def default(o: Any) -> Any:
+        if hasattr(o, "tolist"):
+            return o.tolist()
+        if hasattr(o, "item"):
+            return o.item()
+        return str(o)
+
+    return json.loads(json.dumps(obj, default=default))
+
+
+def build_detector(settings: Settings) -> Detector:
+    """Stream B's ``DetectionPipeline`` (YOLO, then marker fallback) or the synthetic fake.
+
+    ``SKYPAW_FAKE_DETECTOR=1`` selects :class:`FakeDetector`. Without ultralytics the
+    pipeline runs markers only (logged by ``CompositeDetector.from_settings``).
+    """
+    if settings.skypaw_fake_detector:
+        return FakeDetector()
+    from skypaw.perception.detector import CompositeDetector
+    from skypaw.perception.pipeline import DetectionPipeline
+    from skypaw.sensors.synthetic import SyntheticSensors
+
+    return DetectionPipeline(CompositeDetector.from_settings(settings.data_dir), SyntheticSensors())
+
+
 def build_voice(settings: Settings) -> Voice:
     """``SarvamVoice`` (default) or stream C's ``FakeVoice`` when ``SKYPAW_FAKE_VOICE`` is set.
 
@@ -97,7 +126,8 @@ class MissionRuntime:
         self.drone: DroneExecutor | None = drone
         self._drone_factory = drone_factory
         self.go2: Go2Executor | None = go2 or self._fake_go2_if_configured()
-        self.detector: Detector = detector or FakeDetector()
+        self.detector: Detector = detector or build_detector(self.settings)
+        self.published: dict[str, Any] | None = None
         self.voice: Voice = voice or build_voice(self.settings)
         self._translate_ok = True
         self.autostart_survey = autostart_survey
@@ -345,37 +375,80 @@ class MissionRuntime:
         except Exception as exc:  # noqa: BLE001 - detection errors must not stop the survey
             log_event(log, "detector_failed", level=40, error=f"{type(exc).__name__}: {exc}")
             return
+        # Stream B's pipeline returns its whole running candidate set (ids may be re-assigned
+        # as clusters merge); the synthetic fake returns only what is under this frame.
+        full_set = callable(getattr(self.detector, "candidates", None))
         for c in candidates:
-            self._merge_candidate(c)
+            self._merge_candidate(c, replace=full_set)
+        if full_set:
+            ids = {c.victim_id for c in candidates}
+            self.state.victims = [
+                v
+                for v in self.state.victims
+                if v["id"] in ids or v.get("status") != "located" or v.get("triage")
+            ]
 
     def drone_log(self, key: str, text: str, level: str = "info") -> None:
         """Drone log line (NAV)."""
         self.log("NAV", f"drone_{key}", text)
 
-    def _merge_candidate(self, c: Candidate) -> None:
-        v = self.state.victim(c.victim_id)
-        if v is None:
-            v = {
-                "id": c.victim_id,
+    def _merge_candidate(self, c: Candidate, *, replace: bool = False) -> None:
+        """Add or update a victim; lead-owned fields (status, triage) are kept."""
+        latest = _jsonable(
+            {
                 "pos": list(c.position),
-                "status": "located",
                 "fused": c.fused,
                 "life_sign": c.life_sign,
                 "evidence": dict(c.evidence),
                 "suggested_triage": c.suggested_triage,
-                "triage": None,
-                "frames": list(c.frames),
+                "frames": list(c.frames)[-10:],
                 "source": dict(c.source),
             }
+        )
+        v = self.state.victim(c.victim_id)
+        if v is None:
+            v = {"id": c.victim_id, "status": "located", "triage": None, **latest}
             self.state.victims.append(v)
             self.log("DET", "detection", f"{c.victim_id} located, fused {c.fused:.0%}")
             self.emit("detection", {"victim_id": c.victim_id, "fused": c.fused})
             return
+        if replace:
+            v.update(latest)
+            return
         v["fused"] = max(float(v.get("fused") or 0), c.fused)
         v["life_sign"] = bool(v.get("life_sign")) or c.life_sign
-        v["evidence"].update({k: val for k, val in c.evidence.items() if val is not None})
-        v["frames"] = (v["frames"] + [f for f in c.frames if f not in v["frames"]])[-10:]
+        v["evidence"].update({k: val for k, val in latest["evidence"].items() if val is not None})
+        v["frames"] = (v["frames"] + [f for f in latest["frames"] if f not in v["frames"]])[-10:]
         v["suggested_triage"] = c.suggested_triage
+
+    async def publish_candidates(self) -> dict[str, Any] | None:
+        """After a survey: stream B's ``publish_waypoints`` + ``publish_alerts`` on Cyberwave."""
+        cands_fn = getattr(self.detector, "candidates", None)
+        if self.sim is None or self.sim.cw is None or not callable(cands_fn):
+            return None
+        env_id = self.sim.info.env_id
+        if not env_id:
+            return None
+
+        def work() -> dict[str, Any]:
+            from skypaw.perception.publish import publish_alerts, publish_waypoints
+
+            cands = cands_fn()
+            wps = publish_waypoints(self.sim.cw, env_id, cands)  # type: ignore[union-attr]
+            alerts = publish_alerts(self.sim.twin("drone"), env_id, cands, wps)  # type: ignore[union-attr]
+            return {"waypoints": wps, "alerts": alerts}
+
+        try:
+            out = await asyncio.to_thread(work)
+        except Exception as exc:  # noqa: BLE001 - publishing is best effort
+            self.log("SYS", "publish_failed", f"Publishing candidates failed: {exc}")
+            return None
+        created = sum(1 for a in out["alerts"] if a.get("action") == "create")
+        self.log(
+            "DET", "published", f"Published {len(out['waypoints'])} waypoints, {created} alerts"
+        )
+        self.published = out
+        return out
 
     # --- plans ----------------------------------------------------------------------
     def propose(
@@ -461,6 +534,7 @@ class MissionRuntime:
             self.emit("alert", {"kind": "survey_done", "pct_mapped": pct})
             if self.state.mission.phase == "mapping":
                 self.state.mission.phase = "search"
+            self._spawn(self.publish_candidates(), "publish")  # once per survey, not per frame
 
     def _nearest_victim(self, pos: list[float] | None) -> dict[str, Any] | None:
         alive = [
@@ -503,6 +577,21 @@ class MissionRuntime:
             v["status"] = "arrived"
             self.log("NAV", "go2_arrived", f"Go2 arrived at {v['id']}")
             self.emit("nav.arrived", {"victim_id": v["id"]})
+            self._speaker_card(v["id"])
+
+    def _speaker_card(self, victim_id: str) -> None:
+        """On arrival: a ``speak`` card whose actions are stream C's phrase ids."""
+        from skypaw.voice.phrases import PHRASES as VOICE_PHRASES
+
+        actions = [{"id": p.id, "label": p.label} for p in VOICE_PHRASES]
+        if actions:
+            actions[0]["primary"] = True
+        actions.append({"id": "dismiss", "label": "Not now"})
+        lang = self._victim_lang.get(victim_id, DEFAULT_SURVIVOR_LANG)
+        d = self.decisions.add(
+            "speak", f"Go2 speaker at {victim_id}", f"Speak to the survivor ({lang})", actions
+        )
+        self.emit("alert", {"kind": "speaker_ready", "decision_id": d.id, "victim_id": victim_id})
 
     async def _exec_speak(
         self, text: str | None, target: str | None, lang: str | None, phrase_id: str = "p_help"

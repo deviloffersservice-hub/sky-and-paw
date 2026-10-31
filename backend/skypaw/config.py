@@ -83,6 +83,8 @@ class Settings(BaseSettings):
     # voice. Default real; SKYPAW_FAKE_GO2=1 / SKYPAW_FAKE_VOICE=1 select the fakes.
     skypaw_fake_go2: bool = False
     skypaw_fake_voice: bool = False
+    # 1 = synthetic ground-truth detector instead of stream B's YOLO + marker pipeline.
+    skypaw_fake_detector: bool = False
 
     def cors_origins(self) -> list[str]:
         return [PAGES_ORIGIN]
