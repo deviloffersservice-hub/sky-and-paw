@@ -39,7 +39,7 @@ curl http://localhost:7860/version
 | Command | What it does |
 |---|---|
 | `make setup` | Creates `.venv` (prefers `python3.11`), installs `backend/requirements-dev.txt` and the backend in editable mode, runs `npm ci`, builds the frontend. Safe to re-run: a second run does nothing. |
-| `make run` | `uvicorn skypaw.app:create_app --factory` on `0.0.0.0:7860` (`PORT`, `HOST` override). Serves `frontend/dist` at `/` when built, otherwise a one-line placeholder page. Data goes to `./data` unless `DATA_DIR` is set in the environment. |
+| `make run` | Builds the frontend if missing or stale, then `uvicorn skypaw.app:create_app --factory` on `0.0.0.0:7860` (`PORT`, `HOST` override), serving `frontend/dist` at `/` (the app falls back to a one-line placeholder page when no build exists). Data goes to `./data` unless `DATA_DIR` is set in the environment. |
 | `make test` | `ruff check` + `ruff format --check` + `pytest` + `tsc --noEmit`. Tests block every non-loopback socket, so they never call Cyberwave or Sarvam. |
 | `make build` | Builds the console into `frontend/dist`. `VITE_BASE=/sky-and-paw/ make build` builds for GitHub Pages. |
 | `make smoke` | Builds, starts the backend, and runs the Playwright smoke test (`/healthz` 200, page title, WebSocket hello, `?api=` + CORS from a second origin). Screenshot in `frontend/test-results/`. |
@@ -80,7 +80,15 @@ committed. The important ones:
    changes it later.
 
 The backend allows CORS from `https://deviloffersservice-hub.github.io` and any
-`https://*.app.github.dev` origin (plus `http://localhost:*` when `SKYPAW_ENV=dev`).
+`https://<name>.app.github.dev` origin (one DNS label), plus `http://localhost:*` when
+`SKYPAW_ENV=dev`. The Codespace runs with `SKYPAW_ENV=prod`, so `/docs` is off there.
+
+Notes:
+- **Idle timeout** is a per-user setting, not part of `devcontainer.json`: raise it (e.g. to
+  4 hours) at <https://github.com/settings/codespaces> → "Default idle timeout".
+- **First Pages deploy:** `pages.yml` asks `actions/configure-pages` to enable Pages
+  (`enablement: true`). If that first run fails with a permissions error, set the repository's
+  **Settings → Pages → Source = GitHub Actions** once and re-run the workflow.
 
 ## Architecture
 

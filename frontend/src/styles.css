@@ -24,7 +24,7 @@ h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:.02em}
 /* Header, from the mockup */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .brand{font:700 20px/1 var(--display);letter-spacing:.04em;color:var(--accent)}
-.brand small{display:block;font:500 10px/1 var(--display);letter-spacing:.14em;color:var(--fg-2);margin-top:3px;text-transform:uppercase}
+.brand small{display:block;font:500 10px/1 var(--display);letter-spacing:.14em;color:var(--fg-2);margin-top:3px}
 
 /* T0 shell */
 .status{display:flex;align-items:center;gap:8px;font:600 13px/1 var(--display);letter-spacing:.06em;color:var(--fg-2);border-left:1px solid var(--line);padding-left:14px}

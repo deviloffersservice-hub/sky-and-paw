@@ -65,7 +65,7 @@ function render(root: HTMLElement, backend: Backend) {
   const header = el(
     "header",
     { className: "top" },
-    el("div", { className: "brand" }, "Sky & Paw", el("small", {}, "Ops · simulation")),
+    el("div", { className: "brand" }, "SKY & PAW", el("small", {}, "Ops · simulation")),
     status,
     form,
   );
