@@ -1,0 +1,777 @@
+<title>Sky &amp; Paw Ops</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&display=swap">
+<style>
+/* Layout: map is the product. Slim header (clocks, triage counts, EVERYONE OUT). The stage fills the rest: tactical map, camera tiles bottom-left (tap → focus), decision queue top-right, voice strip bottom-centre, a context panel that slides in from the right only when something is selected. Log / layers / timeline / 3D hide behind small toolbar buttons. Single dark theme. */
+:root{
+  --bg:#0b0f14; --panel:#111820; --panel-2:#17202a; --line:#243040; --fg:#e6edf3; --fg-2:#9fb0c0; --muted:#5e6f80;
+  --accent:#ff9f1c; --accent-ink:#1a1200; --good:#3ddc84; --warn:#ffd166; --bad:#ff5c5c; --info:#5ab4ff; --team:#c77dff; --medic:#3ddc84; --extraction:#c77dff; --lead:#ff9f1c;
+  --drone:#5ab4ff; --go2:#c9d4e0;
+  --display:"Barlow Condensed",ui-sans-serif,system-ui,sans-serif; --body:"IBM Plex Sans","Noto Sans Devanagari","Noto Sans Tamil",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:13.5px/1.45 var(--body);display:flex;flex-direction:column;min-height:100%;overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--panel);z-index:10}
+button,select,input{font:inherit;color:inherit}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:.02em}
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:6px 10px;cursor:pointer;font-weight:500;line-height:1.2}
+.btn:hover{border-color:var(--fg-2)} .btn:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600} .btn.ghost{background:transparent} .btn.tiny{padding:2px 6px;font-size:11px} .btn[disabled]{opacity:.4;cursor:not-allowed} .btn.on{border-color:var(--accent);color:var(--accent);background:rgba(255,159,28,.1)} .btn.danger{background:var(--bad);color:#2a0000;border-color:var(--bad);font-weight:700}
+.sel{background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:4px 7px;max-width:100%}
+.chip{display:inline-block;padding:2px 7px;border-radius:3px;font:600 10.5px/1.4 var(--display);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);color:var(--fg-2);white-space:nowrap} .chip.life{color:var(--bad);border-color:var(--bad)} .chip.bad{color:var(--bad);border-color:var(--bad)} .chip.r-medic{color:var(--medic);border-color:var(--medic)} .chip.r-extraction{color:var(--extraction);border-color:var(--extraction)} .chip.r-lead{color:var(--lead);border-color:var(--lead)}
+.dim{color:var(--muted)} .bad{color:var(--bad)}
+.sec-h{font:600 11px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--fg-2);margin:10px 0 6px;display:flex;gap:8px;align-items:center} .sec-h small{font:400 11px var(--body);letter-spacing:0;text-transform:none;color:var(--muted)} .sec-h .sel{margin-left:auto;padding:2px 6px;font-size:12px}
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{font:700 20px/1 var(--display);letter-spacing:.04em;color:var(--accent)} .brand small{display:block;font:500 10px/1 var(--display);letter-spacing:.14em;color:var(--fg-2);margin-top:3px}
+.site{border-left:1px solid var(--line);padding-left:14px;font-size:12px;color:var(--fg-2)} .site b{display:block;font:600 14px/1.2 var(--display);letter-spacing:.03em;color:var(--fg)}
+.clocks{display:flex;gap:14px;font:12px var(--mono);color:var(--fg-2)} .clocks b{display:block;font:600 18px/1 var(--display);color:var(--fg);letter-spacing:.02em} .clocks .since b{color:var(--warn)}
+.tri{display:flex;gap:1px;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-left:auto} .tri span{padding:3px 10px;background:var(--panel-2);text-align:center;min-width:58px} .tri b{display:block;font:600 18px/1 var(--display);font-variant-numeric:tabular-nums} .tri small{display:block;font:600 9px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-2);margin-top:3px} .tri .imm b{color:var(--bad)} .tri .del b{color:var(--warn)} .tri .ext b{color:var(--good)}
+.teamdots{display:flex;gap:4px} .td{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 9.5px var(--display);color:var(--bg);position:relative} .td.r-medic{background:var(--medic)} .td.r-extraction{background:var(--extraction)} .td.r-lead{background:var(--lead);border-radius:5px} .td.lost{background:var(--muted);outline:2px dashed var(--bad);outline-offset:1px} .td i{position:absolute;right:-2px;bottom:-2px;width:8px;height:8px;border-radius:50%;border:2px solid var(--panel);background:var(--muted)} .td.moving i{background:var(--info)} .td.working i{background:var(--good)}
+.ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap} .ctrl label{font-size:12px;color:var(--fg-2);display:flex;gap:4px;align-items:center}
+.evac{position:relative;overflow:hidden;font:700 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;user-select:none;-webkit-user-select:none} .evac::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.35)} .evac.holding::after{width:100%;transition:width 1s linear}
+/* stage */
+.stage{position:relative;flex:1;min-height:0;background:#0d131a;overflow:hidden;display:flex}
+.stage canvas.map{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none} .view3d{position:absolute;inset:0;display:none} .stage.three .view3d{display:block} .stage.three canvas.map{display:none}
+.stage.focus canvas.map{inset:auto 12px 12px auto;width:300px;height:200px;border:1px solid var(--line);border-radius:4px;z-index:3}
+.tools{position:absolute;left:10px;top:10px;display:flex;gap:4px;z-index:4} .tools .btn{font:600 11px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;background:rgba(17,24,32,.92);backdrop-filter:blur(4px)}
+.pop{position:absolute;left:10px;top:44px;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px;display:none;gap:4px;flex-direction:column;min-width:170px;box-shadow:0 12px 32px rgba(0,0,0,.5)} .pop.on{display:flex} .pop label{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:3px 4px;cursor:pointer} .pop .lg{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--fg-2);padding:2px 4px} .pop .lg i{width:10px;height:10px;border-radius:2px;display:inline-block} .pop hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.queue{position:absolute;right:10px;top:10px;width:340px;max-width:calc(100% - 20px);display:grid;gap:6px;z-index:5;transition:right .2s} .stage.panel .queue{right:382px}
+.dec{background:rgba(17,24,32,.96);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:5px;padding:9px 11px;display:grid;gap:5px;animation:rise .25s;box-shadow:0 8px 24px rgba(0,0,0,.4)} @keyframes rise{from{transform:translateY(-6px);opacity:0}}
+.dec.k-cutoff,.dec.k-mandown,.dec.k-deteriorate{border-left-color:var(--bad)} .dec.k-request,.dec.k-newvictim{border-left-color:var(--team)} .dec.k-speak{border-left-color:var(--good)} .dec.k-warn{border-left-color:var(--warn)} .dec.k-proposal{border-left-color:var(--info)}
+.dec-h{display:flex;justify-content:space-between;font:600 10px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--fg-2)} .dec-t{font:600 15px/1.2 var(--display);letter-spacing:.02em} .dec-b{margin:0;font-size:12px;color:var(--fg-2)} .dec-a{display:flex;gap:5px;flex-wrap:wrap} .dec-a .btn{font-size:12px;padding:5px 9px}
+.qmore{font-size:11.5px;color:var(--fg-2);text-align:right} .qcalm{font:600 11px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:right;padding:4px 2px}
+.cams{position:absolute;left:10px;bottom:68px;display:flex;gap:6px;z-index:4;flex-wrap:wrap;max-width:60%} .cam{position:relative;width:200px;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:4px;overflow:hidden;cursor:pointer} .cam.pinned{border-color:var(--warn)} .cam canvas{position:absolute;inset:0;width:100%;height:100%} .cam .lbl{position:absolute;right:6px;bottom:5px;font:600 10px/1 var(--display);letter-spacing:.1em;color:var(--fg-2);text-transform:uppercase}
+.stage.focus .cams{inset:10px 10px 68px 10px;max-width:none;display:block} .stage.focus .cam{display:none} .stage.focus .cam.focus{display:block;width:100%;height:100%;aspect-ratio:auto;border-color:var(--accent)} .stage.focus .cam.focus .lbl{font-size:13px;right:12px;bottom:12px}
+.voice{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;display:flex;gap:10px;align-items:center;background:rgba(17,24,32,.95);border:1px solid var(--line);border-radius:30px;padding:6px 12px 6px 6px;max-width:min(760px,calc(100% - 20px));backdrop-filter:blur(4px)}
+.ptt{width:46px;height:46px;border-radius:50%;border:2px solid var(--accent);background:radial-gradient(circle at 50% 40%,#2a1d08,#161008);color:var(--accent);font:700 10px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:grid;place-items:center;flex:none;user-select:none;-webkit-user-select:none}
+.ptt.live{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 6px rgba(255,159,28,.2);animation:pttpulse 1s infinite} @keyframes pttpulse{50%{box-shadow:0 0 0 12px rgba(255,159,28,.08)}}
+.vtext{min-width:0;display:grid;gap:1px} .vtext .line{font-size:14px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px} .vtext .line .partial::after{content:"▍";color:var(--accent);animation:blink .8s infinite} @keyframes blink{50%{opacity:.3}} .vtext .sub{font-size:11px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .vtext .sub b{color:var(--team);font-weight:600}
+.vmore{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px;display:none;gap:4px;width:min(560px,calc(100% - 20px))} .vmore.on{display:grid} .vmore .btn{text-align:left;font-size:12.5px} .vmore .btn small{color:var(--muted);margin-left:6px} .vmore .row{display:flex;gap:5px} .vmore input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.tts-badge{position:absolute;left:50%;transform:translateX(-50%);bottom:120px;z-index:5;background:rgba(61,220,132,.12);border:1px solid var(--good);color:var(--good);border-radius:4px;padding:6px 10px;font-size:12.5px;display:none;max-width:420px} .tts-badge.on{display:block} .tts-badge b{font:600 10px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+.evacbar{position:absolute;left:0;right:0;top:0;z-index:7;background:var(--bad);color:#2a0000;font:700 13px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;padding:8px 14px;display:none;justify-content:space-between;align-items:center} .evacbar.on{display:flex} .evacbar .btn{font-size:12px;background:#2a0000;color:#fff;border-color:#2a0000}
+/* pick menu */
+.pick{position:absolute;z-index:8;background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:10px;width:330px;box-shadow:0 12px 32px rgba(0,0,0,.55);display:grid;gap:6px;animation:rise .15s}
+.pick-h{font:600 13px/1 var(--display);letter-spacing:.04em} .pick-sec{font:600 10px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--fg-2);margin-top:4px;display:flex;justify-content:space-between} .pick-sec small{text-transform:none;letter-spacing:0;font:400 11px var(--body);color:var(--muted)} .pick-row{display:flex;gap:5px;flex-wrap:wrap} .pick-row.end{justify-content:flex-end;margin-top:4px}
+.who{display:grid;grid-template-columns:auto 1fr;gap:1px 8px;align-items:center;text-align:left;padding:5px 9px 5px 6px;font-size:12.5px;line-height:1.1} .who b{grid-row:1/3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 10px var(--display);color:var(--bg);background:var(--fg-2)} .who small{font-size:10.5px;color:var(--muted)} .who.r-medic b{background:var(--medic)} .who.r-extraction b{background:var(--extraction)} .who.r-bot b{background:var(--drone);border-radius:5px} .who.sel{border-color:var(--accent);background:rgba(255,159,28,.12)} .who.dis{opacity:.4}
+/* context panel */
+.cpanel{position:absolute;right:0;top:0;bottom:0;width:372px;max-width:100%;z-index:6;background:rgba(17,24,32,.97);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .2s;overflow:auto;padding:12px 14px} .stage.panel .cpanel{transform:none}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:8px} .vid{font:700 20px/1 var(--display);letter-spacing:.04em} .where{margin:6px 0 0;font-size:12px;color:var(--fg-2)}
+.triage{display:grid;grid-template-columns:repeat(4,1fr);gap:4px} .tbtn{border:1px solid var(--line);background:var(--panel-2);border-radius:4px;padding:6px 4px;font:600 12px/1.1 var(--display);letter-spacing:.04em;cursor:pointer;display:grid;gap:3px} .tbtn small{font:400 9.5px var(--body);color:var(--muted)} .tbtn.sugg{border-style:dashed} .tbtn.on.t-immediate{background:var(--bad);color:#2a0000;border-color:var(--bad)} .tbtn.on.t-delayed{background:var(--warn);color:#2a1a00;border-color:var(--warn)} .tbtn.on.t-unknown,.tbtn.on.t-expectant{background:var(--fg-2);color:var(--bg);border-color:var(--fg-2)} .tbtn.on small{color:inherit;opacity:.75}
+.needs{display:grid;gap:4px} .need{display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:4px;background:var(--panel-2);border-left:3px solid var(--line);font-size:12.5px} .need b{font:600 12px var(--display);letter-spacing:.06em;text-transform:uppercase} .need span{color:var(--fg-2)} .need.active{border-left-color:var(--info)} .need.done{border-left-color:var(--good)} .need.done span{color:var(--good)}
+.sendrow{display:flex;gap:5px;flex-wrap:wrap}
+.evidence{display:grid;gap:3px;margin-top:6px} .ev{display:grid;grid-template-columns:90px 1fr;gap:2px 8px;padding:4px 7px;border-radius:3px;background:var(--panel-2);border-left:3px solid var(--line);font-size:12px} .ev.on{border-left-color:var(--good)} .ev.off{opacity:.5} .ev-k{font:600 10.5px/1.6 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)} .ev-v{font-family:var(--mono);font-size:11.5px} .ev-n{grid-column:2;color:var(--muted);font-size:11px}
+.ev-d{margin-top:10px} .ev-d summary{cursor:pointer;font-size:12.5px;color:var(--fg-2)}
+.acts{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px} .acts .btn{font-size:12px}
+.state{margin-top:8px;padding:8px 10px;border-radius:4px;background:var(--panel-2);display:grid;gap:3px;font-size:12.5px} .state b{font:600 14px/1.2 var(--display);letter-spacing:.03em} .state span{color:var(--fg-2)} .state .eg{color:var(--info)} .state.bad b{color:var(--bad)}
+.thread{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:12.5px} .thread li{display:grid;grid-template-columns:58px 1fr;gap:6px;padding:4px 0;border-bottom:1px dashed var(--line)} .thread li.lead span{color:var(--accent)} .thread time{color:var(--muted);font-size:10.5px}
+.msgrow{display:flex;gap:5px;margin-top:8px} .msgrow input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.phrases{display:grid;grid-template-columns:1fr 1fr;gap:5px} .phrases .btn{text-align:left;font-size:12px;padding:6px 8px} .phrases .btn small{display:block;color:var(--fg-2);font-size:11px;margin-top:2px;line-height:1.3}
+/* overlays: timeline + log */
+.ovl{position:absolute;inset:0;z-index:12;background:rgba(5,8,12,.6);display:none;align-items:center;justify-content:center;padding:20px} .ovl.on{display:flex} .ovl-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;width:min(880px,100%);max-height:100%;overflow:auto;padding:14px 16px;display:grid;gap:10px} .ovl-h{display:flex;justify-content:space-between;align-items:center} .ovl-h h2{font-size:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+.tl{display:grid;gap:4px} .tl-order{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--fg-2);margin-bottom:4px} .tl-order b{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 10px var(--display);margin-right:3px} .tl-order .warn{color:var(--warn)}
+.tl-row{display:grid;grid-template-columns:64px 1fr;gap:8px;align-items:center} .tl-name{font:600 12px var(--display);letter-spacing:.04em;color:var(--fg-2)} .tl-row.r-medic .tl-name{color:var(--medic)} .tl-row.r-extraction .tl-name{color:var(--extraction)} .tl-row.r-bot .tl-name{color:var(--drone)}
+.tl-bar{position:relative;height:20px;background:var(--panel-2);border-radius:3px;overflow:hidden} .tl-seg{position:absolute;top:2px;bottom:2px;border-radius:2px;font:600 10px/16px var(--display);letter-spacing:.04em;padding:0 5px;white-space:nowrap;overflow:hidden;color:var(--bg)} .tl-seg.travel{background:var(--fg-2);opacity:.75} .tl-seg.work{background:var(--good)} .tl-seg.wait{background:var(--warn);opacity:.7} .tl-seg.overwatch{background:var(--drone)} .r-bot .tl-seg.travel{background:var(--drone)}
+.tl-axis{display:flex;justify-content:space-between;font:10.5px var(--mono);color:var(--muted);padding-left:72px} .tl-warns{margin:4px 0 0;padding-left:16px;font-size:12px;color:var(--warn)}
+.tl.compact .tl-row{grid-template-columns:48px 1fr} .tl.compact .tl-bar{height:14px} .tl.compact .tl-seg{top:1px;bottom:1px;font-size:9px;line-height:12px} .tl.compact .tl-axis{display:none}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:12px} .log-line{display:grid;grid-template-columns:58px 36px 1fr;gap:6px;align-items:baseline;padding:4px 0;border-bottom:1px dashed var(--line)} .log-line time{color:var(--muted);font-size:10.5px} .log-line .src{font:600 9.5px/1.6 var(--display);letter-spacing:.08em;color:var(--fg-2)} .src-STT .src{color:var(--info)} .src-LLM .src{color:var(--accent)} .src-DET .src{color:var(--bad)} .src-NAV .src{color:var(--go2)} .src-TTS .src{color:var(--good)} .src-LEAD .src{color:var(--warn)} .src-TEAM .src{color:var(--team)}
+.comms{list-style:none;margin:0;padding:0;display:grid;gap:8px} .comm{display:grid;grid-template-columns:24px 1fr;gap:8px} .av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 9.5px var(--display);color:var(--bg);background:var(--fg-2)} .av.r-medic{background:var(--medic)} .av.r-extraction{background:var(--extraction)} .av.r-lead{background:var(--lead);border-radius:5px} .comm .who{font:600 11px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);display:flex;gap:8px} .comm .who time{margin-left:auto;letter-spacing:0;text-transform:none;font-size:10.5px} .comm .say{font-size:14px;margin-top:3px} .comm .orig{display:block;color:var(--muted);font-size:11px;margin-top:2px} .comm.evac .say{color:var(--bad);font-weight:600}
+/* phone */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(430px,100vw);z-index:20;background:rgba(5,8,12,.75);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:14px} .drawer.on{display:flex}
+.phone{width:360px;max-width:100%;height:min(760px,94vh);background:#0e1419;border:8px solid #1d2630;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.ph-top{padding:14px 14px 8px;border-bottom:1px solid var(--line);display:grid;gap:8px} .ph-title{font:700 17px/1 var(--display);letter-spacing:.04em;color:var(--accent)} .ph-sub{font-size:11.5px;color:var(--fg-2)} .ph-pick{display:flex;gap:4px;flex-wrap:wrap} .ph-pick .btn{font-size:11px;padding:3px 7px}
+.ph-tabs{display:flex;border-bottom:1px solid var(--line)} .ph-tabs .btn{flex:1;border:0;border-radius:0;background:transparent;padding:8px 2px;font:600 11px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)} .ph-tabs .btn.on{color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.ph-body{flex:1;overflow:auto;padding:12px;display:grid;gap:10px;align-content:start}
+.ph-evac{background:var(--bad);color:#2a0000;border-radius:8px;padding:10px;font:700 15px/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;display:grid;gap:4px} .ph-evac small{font:400 12px var(--body);text-transform:none;letter-spacing:0}
+.ph-lead{background:rgba(255,159,28,.1);border:1px solid var(--accent);border-radius:8px;padding:10px;display:grid;gap:5px} .ph-lead .say{font-size:16px;line-height:1.35} .ph-lead .orig{font-size:11px;color:var(--fg-2)} .ph-lead .btn{justify-self:start;font-size:11.5px} .ph-lead .eyebrow{font:600 10px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--fg-2)}
+.ph-task{border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;display:grid;gap:4px} .ph-task b{font:600 15px var(--display)} .ph-task.dim{border-style:dashed} .ph-task .eg{color:var(--info);font-size:12px}
+.ph-log{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13px} .ph-log li{border-bottom:1px dashed var(--line);padding-bottom:6px} .ph-log time{display:block;font-size:10px;color:var(--muted)}
+.ph-map{position:relative;aspect-ratio:1;background:#0d131a;border-radius:8px;overflow:hidden} .ph-map canvas{position:absolute;inset:0;width:100%;height:100%}
+.ph-cam .cam{width:100%;max-width:none;cursor:default}
+.ph-req{display:grid;gap:6px} .ph-req .btn{text-align:left;padding:10px;font-size:14px} .ph-req input{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px}
+.ph-mine{display:grid;gap:5px;font-size:12.5px} .ph-mine div{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;background:var(--panel);border-radius:6px}
+.ph-talk{display:grid;gap:10px;justify-items:center} .ph-ptt{width:110px;height:110px;border-radius:50%;background:var(--team);color:#1a0a28;border:0;font:700 12px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;user-select:none;-webkit-user-select:none} .ph-ptt.live{box-shadow:0 0 0 12px rgba(199,125,255,.25);animation:pttpulse 1s infinite}
+.ph-tr{width:100%;min-height:44px;background:var(--panel);border-radius:8px;padding:8px 10px;font-size:15px;overflow-wrap:anywhere;box-sizing:border-box} .ph-sent{width:100%;font-size:12px;color:var(--good)} .ph-sent small{display:block;color:var(--fg-2)}
+.close{position:absolute;right:12px;top:10px;z-index:2}
+@media (max-width:900px){.queue{width:280px} .stage.panel .queue{right:10px;top:auto;bottom:140px} .cpanel{width:100%} .cams{max-width:48%} .cam{width:150px} .tri{margin-left:0} .voice{max-width:calc(100% - 20px)} .vtext .line{max-width:200px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand">SKY &amp; PAW<small>Ops · simulation</small></div>
+  <div class="site"><b id="siteName"></b><span id="siteDesc"></span></div>
+  <div class="clocks"><span>Mission<b id="stT">00:00</b></span><span class="since">Since collapse<b id="stSince">—</b></span></div>
+  <div class="tri"><span class="imm"><b id="kImm">0</b><small>Immediate</small></span><span class="del"><b id="kDel">0</b><small>Delayed</small></span><span><b id="kUnk">0</b><small>Unknown</small></span><span class="ext"><b id="kExt">0</b><small>Extracted</small></span></div>
+  <div class="teamdots" id="teamdots"></div>
+  <button class="btn danger evac" id="btnEvac" title="Hold 1 s">Everyone out</button>
+  <div class="ctrl"><button class="btn primary" id="btnDemo">▶ Play demo</button><label><input type="checkbox" id="chkAuto"> auto</label><select class="sel" id="selSpeed" aria-label="Demo speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select><button class="btn" id="btnPhone">Phone view</button></div>
+</header>
+
+<main class="stage" id="stage">
+  <canvas class="map" id="map"></canvas><div class="view3d" id="view3d"></div>
+  <div class="evacbar" id="evacbar"><span>Everyone out · egress routes sent · all robots returning</span><button class="btn" id="btnStand">Stand down</button></div>
+  <div class="tools"><button class="btn" id="tLayers">Layers ▾</button><button class="btn" id="t3d">3D twin</button><button class="btn" id="tTimeline">Plan timeline</button><button class="btn" id="tLog">Log &amp; comms</button><button class="btn" id="tReset" title="Reset view">⌖</button></div>
+  <div class="pop" id="layersPop"></div>
+  <div class="queue" id="queue"></div>
+  <div class="cams" id="cams"></div>
+  <div class="tts-badge" id="ttsBadge"></div>
+  <div class="vmore" id="vmore"></div>
+  <div class="voice"><button class="ptt" id="ptt" aria-pressed="false">Hold</button><div class="vtext"><div class="line" id="vline"><span class="dim">Hold to talk · saaras:v3-realtime · auto-detect</span></div><div class="sub" id="vsub">Last from team: —</div></div><button class="btn tiny" id="vtoggle">▾</button></div>
+  <aside class="cpanel" id="cpanel"></aside>
+  <div class="ovl" id="ovlTimeline"><div class="ovl-box"><div class="ovl-h"><h2>Allocation timeline</h2><div><button class="btn" id="tlRecompute">Recompute proposal</button> <button class="btn" data-close>Close</button></div></div><div id="tlBody"></div></div></div>
+  <div class="ovl" id="ovlLog"><div class="ovl-box"><div class="ovl-h"><h2>Log &amp; comms</h2><div><select class="sel" id="logLang" aria-label="Language"></select> <button class="btn" data-close>Close</button></div></div><div class="sec-h">Comms</div><ul class="comms" id="comms"></ul><div class="sec-h">Mission log</div><ul class="log" id="log"></ul></div></div>
+</main>
+
+<div class="drawer" id="drawer"><div class="phone"><button class="btn tiny close" id="phoneClose">Close</button><div class="ph-top"><div><div class="ph-title">SKY &amp; PAW · <span id="phMission"></span></div><div class="ph-sub" id="phSub"></div></div><div class="ph-pick" id="phPick"></div></div><div class="ph-tabs" id="phTabs"></div><div class="ph-body" id="phBody"></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/* Sky & Paw — mission engine v3 (map-first ops). Simulated data only.
+   v3 adds: team roles (lead/medic/extraction), START-style triage (system
+   suggests, lead sets), automatic allocation proposals as a timeline,
+   replanning on collapse / deterioration / new victim, egress + "everyone
+   out", man-down checks, map-click dispatch, body cams, one decision queue. */
+(function () {
+  'use strict';
+  const SP = {}; window.SP = SP;
+  SP.MODELS = { stt: 'saaras:v4', sttRealtime: 'saaras:v3-realtime', llm: 'sarvam-105b', tts: 'bulbul:v3', translate: 'sarvam-translate:v1', detector: 'YOLOv8n', sim: 'Cyberwave MuJoCo', go2: 'unitree/go2', drone: 'dji/mini-4-pro' };
+  SP.LANGS = [{ code: 'hi-IN', native: 'हिन्दी' }, { code: 'mr-IN', native: 'मराठी' }, { code: 'ta-IN', native: 'தமிழ்' }, { code: 'en-IN', native: 'English' }];
+  SP.langName = c => (SP.LANGS.find(l => l.code === c) || { native: c }).native;
+  SP.VOICES = { 'hi-IN': 'priya', 'mr-IN': 'rohan', 'ta-IN': 'kavitha', 'en-IN': 'shubh' };
+  SP.SITE = { name: 'Ghatkopar · Block C', desc: 'Collapsed 3-floor residential · 18 × 12 m', mission: 'SP-0417', collapseMinAgo: 42 };
+  const L4 = (en, hi, mr, ta) => ({ 'en-IN': en, 'hi-IN': hi, 'mr-IN': mr, 'ta-IN': ta });
+  SP.L4 = L4;
+
+  /* ---------- strings ---------- */
+  const T = {
+    mission_start: L4('Mission {m} started. Simulation active ({sim}).', 'मिशन {m} शुरू। सिमुलेशन सक्रिय ({sim})।', 'मोहीम {m} सुरू. सिम्युलेशन सक्रिय ({sim}).', 'பணி {m} தொடங்கியது. சிமுலேஷன் செயலில் ({sim}).'),
+    stt_final: L4('Lead ({lang}): “{text}”', 'लीड ({lang}): “{text}”', 'लीड ({lang}): “{text}”', 'தலைவர் ({lang}): “{text}”'),
+    plan_ready: L4('Plan ready: {title}', 'योजना तैयार: {title}', 'योजना तयार: {title}', 'திட்டம் தயார்: {title}'),
+    plan_confirmed: L4('Lead approved: {title}', 'लीड ने मंज़ूर किया: {title}', 'लीडने मंजूर केले: {title}', 'தலைவர் ஒப்புதல்: {title}'),
+    plan_cancelled: L4('Lead cancelled: {title}', 'लीड ने रद्द किया: {title}', 'लीडने रद्द केले: {title}', 'தலைவர் ரத்து: {title}'),
+    drone_takeoff: L4('Drone airborne at {alt} m. Mapping.', 'ड्रोन {alt} मी. पर। मैपिंग।', 'ड्रोन {alt} मी. वर. मॅपिंग.', 'ட்ரோன் {alt} மீ. வரைபடம்.'),
+    detection: L4('{id}: {sensors} at {pos} · fused {c}', '{id}: {pos} पर {sensors} · {c}', '{id}: {pos} येथे {sensors} · {c}', '{id}: {pos} இல் {sensors} · {c}'),
+    survey_done: L4('Mapping complete: {p}% seen, {n} candidates. Proposal ready.', 'मैपिंग पूरी: {p}%, {n} संभावित। प्रस्ताव तैयार।', 'मॅपिंग पूर्ण: {p}%, {n} संभाव्य. प्रस्ताव तयार.', 'வரைபடம் முடிந்தது: {p}%, {n} பேர். முன்மொழிவு தயார்.'),
+    nav_start: L4('Go2 → {id}: {d} m, ETA {s} s.', 'Go2 → {id}: {d} मी., {s} से.', 'Go2 → {id}: {d} मी., {s} से.', 'Go2 → {id}: {d} மீ, {s} வி.'),
+    nav_arrived: L4('Go2 at {id}. Radar + CO₂ scan.', 'Go2 {id} पर। रडार + CO₂ स्कैन।', 'Go2 {id} वर. रडार + CO₂ स्कॅन.', 'Go2 {id} இல். ரேடார் + CO₂.'),
+    tts: L4('Go2 spoke ({lang}): “{text}”', 'Go2 ने कहा ({lang}): “{text}”', 'Go2 म्हणाला ({lang}): “{text}”', 'Go2 பேசியது ({lang}): “{text}”'),
+    alert: L4('{text}', '{text}', '{text}', '{text}'),
+    contact: L4('{id}: contact — tapping heard.', '{id}: संपर्क — थपथपाहट।', '{id}: संपर्क — टकटक.', '{id}: தொடர்பு — தட்டல்.'),
+    triage_set: L4('{id} triage set to {cat} by lead.', '{id} ट्राइएज {cat} — लीड।', '{id} ट्रायएज {cat} — लीड.', '{id} முன்னுரிமை {cat} — தலைவர்.'),
+    dismissed: L4('{id} dismissed: {why}', '{id} खारिज: {why}', '{id} रद्द: {why}', '{id} நிராகரிப்பு: {why}'),
+    confirmed: L4('{id} confirmed: {why}', '{id} पुष्टि: {why}', '{id} निश्चित: {why}', '{id} உறுதி: {why}'),
+    dispatch: L4('{who} → {where} ({d} m, ~{s} s).', '{who} → {where} ({d} मी., ~{s} से.)।', '{who} → {where} ({d} मी., ~{s} से.).', '{who} → {where} ({d} மீ, ~{s} வி).'),
+    arrived: L4('{who} reached {where}.', '{who} {where} पर पहुँचे।', '{who} {where} वर पोहोचले.', '{who} {where} ஐ அடைந்தார்.'),
+    stabilized: L4('{who} stabilised {id}. Ready for extraction.', '{who} ने {id} को स्थिर किया। निकासी के लिए तैयार।', '{who} ने {id} स्थिर केले. बाहेर काढण्यास तयार.', '{who} {id} ஐ நிலைப்படுத்தினார். மீட்புக்கு தயார்.'),
+    extracting: L4('Extraction started at {id} ({who}).', '{id} पर निकासी शुरू ({who})।', '{id} येथे बाहेर काढणे सुरू ({who}).', '{id} இல் மீட்பு தொடங்கியது ({who}).'),
+    extracted: L4('{id} extracted. Handed to medic at staging.', '{id} निकाला गया। स्टेजिंग पर मेडिक को सौंपा।', '{id} बाहेर काढले. स्टेजिंगला मेडिककडे.', '{id} மீட்கப்பட்டார். முகாமில் மருத்துவரிடம்.'),
+    rerouted: L4('{who} rerouted around {hz}: +{d} m.', '{who} {hz} से बचकर नया रास्ता: +{d} मी.।', '{who} {hz} टाळून नवा मार्ग: +{d} मी.', '{who} {hz} ஐ தவிர்த்து புதிய வழி: +{d} மீ.'),
+    cutoff: L4('{who} is cut off: no route to {where}.', '{who} का रास्ता कट गया: {where} तक कोई रास्ता नहीं।', '{who} चा मार्ग तुटला: {where} पर्यंत मार्ग नाही.', '{who} துண்டிக்கப்பட்டார்: {where} க்கு வழி இல்லை.'),
+    collapse: L4('Secondary collapse at {pos} ({src}). Routes recomputed.', '{pos} पर दूसरा ढहाव ({src})। रास्ते पुनर्गणित।', '{pos} येथे दुय्यम कोसळ ({src}). मार्ग पुन्हा मोजले.', '{pos} இல் இரண்டாம் இடிபாடு ({src}). வழிகள் மீண்டும்.'),
+    hazard: L4('Hazard {id} at {pos}: {note}.', 'खतरा {id} {pos}: {note}।', 'धोका {id} {pos}: {note}.', 'அபாயம் {id} {pos}: {note}.'),
+    deteriorating: L4('{id} weakening: {bpm} bpm and falling.', '{id} कमज़ोर: {bpm} bpm, गिर रहा।', '{id} कमकुवत: {bpm} bpm, घटत आहे.', '{id} பலவீனம்: {bpm} bpm, குறைகிறது.'),
+    proposal: L4('Allocation proposal {n}: {summary}', 'आवंटन प्रस्ताव {n}: {summary}', 'वाटप प्रस्ताव {n}: {summary}', 'ஒதுக்கீடு முன்மொழிவு {n}: {summary}'),
+    proposal_ok: L4('Lead approved proposal {n}.', 'लीड ने प्रस्ताव {n} मंज़ूर किया।', 'लीडने प्रस्ताव {n} मंजूर केला.', 'முன்மொழிவு {n} ஒப்புதல்.'),
+    request_in: L4('{who} requests: {what}', '{who} का अनुरोध: {what}', '{who} ची विनंती: {what}', '{who} கோரிக்கை: {what}'),
+    request_ok: L4('Approved {what} for {who}.', '{who} के लिए {what} मंज़ूर।', '{who} साठी {what} मंजूर.', '{who} க்கு {what} ஒப்புதல்.'),
+    request_no: L4('Denied {what} for {who}.', '{who} के लिए {what} अस्वीकार।', '{who} साठी {what} नाकारले.', '{who} க்கு {what} மறுப்பு.'),
+    team_msg: L4('{who}: “{text}”', '{who}: “{text}”', '{who}: “{text}”', '{who}: “{text}”'),
+    lead_msg: L4('Lead → {who}: “{text}”', 'लीड → {who}: “{text}”', 'लीड → {who}: “{text}”', 'தலைவர் → {who}: “{text}”'),
+    overwatch: L4('Drone overwatch above {who}, light on.', 'ड्रोन {who} के ऊपर, लाइट चालू।', 'ड्रोन {who} च्या वर, लाइट चालू.', 'ட்ரோன் {who} மேலே, விளக்கு.'),
+    signal_lost: L4('{who}: no telemetry for {s} s.', '{who}: {s} से. से कोई संकेत नहीं।', '{who}: {s} से. पासून संकेत नाही.', '{who}: {s} வி. சமிக்ஞை இல்லை.'),
+    signal_back: L4('{who} responded: OK, radio shadow.', '{who} ने जवाब दिया: ठीक, रेडियो छाया।', '{who} ने उत्तर दिले: ठीक, रेडिओ सावली.', '{who} பதில்: சரி, ரேடியோ நிழல்.'),
+    evacuate: L4('EVERYONE OUT broadcast. Egress routes sent to all phones.', 'सब बाहर — प्रसारण। सभी फ़ोन पर निकास मार्ग।', 'सर्वजण बाहेर — प्रसारण. सर्व फोनवर बाहेर पडण्याचा मार्ग.', 'எல்லோரும் வெளியே — ஒலிபரப்பு.'),
+    role_warn: L4('Warning: {text}', 'चेतावनी: {text}', 'इशारा: {text}', 'எச்சரிக்கை: {text}'),
+    unrecognized: L4('Command not understood.', 'आदेश समझ नहीं आया।', 'आदेश समजला नाही.', 'கட்டளை புரியவில்லை.')
+  };
+  SP.t = (k, lang, p) => { let s = (T[k] && (T[k][lang] || T[k]['en-IN'])) || k; Object.keys(p || {}).forEach(x => { s = s.split('{' + x + '}').join(p[x]); }); return s; };
+  SP.esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  SP.TRIAGE = { immediate: { label: L4('Immediate', 'तत्काल', 'तात्काळ', 'உடனடி'), rank: 0, color: 'bad' }, delayed: { label: L4('Delayed', 'विलंबित', 'विलंबित', 'தாமதம்'), rank: 1, color: 'warn' }, unknown: { label: L4('Unknown', 'अज्ञात', 'अज्ञात', 'தெரியவில்லை'), rank: 2, color: 'muted' }, expectant: { label: L4('Expectant', 'अपेक्षित', 'अपेक्षित', 'எதிர்பார்ப்பு'), rank: 3, color: 'muted' } };
+  SP.ROLES = { lead: L4('Lead', 'लीड', 'लीड', 'தலைவர்'), medic: L4('Medic', 'मेडिक', 'मेडिक', 'மருத்துவர்'), extraction: L4('Extraction', 'निकासी', 'बाहेर काढणे', 'மீட்பு') };
+  SP.PHRASES = [
+    { id: 'p_help', label: 'Help is coming', text: L4('Help is on the way. Stay calm.', 'मदद आ रही है। शांत रहें।', 'मदत येत आहे. शांत राहा.', 'உதவி வருகிறது. அமைதியாக இருங்கள்.') },
+    { id: 'p_hear', label: 'Can you hear me?', text: L4('Can you hear me? Tap twice on something.', 'क्या आप मुझे सुन सकते हैं? दो बार थपथपाएँ।', 'तुम्हाला ऐकू येतंय का? दोनदा टकटक करा.', 'என் குரல் கேட்கிறதா? இரண்டு முறை தட்டுங்கள்.') },
+    { id: 'p_still', label: "Don't move", text: L4("Don't move. Cover your mouth and nose.", 'हिलें नहीं। मुँह और नाक ढक लें।', 'हलू नका. तोंड आणि नाक झाका.', 'அசையாதீர்கள். வாய், மூக்கை மூடுங்கள்.') },
+    { id: 'p_medic', label: 'Medic is close', text: L4('A medic is two minutes away. Keep breathing slowly.', 'मेडिक दो मिनट दूर है। धीरे-धीरे साँस लेते रहें।', 'मेडिक दोन मिनिटांवर आहे. हळू श्वास घ्या.', 'மருத்துவர் இரண்டு நிமிடத்தில். மெதுவாக சுவாசியுங்கள்.') }
+  ];
+  SP.EVAC = L4('Evacuate now. Follow the route on your phone to west staging.', 'अभी बाहर निकलें। फ़ोन पर दिखाए रास्ते से पश्चिमी स्टेजिंग जाएँ।', 'आत्ताच बाहेर पडा. फोनवरील मार्गाने पश्चिम स्टेजिंगला जा.', 'இப்போதே வெளியேறுங்கள். ஃபோனில் உள்ள வழியில் மேற்கு முகாமுக்கு.');
+  SP.REQUESTS = {
+    r_go2: { label: L4('Send Go2 to me', 'Go2 मेरे पास भेजो', 'Go2 माझ्याकडे पाठवा', 'Go2 ஐ என்னிடம்'), what: 'Go2 to position' },
+    r_drone: { label: L4('Drone overwatch here', 'ड्रोन मेरे ऊपर', 'ड्रोन माझ्या वर', 'ட்ரோன் என் மேலே'), what: 'drone overwatch' },
+    r_hazard: { label: L4('Mark hazard here', 'यहाँ खतरा', 'इथे धोका', 'இங்கே அபாயம்'), what: 'hazard pin' },
+    r_confirm: { label: L4('Confirm victim', 'पीड़ित की पुष्टि', 'व्यक्ती निश्चित', 'நபரை உறுதி'), what: 'confirm detection' },
+    r_dismiss: { label: L4('Dismiss victim', 'पीड़ित खारिज', 'व्यक्ती रद्द', 'நபரை நிராகரி'), what: 'dismiss detection' }
+  };
+  SP.PHONE_UI = {
+    feed: L4('Feed', 'फ़ीड', 'फीड', 'ஊட்டம்'), map: L4('Map', 'नक्शा', 'नकाशा', 'வரைபடம்'), cam: L4('Body cam', 'कैमरा', 'कॅमेरा', 'கேமரா'), help: L4('Request', 'अनुरोध', 'विनंती', 'கோரிக்கை'), talk: L4('Talk', 'बोलें', 'बोला', 'பேசு'),
+    leadSays: L4('Lead says', 'लीड कह रहे हैं', 'लीड म्हणतात', 'தலைவர் சொல்கிறார்'), yourTask: L4('Your task', 'आपका काम', 'तुमचे काम', 'உங்கள் பணி'), noTask: L4('No task yet. Stand by at staging.', 'अभी कोई काम नहीं। स्टेजिंग पर रहें।', 'अद्याप काम नाही. स्टेजिंगवर थांबा.', 'இன்னும் பணி இல்லை. முகாமில் காத்திருங்கள்.'),
+    egress: L4('Your way out', 'बाहर का रास्ता', 'बाहेर पडण्याचा मार्ग', 'வெளியேறும் வழி'), evacuate: L4('EVACUATE NOW', 'अभी बाहर निकलें', 'आत्ताच बाहेर पडा', 'இப்போதே வெளியேறுங்கள்'),
+    pending: L4('Waiting for lead', 'लीड की प्रतीक्षा', 'लीडची वाट', 'காத்திருப்பு'), approved: L4('Approved', 'मंज़ूर', 'मंजूर', 'ஒப்புதல்'), denied: L4('Denied', 'अस्वीकृत', 'नाकारले', 'மறுப்பு'),
+    hold: L4('Hold to talk', 'बोलने के लिए दबाएँ', 'बोलण्यासाठी दाबा', 'பேச அழுத்தவும்'), listen: L4('Listen', 'सुनें', 'ऐका', 'கேள்'), camOn: L4('Share my camera', 'मेरा कैमरा साझा करें', 'माझा कॅमेरा शेअर करा', 'என் கேமராவை பகிர்'), camOff: L4('Stop sharing', 'साझा बंद करें', 'शेअर थांबवा', 'பகிர்வை நிறுத்து'),
+    nearest: L4('Nearest detection', 'निकटतम पहचान', 'जवळची ओळख', 'அருகில்'), sentToLead: L4('Sent to lead (translated)', 'लीड को भेजा (अनुवादित)', 'लीडला पाठवले (भाषांतरित)', 'தலைவருக்கு அனுப்பப்பட்டது'), climbs: L4('climbs', 'चढ़ाई', 'चढण', 'ஏற்றம்'), toStaging: L4('Return to staging', 'स्टेजिंग पर लौटें', 'स्टेजिंगला परत', 'முகாமுக்கு திரும்பு'), point: L4('Go to marked point', 'चिह्नित बिंदु पर जाएँ', 'खूण केलेल्या ठिकाणी जा', 'குறித்த இடத்திற்கு')
+  };
+  SP.ui4 = (k, lang) => SP.PHONE_UI[k][lang] || SP.PHONE_UI[k]['en-IN'];
+  SP.LEAD_SAMPLES = [
+    { t: 'ड्रोन भेजो, पूरी इमारत मैप करो और लोगों को ढूंढो', l: 'hi-IN', h: 'survey', tr: L4('Send the drone, map the whole building and find people.', 'ड्रोन भेजो, पूरी इमारत मैप करो और लोगों को ढूंढो', 'ड्रोन पाठवा, संपूर्ण इमारत मॅप करा आणि लोकांना शोधा.', 'ட்ரோனை அனுப்பு, முழு கட்டிடத்தையும் வரைபடமாக்கி மக்களைத் தேடு.') },
+    { t: 'dog को V-01 के पास भेजो', l: 'hi-IN', h: 'nav', tr: L4('Send the dog to V-01.', 'dog को V-01 के पास भेजो', 'कुत्र्याला V-01 कडे पाठवा.', 'நாயை V-01 க்கு அனுப்பு.') },
+    { t: 'Everyone, V-01 is the priority. Priya goes first.', l: 'en-IN', h: 'broadcast', tr: L4('Everyone, V-01 is the priority. Priya goes first.', 'सब लोग, V-01 प्राथमिकता है। प्रिया पहले जाएगी।', 'सगळ्यांनो, V-01 प्राधान्य आहे. प्रिया आधी जाईल.', 'எல்லோரும், V-01 முன்னுரிமை. பிரியா முதலில்.') },
+    { t: 'Tell them a medic is close, in Marathi', l: 'en-IN', h: 'speak', tr: L4('Tell them a medic is close, in Marathi.', 'उन्हें मराठी में बताओ कि मेडिक पास है।', 'त्यांना मराठीत सांगा की मेडिक जवळ आहे.', 'மருத்துவர் அருகில் என்று மராத்தியில் சொல்.') }
+  ];
+  SP.TEAM_SAMPLES = {
+    t2: { t: 'V-01 जवळ पोहोचले, श्वास आहे पण पाय अडकला आहे', tr: L4('Reached V-01, breathing but leg is trapped.', 'V-01 के पास पहुँची, साँस है पर पैर फँसा है।', 'V-01 जवळ पोहोचले, श्वास आहे पण पाय अडकला आहे', 'V-01 ஐ அடைந்தேன், சுவாசம் உள்ளது ஆனால் கால் சிக்கியுள்ளது.') },
+    t3: { t: 'இங்கே இருட்டாக இருக்கிறது, ட்ரோன் லைட் வேண்டும்', tr: L4("It's dark here, I need the drone light.", 'यहाँ अंधेरा है, ड्रोन की लाइट चाहिए।', 'इथे अंधार आहे, ड्रोनचा लाइट हवा आहे.', 'இங்கே இருட்டாக இருக்கிறது, ட்ரோன் லைட் வேண்டும்') },
+    t4: { t: 'Slab above V-02 is moving, need a structural check before we cut', tr: L4('Slab above V-02 is moving, need a structural check before we cut.', 'V-02 के ऊपर की स्लैब हिल रही है, काटने से पहले जाँच चाहिए।', 'V-02 वरची स्लॅब हलते आहे, कापण्याआधी तपासणी हवी.', 'V-02 மேலே உள்ள ஸ்லாப் நகர்கிறது, வெட்டும் முன் சோதனை தேவை.') }
+  };
+
+  /* ---------- site geometry ---------- */
+  SP.RUBBLE = [
+    [-5, -3, 6, .35, 4, .2], [1, -3.5, 5, .3, 3.5, -.15], [-2, 2.5, 5, .3, 4, .1], [-6.5, 3.5, 3.5, .3, 3, .35], [7, -4, 3, .3, 3, .05], [7.5, 3.5, 2.5, .3, 4, -.3], [.5, 1, 3, .3, 2.5, .6],
+    [-9, 0, .3, 2.8, 6, 0], [-3, -6, 5, 2.2, .3, 0], [9, -2, .3, 1.8, 5, 0],
+    [-7, -1, 1.2, 1, 1.4, .4], [-3.5, -.5, 1, .8, 1, .9], [2, -5, 1.5, .9, 1.2, .3], [-1, 4.5, 1.1, 1.2, 1, .7], [6, 1.5, 1, .7, 1.3, .2], [-5, 5, .9, .6, .9, .1], [1.5, 4.2, 1.3, .8, .9, -.5], [-8, -4.5, 1.2, 1.5, 1, .3]
+  ];
+  const VDEF = [
+    { id: 'V-01', pos: [3.5, 0.5, -2.0], where: 'Under slab edge, ground-floor stairwell', truth: { rgb: 0.91, thermal: 5.8, radar: { bpm: 64, snr: 'strong' }, co2: 420 }, lang: 'mr-IN' },
+    { id: 'V-02', pos: [-4.0, 0.6, 3.0], where: 'Beneath first-floor slab, east room, 1.1 m void', truth: { thermal: 3.1, radar: { bpm: 71, snr: 'weak' }, co2: 380 }, lang: 'hi-IN', deteriorates: true },
+    { id: 'V-03', pos: [7.0, 0.5, 4.8], where: 'South-west corner, partial occlusion', truth: { rgb: 0.64 }, lang: 'mr-IN' },
+    { id: 'D-01', pos: [-7.5, 0.4, -5.2], where: 'North-west edge, sheet-metal pile', truth: { thermal: 9.2 }, lang: 'hi-IN', decoy: true }
+  ];
+  const SURVEY = { x0: -8, x1: 8, rows: [-5, -2.5, 0, 2.5, 5], alt: 6, speed: 2.2 };
+  const STAGING = [-12.5, 0, 7.5]; SP.STAGING = STAGING;
+
+  /* ---------- occupancy grid ---------- */
+  const G = SP.GRID = { x0: -13, z0: -9, cs: 0.5, w: 52, h: 36 };
+  G.truth = new Uint8Array(G.w * G.h); G.seen = new Uint8Array(G.w * G.h); G.verified = new Uint8Array(G.w * G.h); G.base = null;
+  const cellIdx = (cx, cz) => cz * G.w + cx; const toCell = (x, z) => [Math.floor((x - G.x0) / G.cs), Math.floor((z - G.z0) / G.cs)]; const cellCenter = (cx, cz) => [G.x0 + (cx + .5) * G.cs, G.z0 + (cz + .5) * G.cs];
+  SP.toCell = toCell; SP.cellCenter = cellCenter;
+  (function buildTruth() {
+    for (let cz = 0; cz < G.h; cz++) for (let cx = 0; cx < G.w; cx++) { const [x, z] = cellCenter(cx, cz); let cls = 1; SP.RUBBLE.forEach(r => { const dx = x - r[0], dz = z - r[1], c = Math.cos(-r[5]), s = Math.sin(-r[5]); const lx = dx * c - dz * s, lz = dx * s + dz * c; if (Math.abs(lx) <= r[2] / 2 && Math.abs(lz) <= r[4] / 2) cls = Math.max(cls, r[3] >= 0.6 ? 3 : 2); }); G.truth[cellIdx(cx, cz)] = cls; }
+    const copy = G.truth.slice(); for (let cz = 1; cz < G.h - 1; cz++) for (let cx = 1; cx < G.w - 1; cx++) if (copy[cellIdx(cx, cz)] === 1) { let nb = false; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (copy[cellIdx(cx + a, cz + b)] === 3) nb = true; if (nb) G.truth[cellIdx(cx, cz)] = 2; }
+    G.base = G.truth.slice();
+  })();
+  function resetSeen() { G.truth.set(G.base); G.seen.fill(0); G.verified.fill(0); for (let cz = 0; cz < G.h; cz++) for (let cx = 0; cx < G.w; cx++) { const [x, z] = cellCenter(cx, cz); if (Math.abs(x) > 9.8 || Math.abs(z) > 6.8) G.seen[cellIdx(cx, cz)] = 1; } }
+  resetSeen();
+  SP.cellClass = (cx, cz) => { if (cx < 0 || cz < 0 || cx >= G.w || cz >= G.h) return 3; const i = cellIdx(cx, cz); return G.seen[i] ? G.truth[i] : 0; };
+  function reveal(x, z, r, verified) { const [cx, cz] = toCell(x, z); const n = Math.ceil(r / G.cs); for (let a = -n; a <= n; a++) for (let b = -n; b <= n; b++) { const X = cx + a, Z = cz + b; if (X < 0 || Z < 0 || X >= G.w || Z >= G.h) continue; const [px, pz] = cellCenter(X, Z); if (Math.hypot(px - x, pz - z) <= r) { G.seen[cellIdx(X, Z)] = 1; if (verified) G.verified[cellIdx(X, Z)] = 1; } } }
+  function blockCells(x, z, r) { const [cx, cz] = toCell(x, z); const n = Math.ceil(r / G.cs); for (let a = -n; a <= n; a++) for (let b = -n; b <= n; b++) { const X = cx + a, Z = cz + b; if (X < 0 || Z < 0 || X >= G.w || Z >= G.h) continue; const [px, pz] = cellCenter(X, Z); if (Math.hypot(px - x, pz - z) <= r) { G.truth[cellIdx(X, Z)] = 3; G.seen[cellIdx(X, Z)] = 1; } } }
+  SP.mappedPct = () => { let seen = 0, tot = 0; for (let cz = 0; cz < G.h; cz++) for (let cx = 0; cx < G.w; cx++) { const [x, z] = cellCenter(cx, cz); if (Math.abs(x) <= 9 && Math.abs(z) <= 6) { tot++; if (G.seen[cellIdx(cx, cz)]) seen++; } } return Math.round(seen / tot * 100); };
+
+  /* ---------- planner ---------- */
+  function plan(from, to, profile) {
+    const hz = S.hazards; const [sx, sz] = toCell(from[0], from[2]); let [tx, tz] = toCell(to[0], to[2]);
+    const cost = (cx, cz) => { const c = SP.cellClass(cx, cz); if (c === 0 || c === 3) return Infinity; let k = c === 2 ? profile.difficult : 1; const [x, z] = cellCenter(cx, cz); hz.forEach(h => { if (Math.hypot(h.pos[0] - x, h.pos[2] - z) < 1.2) k *= 4; }); return k; };
+    const near = (cx, cz) => { if (isFinite(cost(cx, cz))) return [cx, cz]; let best = null, bd = 1e9; for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) if (isFinite(cost(cx + a, cz + b))) { const d = a * a + b * b; if (d < bd) { bd = d; best = [cx + a, cz + b]; } } return best; };
+    const s = near(sx, sz), t = near(tx, tz); if (!s || !t) return null; [tx, tz] = t;
+    const N = G.w * G.h, dist = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N); const si = cellIdx(s[0], s[1]), ti = cellIdx(tx, tz); dist[si] = 0;
+    const heap = [[0, si]]; const push = (d, i) => { heap.push([d, i]); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (heap[p][0] <= heap[k][0]) break;[heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (; ;) { const l = 2 * k + 1, r = l + 1; let m = k; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === k) break;[heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
+    while (heap.length) { const [d, i] = pop(); if (done[i]) continue; done[i] = 1; if (i === ti) break; const cx = i % G.w, cz = (i / G.w) | 0; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (!a && !b) continue; const X = cx + a, Z = cz + b; if (X < 0 || Z < 0 || X >= G.w || Z >= G.h) continue; const k = cost(X, Z); if (!isFinite(k)) continue; const nd = d + k * (a && b ? 1.414 : 1); const j = cellIdx(X, Z); if (nd < dist[j]) { dist[j] = nd; prev[j] = i; push(nd, j); } } }
+    if (!isFinite(dist[ti])) return null;
+    const cells = []; for (let i = ti; i !== -1; i = prev[i]) cells.push(i); cells.reverse();
+    const pts = cells.map(i => { const [x, z] = cellCenter(i % G.w, (i / G.w) | 0); return [x, 0, z]; }); pts[0] = [from[0], 0, from[2]];
+    let len = 0, climbs = 0, secs = 0, prevCls = 1; const hazards = new Set();
+    cells.forEach((i, k) => { if (k) len += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][2] - pts[k - 1][2]); const cls = G.truth[i]; if (cls === 2 && prevCls !== 2) climbs++; prevCls = cls; secs += G.cs / (cls === 2 ? profile.slowSpeed : profile.speed); const [x, z] = cellCenter(i % G.w, (i / G.w) | 0); hz.forEach(h => { if (Math.hypot(h.pos[0] - x, h.pos[2] - z) < 1.8) hazards.add(h.id); }); });
+    const simp = [pts[0]]; for (let k = 1; k < pts.length - 1; k++) { const a = pts[k - 1], b = pts[k], c = pts[k + 1]; if (Math.abs((b[0] - a[0]) * (c[2] - b[2]) - (b[2] - a[2]) * (c[0] - b[0])) > 1e-6) simp.push(b); } simp.push(pts[pts.length - 1]);
+    const diff = hazards.size ? 'hard' : climbs >= 3 ? 'hard' : climbs >= 1 ? 'moderate' : 'easy';
+    return { pts: simp, raw: pts, len, climbs, secs, hazards: [...hazards], diff };
+  }
+  const HUMAN = { difficult: 3, speed: 0.7, slowSpeed: 0.25 }, GO2P = { difficult: 2.2, speed: 0.6, slowSpeed: 0.3 };
+  SP.plan = plan; SP.HUMAN = HUMAN;
+  const WORK = { stabilize: 20, extract: 30 };
+
+  /* ---------- state ---------- */
+  const S = SP.state = {
+    t: 0, speed: 1, auto: false, running: false, demoDone: false, credits: 49.6, go2Battery: 71, droneBattery: 84,
+    drone: { pos: [-11.5, 0.2, 5.5], yaw: 0, mode: 'landed', path: null, idx: 0, light: false, overwatch: null },
+    go2: { pos: [-11, 0, 7.5], yaw: 0, mode: 'idle', path: null, idx: 0, target: null, targetKind: null, payload: null, wpReached: 0 },
+    victims: [], hazards: [], log: [], comms: [], requests: [], decisions: [], proposalN: 0, proposal: null, plan: null, evacuating: false,
+    team: [
+      { id: 't1', name: 'Rohan Deshmukh', role: 'lead', lang: 'hi-IN', initials: 'RD', pos: [-12.5, 0, 7.8], src: 'gps', acc: 4, lead: true },
+      { id: 't2', name: 'Priya Kulkarni', role: 'medic', lang: 'mr-IN', initials: 'PK', pos: [-11.5, 0, 6.5], src: 'uwb', acc: 0.2 },
+      { id: 't3', name: 'Arun Selvam', role: 'extraction', lang: 'ta-IN', initials: 'AS', pos: [10.5, 0, 6.6], src: 'uwb', acc: 0.2 },
+      { id: 't4', name: 'Meera Nair', role: 'extraction', lang: 'en-IN', initials: 'MN', pos: [-12, 0, 8.8], src: 'uwb', acc: 0.2 }
+    ],
+    mic: { active: false, partial: '', final: '', lang: null }, tts: { playing: null }, survivorLang: 'mr-IN', surveyPreview: false, mapped: 0, selected: null, phoneMic: null, pick: null
+  };
+  SP.TEAM = S.team; SP.member = id => S.team.find(t => t.id === id); SP.roleName = (r, l) => SP.ROLES[r][l || 'en-IN'];
+  const listeners = {}; SP.on = (ev, cb) => { (listeners[ev] = listeners[ev] || []).push(cb); return () => { listeners[ev] = listeners[ev].filter(f => f !== cb); }; };
+  const emit = (ev, d) => { (listeners[ev] || []).forEach(f => { try { f(d); } catch (e) { console.error(e); } }); }; SP.emit = emit;
+  const change = () => emit('change', S);
+  const clock = () => new Date().toTimeString().slice(0, 8); const dist2 = (a, b) => Math.hypot(a[0] - b[0], a[2] - b[2]); const fmtPos = p => `(${p[0].toFixed(1)}, ${p[2].toFixed(1)})`; SP.fmtPos = fmtPos; SP.dist2 = dist2;
+  const first = m => m.name.split(' ')[0];
+  function log(key, params, src, extra) { const e = Object.assign({ id: 'L' + (S.log.length + 1), t: S.t, clock: clock(), key, params: params || {}, src: src || 'SYS' }, extra || {}); S.log.push(e); emit('log', e); change(); return e; }
+  SP.logText = (e, lang) => e.tr ? SP.t(e.key, lang, Object.assign({}, e.params, { text: e.tr[lang] || e.tr['en-IN'] })) : SP.t(e.key, lang, e.params);
+  SP.select = (kind, id) => { S.selected = kind ? { kind, id } : null; S.pick = null; change(); };
+
+  /* ---------- decision queue ---------- */
+  let dn = 0;
+  function decide(d) { d.id = 'D' + (++dn); d.clock = clock(); d.t = S.t; S.decisions.unshift(d); emit('decision', d); change(); if (S.auto && d.auto) setTimeout(() => { if (S.decisions.includes(d)) SP.act(d.id, d.auto); }, (d.autoDelay || 2.2) * 1000 / S.speed); return d; }
+  SP.decide = decide;
+  SP.act = function (id, actionId) { const d = S.decisions.find(x => x.id === id); if (!d) return; const a = d.actions.find(x => x.id === actionId); S.decisions = S.decisions.filter(x => x !== d); if (a && a.run) a.run(); change(); };
+  SP.dismissDecision = id => { S.decisions = S.decisions.filter(x => x.id !== id); change(); };
+
+  /* ---------- sensor fusion + triage ---------- */
+  const W = { rgb: v => v, thermal: v => Math.min(1, v / 6) * 0.7, radar: v => v.snr === 'strong' ? 0.95 : 0.75, acoustic: () => 0.9, co2: v => Math.min(1, (v - 300) / 200) * 0.5 };
+  function fuse(v) { const ev = v.evidence; let nd = 1, n = 0; Object.keys(ev).forEach(k => { if (ev[k] == null || ev[k] === false || k === 'human') return; n++; nd *= (1 - W[k](ev[k])); }); v.fused = n ? 1 - nd : 0; v.nSensors = n; v.lifeSign = !!(ev.radar || ev.acoustic); v.suggest = v.lifeSign ? (ev.radar && ev.radar.snr === 'strong' ? 'immediate' : 'delayed') : (v.radarNegative && ev.rgb == null && n <= 1) ? 'expectant' : 'unknown'; if (!v.triage) v.triage = null; }
+  SP.sensorList = v => Object.keys(v.evidence).filter(k => v.evidence[k] != null && v.evidence[k] !== false).map(k => ({ rgb: 'RGB', thermal: 'thermal', radar: 'radar', acoustic: 'acoustic', co2: 'CO₂', human: 'team' }[k])).join(' + ') || '—';
+  SP.triageOf = v => v.triage || v.suggest || 'unknown';
+  function detect(def, sensors, src) {
+    let v = S.victims.find(x => x.id === def.id); const fresh = !v;
+    if (!v) { v = { id: def.id, pos: def.pos.slice(), where: def.where, lang: def.lang, decoy: !!def.decoy, deteriorates: !!def.deteriorates, evidence: {}, radarNegative: false, status: 'located', triage: null, t: S.t, clock: clock(), contact: false, history: [], needs: { medic: 1, extraction: 2 }, medicOnSite: null, stabilized: false, extractionOnSite: [], extractStart: null }; S.victims.push(v); }
+    sensors.forEach(k => { if (def.truth[k] != null) v.evidence[k] = JSON.parse(JSON.stringify(def.truth[k])); else if (k === 'radar') v.radarNegative = true; });
+    v.history.push({ clock: clock(), src, sensors: sensors.join('+') }); fuse(v);
+    log('detection', { id: v.id, sensors: SP.sensorList(v), pos: fmtPos(v.pos), c: (v.fused * 100).toFixed(0) + '%' }, 'DET'); emit('detect', v);
+    if (fresh && S.proposal && S.proposal.approved && !v.decoy) decide({ kind: 'newvictim', title: `New candidate ${v.id}`, body: `${SP.sensorList(v)} · suggested ${SP.TRIAGE[v.suggest].label['en-IN']}. Replan?`, victim: v.id, actions: [{ id: 'replan', label: 'Replan', run: () => propose('new candidate ' + v.id) }, { id: 'later', label: 'Later' }] });
+    return v;
+  }
+  SP.setTriage = (id, cat) => { const v = S.victims.find(x => x.id === id); if (!v) return; v.triage = cat; log('triage_set', { id, cat: SP.TRIAGE[cat].label['en-IN'] }, 'LEAD'); change(); };
+  SP.dismissVictim = (id, why, src) => { const v = S.victims.find(x => x.id === id); if (!v) return; v.status = 'dismissed'; v.triage = 'expectant'; S.team.forEach(m => { if (m.task && m.task.target === id) { m.task = null; m.route = null; m.moving = false; } m.queue = (m.queue || []).filter(q => q.target !== id); }); log('dismissed', { id, why }, src || 'LEAD'); change(); };
+  SP.confirmVictim = (id, why, src) => { const v = S.victims.find(x => x.id === id); if (!v) return; v.evidence.human = true; if (!v.lifeSign) v.lifeSign = true; if (!v.triage) v.triage = 'delayed'; log('confirmed', { id, why }, src || 'TEAM'); change(); };
+  SP.markContact = id => { const v = S.victims.find(x => x.id === id); if (!v || v.contact) return; v.contact = true; v.evidence.acoustic = true; fuse(v); log('contact', { id }, 'DET'); emit('contact', v); change(); };
+
+  /* ---------- robot plans (confirm) ---------- */
+  function surveyPlan() { return { intent: 'aerial_survey', robot: 'drone', title: 'Drone: map Block C, search for people', risk: 'low', est_s: 95, steps: ['Take off to 6 m', '5 passes · 2.5 m spacing · passability grid', 'RGB + depth (sim) · thermal · UWB radar (synthetic)', 'Fuse per candidate · propose allocation'] }; }
+  function navPlan(target, kind, payload) { const tgt = kind === 'team' ? SP.member(target) : kind === 'point' ? { pos: target, name: 'point' } : S.victims.find(x => x.id === target); if (!tgt) return null; const r = plan(S.go2.pos, tgt.pos, GO2P); if (!r) return null; const where = kind === 'team' ? first(tgt) : kind === 'point' ? fmtPos(target) : target; return { intent: 'navigate_go2', robot: 'go2', title: `Go2 → ${where}${payload ? ' with ' + payload : ''}`, target, targetKind: kind, payload, risk: r.hazards.length ? 'medium' : 'low', est_s: Math.round(r.secs), dist: r.len.toFixed(1), route: r, steps: [`${r.pts.length} waypoints · ${r.len.toFixed(1)} m · ${r.climbs} climbs`, 'follow_path at 0.6 m/s, margin 0.4 m', kind === 'victim' ? 'Radar + CO₂ scan on arrival, speaker ready' : 'Stop 1 m short, speaker ready'] }; }
+  function overwatchPlan(target, kind) { const pos = kind === 'team' ? SP.member(target).pos : target; return { intent: 'overwatch', robot: 'drone', title: `Drone overwatch ${kind === 'team' ? 'above ' + first(SP.member(target)) : 'at ' + fmtPos(pos)}`, risk: 'low', est_s: Math.round(dist2(S.drone.pos, pos) / 2.2), target, targetKind: kind, steps: ['Fly to 5 m above target', 'Light on, camera down, feed pinned', 'Re-map 3 m radius around target'] }; }
+  function speakPlan(text, lang) { return { intent: 'speak', robot: 'go2', title: `Go2 speaks in ${SP.langName(lang)}`, risk: 'low', est_s: 4, steps: [`bulbul:v3 · ${SP.VOICES[lang]}`, text], text, lang }; }
+  function proposeRobot(p, source) { if (!p) return; p.source = source || 'voice'; decide({ kind: 'plan', title: p.title, body: p.steps.join(' · '), plan: p, risk: p.risk, auto: 'go', actions: [{ id: 'go', label: 'Confirm · Go', primary: true, run: () => execPlan(p) }, { id: 'cancel', label: 'Cancel', run: () => log('plan_cancelled', { title: p.title }, 'LEAD') }] }); S.surveyPreview = p.intent === 'aerial_survey'; log('plan_ready', { title: p.title }, 'LLM'); emit('plan', p); change(); }
+  function execPlan(p) { S.surveyPreview = false; log('plan_confirmed', { title: p.title }, 'LEAD'); if (p.intent === 'aerial_survey') startSurvey(); else if (p.intent === 'navigate_go2') startNav(p); else if (p.intent === 'overwatch') SP.overwatch(p.target, p.targetKind); else if (p.intent === 'speak') doTTS(p.text, p.lang); change(); }
+  SP.sendGo2 = (target, kind, payload) => proposeRobot(navPlan(target, kind, payload), 'map'); SP.sendDrone = (target, kind) => proposeRobot(overwatchPlan(target, kind), 'map');
+
+  /* ---------- voice ---------- */
+  let sttTimer = null;
+  SP.speak = function (text, lang, hint, tr) {
+    if (sttTimer) clearTimeout(sttTimer); S.mic = { active: true, partial: '', final: '', lang }; change();
+    const words = text.split(' '); let i = 0;
+    const step = () => { i++; S.mic.partial = words.slice(0, i).join(' '); change(); if (i < words.length) sttTimer = setTimeout(step, 200 / S.speed); else sttTimer = setTimeout(() => { S.mic.active = false; S.mic.final = text; S.mic.partial = ''; const trs = tr || L4(text, text, text, text); S.comms.push({ from: 't1', to: null, text, lang, tr: trs, t: S.t, clock: clock() }); log('stt_final', { lang: SP.langName(lang) }, 'STT', { tr: trs }); emit('lead_said'); change(); setTimeout(() => SP.proposeFromText(text, lang, hint), 600 / S.speed); }, 300 / S.speed); };
+    sttTimer = setTimeout(step, 200 / S.speed);
+  };
+  SP.proposeFromText = function (text, lang, hint) {
+    const t = text.toLowerCase();
+    const intent = hint || (/(drone|ड्रोन|scan|survey|map|मैप|स्कैन)/.test(t) ? 'survey' : /(dog|कुत्त|go2|bhej|भेज|send|अनुप्पु)/.test(t) ? 'nav' : /(tell|say|बोल|कह|बताओ)/.test(t) ? 'speak' : /(everyone|सब|out|बाहर|evacuate)/.test(t) && /(out|बाहर|evacuate|निकल)/.test(t) ? 'evac' : 'broadcast');
+    if (intent === 'survey') proposeRobot(surveyPlan(), 'voice');
+    else if (intent === 'nav') { const m = t.match(/v-?0?([123])/); let target = m ? 'V-0' + m[1] : null; if (!target) { const c = S.victims.filter(v => v.status !== 'dismissed' && v.status !== 'extracted' && !v.decoy).sort((a, b) => dist2(S.go2.pos, a.pos) - dist2(S.go2.pos, b.pos)); target = c.length ? c[0].id : null; } if (target) proposeRobot(navPlan(target, 'victim'), 'voice'); else log('unrecognized', {}, 'LLM'); }
+    else if (intent === 'speak') { const l = /(marathi|मराठी)/.test(t) ? 'mr-IN' : /(tamil|तमिल)/.test(t) ? 'ta-IN' : /(hindi|हिंदी|हिन्दी)/.test(t) ? 'hi-IN' : S.survivorLang; const ph = /(hear|सुन)/.test(t) ? SP.PHRASES[1] : /(move|हिल)/.test(t) ? SP.PHRASES[2] : /(medic|मेडिक)/.test(t) ? SP.PHRASES[3] : SP.PHRASES[0]; proposeRobot(speakPlan(ph.text[l], l), 'voice'); }
+    else if (intent === 'evac') SP.everyoneOut();
+    else { /* broadcast: already in comms, delivered to all phones */ emit('broadcast'); }
+  };
+
+  /* ---------- drone ---------- */
+  function surveyWaypoints() { const pts = []; SURVEY.rows.forEach((z, i) => { const a = i % 2 ? SURVEY.x1 : SURVEY.x0, b = i % 2 ? SURVEY.x0 : SURVEY.x1; pts.push([a, SURVEY.alt, z], [b, SURVEY.alt, z]); }); pts.push([0, 9, 0]); return pts; }
+  SP.surveyWaypoints = surveyWaypoints;
+  function startSurvey() { S.drone.mode = 'takeoff'; S.drone.path = surveyWaypoints(); S.drone.idx = 0; change(); }
+  function tickDrone(dt) {
+    const d = S.drone;
+    if (d.mode === 'takeoff') { d.pos[1] += 2 * dt; if (d.pos[1] >= SURVEY.alt) { d.pos[1] = SURVEY.alt; d.mode = 'survey'; log('drone_takeoff', { alt: SURVEY.alt }, 'NAV'); } }
+    else if (d.mode === 'survey' || d.mode === 'overwatch_move') {
+      const tgt = d.mode === 'survey' ? d.path[d.idx] : d.overwatchTarget; if (!tgt) { d.mode = 'hold'; return; }
+      const dx = tgt[0] - d.pos[0], dy = tgt[1] - d.pos[1], dz = tgt[2] - d.pos[2]; const L = Math.hypot(dx, dy, dz), st = SURVEY.speed * dt;
+      if (L <= st) { d.pos = tgt.slice(); if (d.mode === 'survey') { d.idx++; if (d.idx >= d.path.length) { d.mode = 'hold'; S.mapped = SP.mappedPct(); log('survey_done', { p: S.mapped, n: S.victims.filter(v => !v.decoy).length }, 'DET'); emit('survey_done'); propose('mapping complete'); } } else { d.mode = 'overwatch'; d.light = true; reveal(d.pos[0], d.pos[2], 3, false); if (d.overwatchKind === 'team') log('overwatch', { who: SP.member(d.overwatch).name }, 'NAV'); emit('overwatch_on'); } }
+      else { d.pos[0] += dx / L * st; d.pos[1] += dy / L * st; d.pos[2] += dz / L * st; d.yaw = Math.atan2(dx, dz); }
+      if (d.mode === 'survey') { reveal(d.pos[0], d.pos[2], 2.8, false); S.mapped = SP.mappedPct(); if (d.idx < d.path.length - 1) VDEF.forEach(def => { const v = S.victims.find(x => x.id === def.id); if (v && v.history.some(h => h.src === 'drone')) return; if (dist2(d.pos, def.pos) < 2.6) detect(def, ['rgb', 'thermal', 'radar'], 'drone'); }); }
+      S.droneBattery = Math.max(40, S.droneBattery - dt * .12);
+    } else if (d.mode === 'hold') d.yaw += dt * .15;
+    else if (d.mode === 'overwatch' && d.overwatchKind === 'team') { const m = SP.member(d.overwatch); if (m) { d.pos[0] += (m.pos[0] - d.pos[0]) * dt; d.pos[2] += (m.pos[2] - d.pos[2]) * dt; } }
+    S.team.forEach(m => { if (m.uwbLost) { const seen = d.mode !== 'landed' && dist2(d.pos, m.pos) < 7; const src = seen ? 'vision' : 'stale'; if (m.src !== src) { m.src = src; m.acc = seen ? 0.5 : 2.5; change(); } } });
+  }
+  SP.overwatch = function (target, kind) { const pos = kind === 'team' ? SP.member(target).pos : target; S.drone.overwatch = target; S.drone.overwatchKind = kind; S.drone.overwatchTarget = [pos[0], 5, pos[2]]; S.drone.mode = 'overwatch_move'; if (S.drone.pos[1] < 1) S.drone.pos[1] = 2; change(); };
+
+  /* ---------- go2 ---------- */
+  function startNav(p) { S.go2.mode = 'moving'; S.go2.path = p.route.pts.slice(1); S.go2.idx = 0; S.go2.target = p.target; S.go2.targetKind = p.targetKind; S.go2.payload = p.payload || null; S.go2.wpReached = 0; S.go2.route = p.route; if (p.targetKind === 'victim') { const v = S.victims.find(x => x.id === p.target); if (v) v.go2 = 'enroute'; log('nav_start', { id: p.target, d: p.dist, s: p.est_s }, 'NAV'); } else log('dispatch', { who: 'Go2', where: p.targetKind === 'team' ? first(SP.member(p.target)) : fmtPos(p.target), d: p.dist, s: p.est_s }, 'NAV'); emit('nav_start', p); change(); }
+  function tickGo2(dt) {
+    const g = S.go2; if (g.mode !== 'moving') return; const tgt = g.path[g.idx]; const dx = tgt[0] - g.pos[0], dz = tgt[2] - g.pos[2]; const L = Math.hypot(dx, dz), st = 0.6 * dt;
+    const want = Math.atan2(dx, dz); let dy = want - g.yaw; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; g.yaw += dy * Math.min(1, dt * 3); reveal(g.pos[0], g.pos[2], 1.2, true);
+    if (L <= st) { g.pos = tgt.slice(); g.idx++; g.wpReached++; if (g.idx >= g.path.length) { g.mode = 'arrived'; if (g.targetKind === 'victim') { const v = S.victims.find(x => x.id === g.target); if (v) { v.go2 = 'onsite'; const def = VDEF.find(d => d.id === v.id); setTimeout(() => { if (def.truth.radar) v.evidence.radar = Object.assign({}, def.truth.radar, { snr: 'strong' }); else v.radarNegative = true; if (def.truth.co2) v.evidence.co2 = def.truth.co2; v.history.push({ clock: clock(), src: 'go2', sensors: 'radar+co2' }); fuse(v); change(); }, 2000 / S.speed); } log('nav_arrived', { id: g.target }, 'NAV'); emit('arrived', v); decide({ kind: 'speak', title: `Go2 is at ${g.target}. Speak to the survivor?`, body: `Survivor language ${SP.langName(v ? v.lang : S.survivorLang)} · bulbul:v3`, victim: g.target, auto: 'p_help', autoDelay: 1.5, actions: SP.PHRASES.map(ph => ({ id: ph.id, label: ph.label, run: () => SP.sayPhrase(ph.id, v ? v.lang : S.survivorLang) })).concat([{ id: 'skip', label: 'Not now' }]) }); } else { log('arrived', { who: 'Go2', where: g.targetKind === 'team' ? first(SP.member(g.target)) : fmtPos(g.target) }, 'NAV'); } } }
+    else { g.pos[0] += dx / L * st; g.pos[2] += dz / L * st; }
+    S.go2Battery = Math.max(30, S.go2Battery - dt * .09); change();
+  }
+
+  /* ---------- hazards / collapse ---------- */
+  SP.addHazard = function (pos, note, src) { const h = { id: 'H-0' + (S.hazards.length + 1), pos: pos.slice(), note, src, clock: clock() }; S.hazards.push(h); log('hazard', { id: h.id, pos: fmtPos(pos), note }, src || 'SIM'); replanAll(h.id); change(); return h; };
+  SP.collapse = function (pos, r, src) { blockCells(pos[0], pos[2], r); const h = { id: 'H-0' + (S.hazards.length + 1), pos: pos.slice(), note: 'secondary collapse', src, clock: clock(), collapse: true }; S.hazards.push(h); log('collapse', { pos: fmtPos(pos), src }, 'SIM'); emit('collapse', h); replanAll(h.id); change(); return h; };
+  function replanAll(hzId) {
+    S.team.forEach(m => { if (!m.task || !m.route) return; const dest = taskPos(m.task); const old = m.route.len - progressed(m); const r = plan(m.pos, dest, HUMAN); if (!r) { m.moving = false; m.cutoff = true; decide({ kind: 'cutoff', title: `${first(m)} is cut off`, body: `No route from ${fmtPos(m.pos)} to ${taskName(m.task)}. Egress ${SP.egress(m) ? SP.egress(m).len.toFixed(0) + ' m available' : 'also blocked'}.`, member: m.id, actions: [{ id: 'egress', label: 'Egress now', primary: true, run: () => SP.dispatch([m.id], STAGING, 'staging') }, { id: 'hold', label: 'Hold position', run: () => { m.task = null; m.route = null; } }, { id: 'go2', label: 'Send Go2 with supplies', run: () => SP.sendGo2(m.id, 'team', 'supplies') }] }); log('cutoff', { who: m.name, where: taskName(m.task) }, 'NAV'); } else { const extra = r.len - old; m.route = r; m.routeIdx = 1; m.cutoff = false; if (extra > 1.5) log('rerouted', { who: m.name, hz: hzId, d: extra.toFixed(0) }, 'NAV'); } });
+    if (S.go2.mode === 'moving') { const dest = S.go2.targetKind === 'team' ? SP.member(S.go2.target).pos : S.go2.targetKind === 'point' ? S.go2.target : S.victims.find(v => v.id === S.go2.target).pos; const r = plan(S.go2.pos, dest, GO2P); if (r) { S.go2.path = r.pts.slice(1); S.go2.idx = 0; } else { S.go2.mode = 'blocked'; } }
+    S.team.forEach(m => { m.egressRoute = SP.egress(m); });
+  }
+  const progressed = m => { let d = 0; for (let i = 1; i < m.routeIdx && i < m.route.pts.length; i++) d += dist2(m.route.pts[i - 1], m.route.pts[i]); return d; };
+
+  /* ---------- team tasks ---------- */
+  const taskPos = t => t.kind === 'victim' ? S.victims.find(v => v.id === t.target).pos : t.kind === 'staging' ? STAGING : t.pos;
+  const taskName = t => t.kind === 'victim' ? t.target : t.kind === 'staging' ? 'staging' : fmtPos(t.pos);
+  SP.taskName = taskName;
+  SP.egress = m => plan(m.pos, STAGING, HUMAN);
+  function startTask(m, task, quiet) {
+    const dest = taskPos(task); const r = plan(m.pos, dest, HUMAN);
+    if (!r) { if (!quiet) decide({ kind: 'cutoff', title: `${first(m)}: no route to ${taskName(task)}`, body: 'Mapping gap or collapse on every path. Re-map with the drone or hold.', member: m.id, actions: [{ id: 'remap', label: 'Drone re-map there', primary: true, run: () => SP.sendDrone(dest, 'point') }, { id: 'hold', label: 'Hold' }] }); return false; }
+    m.task = task; m.route = r; m.routeIdx = 1; m.moving = true; m.cutoff = false; m.work = null; m.egressRoute = SP.egress(m);
+    if (!quiet) log('dispatch', { who: m.name, where: taskName(task), d: r.len.toFixed(0), s: Math.round(r.secs) }, 'LEAD'); emit('dispatch', { m, task }); return true;
+  }
+  // dispatch people immediately (human instruction); robots go through plans
+  SP.dispatch = function (memberIds, target, kind, note) {
+    const warns = [];
+    memberIds.forEach(id => { const m = SP.member(id); if (!m || m.lead) return; const task = kind === 'victim' ? { kind: 'victim', target } : kind === 'staging' ? { kind: 'staging' } : { kind: 'point', pos: target.slice() }; m.queue = []; startTask(m, task); if (kind === 'victim') { const v = S.victims.find(x => x.id === target); if (v && !v.triage) v.triage = v.suggest; } });
+    if (kind === 'victim') { const v = S.victims.find(x => x.id === target); const going = S.team.filter(m => m.task && m.task.kind === 'victim' && m.task.target === target); const ex = going.filter(m => m.role === 'extraction'), md = going.filter(m => m.role === 'medic'); if (ex.length && !md.length && !v.stabilized && !v.medicOnSite) warns.push(`Extraction heading to ${target} with no medic assigned yet.`); if (ex.length === 1 && !v.extractionOnSite.length) warns.push(`${first(ex[0])} is the only extraction specialist on ${target}: pair recommended.`); }
+    warns.forEach(w => { log('role_warn', { text: w }, 'SYS'); decide({ kind: 'warn', title: 'Role check', body: w, actions: [{ id: 'ok', label: 'Understood' }] }); });
+    change();
+  };
+  SP.recall = id => SP.dispatch([id], STAGING, 'staging');
+  SP.everyoneOut = function () { S.evacuating = true; S.proposal = null; S.team.forEach(m => { if (m.lead) return; m.queue = []; startTask(m, { kind: 'staging' }, true); }); if (S.go2.mode !== 'idle') { const p = navPlan(STAGING, 'point'); if (p) startNav(p); } S.drone.mode = S.drone.mode === 'landed' ? 'landed' : 'hold'; S.drone.overwatch = null; S.decisions = S.decisions.filter(d => d.kind === 'warn'); log('evacuate', {}, 'LEAD'); S.comms.push({ from: 't1', to: null, text: SP.EVAC['hi-IN'], lang: 'hi-IN', tr: SP.EVAC, t: S.t, clock: clock(), evac: true }); emit('evacuate'); change(); };
+  SP.standDown = () => { S.evacuating = false; change(); };
+  function tickTeam(dt) {
+    S.team.forEach(m => {
+      if (m.signalLost) { m.silentFor = (m.silentFor || 0) + dt; if (m.silentFor > 20 && !m.mandownAsked) { m.mandownAsked = true; log('signal_lost', { who: m.name, s: 20 }, 'SYS'); decide({ kind: 'mandown', title: `${first(m)}: no telemetry for 20 s`, body: `Last fix ${fmtPos(m.pos)} · ${m.task ? 'was heading to ' + taskName(m.task) : 'idle'}. Phone unreachable.`, member: m.id, auto: 'ping', autoDelay: 2, actions: [{ id: 'ping', label: 'Ping phone', primary: true, run: () => { m.pinged = true; } }, { id: 'go2', label: 'Send Go2 to last fix', run: () => SP.sendGo2(m.pos.slice(), 'point', 'radio relay') }, { id: 'wait', label: 'Wait' }] }); } return; }
+      if (m.moving && m.route) {
+        const tgt = m.route.pts[m.routeIdx];
+        if (!tgt) { m.moving = false; onArrive(m); return; }
+        const dx = tgt[0] - m.pos[0], dz = tgt[2] - m.pos[2], L = Math.hypot(dx, dz); const [cx, cz] = toCell(m.pos[0], m.pos[2]); const sp = SP.cellClass(cx, cz) === 2 ? HUMAN.slowSpeed : HUMAN.speed; const st = sp * dt; m.yaw = Math.atan2(dx, dz);
+        if (L <= st) { m.pos = [tgt[0], 0, tgt[2]]; m.routeIdx++; } else { m.pos[0] += dx / L * st; m.pos[2] += dz / L * st; }
+      } else if (m.work) {
+        m.work.left -= dt; if (m.work.left <= 0) { const v = S.victims.find(x => x.id === m.work.victim); m.work = null; if (!v) return; if (m.role === 'medic') { v.stabilized = true; v.status = 'stabilized'; log('stabilized', { who: m.name, id: v.id }, 'TEAM'); emit('stabilized', v); nextTask(m); } else { v.status = 'extracted'; v.extractedAt = S.t; log('extracted', { id: v.id }, 'TEAM'); emit('extracted', v); S.team.forEach(x => { if (x.work && x.work.victim === v.id) { x.work = null; } if (x.task && x.task.kind === 'victim' && x.task.target === v.id) { x.task = null; nextTask(x); } }); } }
+      }
+    });
+  }
+  function onArrive(m) {
+    const t = m.task; if (!t) return;
+    if (t.kind === 'victim') { const v = S.victims.find(x => x.id === t.target); log('arrived', { who: m.name, where: v.id }, 'TEAM'); emit('team_arrived', { m, v }); if (m.role === 'medic') { v.medicOnSite = m.id; v.status = 'medic'; m.work = { victim: v.id, left: WORK.stabilize, total: WORK.stabilize, label: 'stabilising' }; } else { v.extractionOnSite.push(m.id); const pair = v.extractionOnSite.length >= 2; if (v.stabilized && pair) { v.status = 'extracting'; v.extractionOnSite.forEach(id => { const x = SP.member(id); x.work = { victim: v.id, left: WORK.extract, total: WORK.extract, label: 'extracting' }; }); log('extracting', { id: v.id, who: v.extractionOnSite.map(id => first(SP.member(id))).join(' + ') }, 'TEAM'); } else { m.waiting = v.stabilized ? 'waiting for second extraction' : 'waiting for medic to stabilise'; } } }
+    else if (t.kind === 'staging') { m.task = null; m.route = null; log('arrived', { who: m.name, where: 'staging' }, 'TEAM'); if (S.evacuating && S.team.every(x => x.lead || !x.task)) emit('all_out'); }
+    else { log('arrived', { who: m.name, where: fmtPos(t.pos) }, 'TEAM'); m.task = null; m.route = null; }
+    change();
+  }
+  // when a victim gets stabilised, waiting extraction members start work
+  SP.on('stabilized', v => { v.extractionOnSite.forEach(id => { const x = SP.member(id); x.waiting = null; }); if (v.extractionOnSite.length >= 2) { v.status = 'extracting'; v.extractionOnSite.forEach(id => { SP.member(id).work = { victim: v.id, left: WORK.extract, total: WORK.extract, label: 'extracting' }; }); log('extracting', { id: v.id, who: v.extractionOnSite.map(id => first(SP.member(id))).join(' + ') }, 'TEAM'); } });
+  function nextTask(m) { m.waiting = null; const q = m.queue || []; while (q.length) { const t = q.shift(); const v = t.kind === 'victim' ? S.victims.find(x => x.id === t.target) : null; if (v && (v.status === 'extracted' || v.status === 'dismissed')) continue; if (startTask(m, t)) return; } m.task = null; m.route = null; change(); }
+
+  /* ---------- allocation proposal ---------- */
+  function propose(reason) {
+    const vs = S.victims.filter(v => !v.decoy && v.status !== 'extracted' && v.status !== 'dismissed' && SP.triageOf(v) !== 'expectant').sort((a, b) => { const ra = SP.TRIAGE[SP.triageOf(a)].rank - SP.TRIAGE[SP.triageOf(b)].rank; if (ra) return ra; return (a._acc || 0) - (b._acc || 0); });
+    const res = S.team.filter(m => !m.lead).map(m => ({ id: m.id, role: m.role, pos: m.pos.slice(), free: 0, tasks: [] }));
+    const tasks = []; const warns = []; let medicDone = {};
+    vs.forEach(v => {
+      // medic
+      const meds = res.filter(r => r.role === 'medic'); let best = null; meds.forEach(r => { const p = plan(r.pos, v.pos, HUMAN); if (!p) return; const arr = r.free + p.secs; if (!best || arr < best.arr) best = { r, p, arr }; });
+      if (best && !v.stabilized) { tasks.push({ res: best.r.id, kind: 'travel', target: v.id, t0: best.r.free, t1: best.arr, len: best.p.len }); tasks.push({ res: best.r.id, kind: 'work', target: v.id, t0: best.arr, t1: best.arr + WORK.stabilize, label: 'stabilise' }); best.r.free = best.arr + WORK.stabilize; best.r.pos = v.pos.slice(); best.r.tasks.push(v.id); medicDone[v.id] = best.r.free; } else if (v.stabilized) medicDone[v.id] = 0; else { warns.push(`No medic can reach ${v.id}.`); medicDone[v.id] = 0; }
+      // extraction pair
+      const exs = res.filter(r => r.role === 'extraction').map(r => { const p = plan(r.pos, v.pos, HUMAN); return p ? { r, p, arr: r.free + p.secs } : null; }).filter(Boolean).sort((a, b) => a.arr - b.arr).slice(0, 2);
+      if (exs.length < 2) warns.push(`Only ${exs.length} extraction specialist${exs.length === 1 ? '' : 's'} can reach ${v.id}: pair recommended.`);
+      const start = Math.max(medicDone[v.id], ...exs.map(e => e.arr)); exs.forEach(e => { tasks.push({ res: e.r.id, kind: 'travel', target: v.id, t0: e.r.free, t1: e.arr, len: e.p.len }); if (start > e.arr) tasks.push({ res: e.r.id, kind: 'wait', target: v.id, t0: e.arr, t1: start }); tasks.push({ res: e.r.id, kind: 'work', target: v.id, t0: start, t1: start + WORK.extract, label: 'extract' }); e.r.free = start + WORK.extract; e.r.pos = v.pos.slice(); e.r.tasks.push(v.id); });
+      v._done = exs.length ? start + WORK.extract : null;
+    });
+    // bots
+    const top = vs.find(v => v.go2 !== 'onsite' || !v.contact) || vs[0]; const botTasks = [];
+    if (top && S.go2.mode !== 'moving' && !(S.go2.target === top.id && S.go2.mode === 'arrived')) { const p = plan(S.go2.pos, top.pos, GO2P); if (p) botTasks.push({ res: 'go2', kind: 'travel', target: top.id, t0: 0, t1: p.secs, len: p.len, note: top.contact ? 'supplies + radar' : 'contact + radar' }); }
+    if (top) botTasks.push({ res: 'drone', kind: 'overwatch', target: top.id, t0: 0, t1: 30, note: 'overwatch ' + top.id + ' route' });
+    const total = Math.max(0, ...tasks.map(t => t.t1));
+    const order = vs.map(v => `${v.id} (${SP.TRIAGE[SP.triageOf(v)].label['en-IN']})`).join(' → ');
+    const P = { n: ++S.proposalN, reason, tasks, botTasks, warns, total, order: vs.map(v => v.id), approved: false, clock: clock(), summary: `${order || 'no survivors'} · ${S.team.filter(m => !m.lead).length} rescuers · ~${Math.round(total)} s` };
+    S.proposal = P; log('proposal', { n: P.n, summary: P.summary }, 'LLM'); emit('proposal', P);
+    decide({ kind: 'proposal', title: `Allocation proposal #${P.n} · ${reason}`, body: P.summary, proposal: P, auto: 'approve', autoDelay: 3, actions: [{ id: 'approve', label: 'Approve all', primary: true, run: () => SP.approveProposal(P) }, { id: 'edit', label: 'Review on timeline', run: () => emit('open_timeline') }, { id: 'reject', label: 'Reject' }] });
+    return P;
+  }
+  SP.propose = propose;
+  SP.approveProposal = function (P) {
+    P.approved = true; log('proposal_ok', { n: P.n }, 'LEAD');
+    S.team.filter(m => !m.lead).forEach(m => { const mine = P.tasks.filter(t => t.res === m.id && t.kind === 'travel'); const seq = []; mine.forEach(t => { if (!seq.includes(t.target)) seq.push(t.target); }); if (!seq.length) return; const [firstT, ...rest] = seq; m.queue = rest.map(id => ({ kind: 'victim', target: id })); if (m.task && m.task.kind === 'victim' && m.task.target === firstT) return; if (m.work) { m.queue.unshift({ kind: 'victim', target: firstT }); return; } startTask(m, { kind: 'victim', target: firstT }); const v = S.victims.find(x => x.id === firstT); if (v && !v.triage) v.triage = v.suggest; });
+    P.botTasks.forEach(b => { if (b.res === 'go2') { const p = navPlan(b.target, 'victim', b.note.includes('supplies') ? 'supplies' : null); if (p) startNav(p); } if (b.res === 'drone' && S.drone.mode === 'hold') { const v = S.victims.find(x => x.id === b.target); SP.overwatch(v.pos, 'point'); } });
+    P.warns.forEach(w => log('role_warn', { text: w }, 'SYS'));
+    change();
+  };
+
+  /* ---------- deterioration (V-02) ---------- */
+  function tickVictims(dt) { S.victims.forEach(v => { if (!v.deteriorates || !v.evidence.radar || v.stabilized || v.status === 'extracted') return; v.evidence.radar.bpm -= dt * 0.12; if (v.evidence.radar.bpm < 60 && !v.deterAsked) { v.deterAsked = true; log('deteriorating', { id: v.id, bpm: v.evidence.radar.bpm.toFixed(0) }, 'DET'); decide({ kind: 'deteriorate', title: `${v.id} is weakening`, body: `Heart rate ${v.evidence.radar.bpm.toFixed(0)} bpm and falling (was 71). Triage is ${SP.TRIAGE[SP.triageOf(v)].label['en-IN']}.`, victim: v.id, auto: 'raise', autoDelay: 2.5, actions: [{ id: 'raise', label: 'Raise to Immediate + replan', primary: true, run: () => { SP.setTriage(v.id, 'immediate'); propose(v.id + ' deteriorating'); } }, { id: 'keep', label: 'Keep' }] }); } }); }
+
+  /* ---------- requests / comms ---------- */
+  SP.request = function (memberId, type, note, extra) {
+    const m = SP.member(memberId); const r = { id: 'Q' + (S.requests.length + 1), member: memberId, type, note: note || '', extra: extra || {}, status: 'pending', clock: clock(), pos: m.pos.slice() };
+    if (type === 'r_confirm' || type === 'r_dismiss') { const near = S.victims.filter(v => !['dismissed', 'extracted'].includes(v.status)).sort((a, b) => dist2(m.pos, a.pos) - dist2(m.pos, b.pos))[0]; r.victim = near ? near.id : null; }
+    S.requests.unshift(r); const what = SP.REQUESTS[type].what + (r.victim ? ' ' + r.victim : ''); log('request_in', { who: m.name, what }, 'TEAM'); emit('request', r);
+    decide({ kind: 'request', title: `${first(m)} asks: ${SP.REQUESTS[type].label['en-IN']}${r.victim ? ' · ' + r.victim : ''}`, body: `${r.note ? '“' + r.note + '” · ' : ''}at ${fmtPos(r.pos)}`, request: r.id, member: m.id, auto: 'ok', autoDelay: 2.5, actions: [{ id: 'ok', label: 'Approve · Go', primary: true, run: () => SP.approve(r.id) }, { id: 'no', label: 'Deny', run: () => SP.deny(r.id) }] });
+    return r;
+  };
+  SP.approve = function (id) { const r = S.requests.find(x => x.id === id); if (!r || r.status !== 'pending') return; const m = SP.member(r.member); r.status = 'approved'; log('request_ok', { who: m.name, what: SP.REQUESTS[r.type].what }, 'LEAD'); if (r.type === 'r_go2') { const p = navPlan(r.member, 'team', 'first-aid kit'); if (p) startNav(p); } else if (r.type === 'r_drone') SP.overwatch(r.member, 'team'); else if (r.type === 'r_hazard') SP.addHazard(m.pos, r.note || 'reported by ' + first(m), 'TEAM'); else if (r.type === 'r_confirm' && r.victim) SP.confirmVictim(r.victim, `${first(m)} on site: ${r.note || 'visual + voice'}`, 'TEAM'); else if (r.type === 'r_dismiss' && r.victim) SP.dismissVictim(r.victim, `${first(m)} on site: ${r.note || 'not a person'}`, 'TEAM'); change(); };
+  SP.deny = function (id) { const r = S.requests.find(x => x.id === id); if (!r || r.status !== 'pending') return; r.status = 'denied'; log('request_no', { who: SP.member(r.member).name, what: SP.REQUESTS[r.type].what }, 'LEAD'); change(); };
+  let pmTimer = null;
+  SP.teamSpeak = function (memberId, text, tr) { const m = SP.member(memberId); if (pmTimer) clearTimeout(pmTimer); S.phoneMic = { member: memberId, partial: '', active: true }; change(); const words = text.split(' '); let i = 0; const step = () => { i++; S.phoneMic.partial = words.slice(0, i).join(' '); change(); if (i < words.length) pmTimer = setTimeout(step, 200 / S.speed); else pmTimer = setTimeout(() => { S.phoneMic = null; const trs = tr || L4(text, text, text, text); S.comms.push({ from: memberId, to: 't1', text, lang: m.lang, tr: trs, t: S.t, clock: clock() }); log('team_msg', { who: first(m) }, 'TEAM', { tr: trs }); emit('team_said', m); change(); }, 300 / S.speed); }; pmTimer = setTimeout(step, 200 / S.speed); };
+  SP.leadMessage = function (memberId, text) { const m = SP.member(memberId); const trs = L4(text, text, text, text); S.comms.push({ from: 't1', to: memberId, text, lang: 'hi-IN', tr: trs, t: S.t, clock: clock() }); log('lead_msg', { who: first(m) }, 'LEAD', { tr: trs }); change(); };
+
+  /* ---------- TTS ---------- */
+  function doTTS(text, lang) { S.tts.playing = { text, lang, voice: SP.VOICES[lang], dur: 1.4 + text.length * .05 }; log('tts', { lang: SP.langName(lang), text }, 'TTS'); emit('tts', S.tts.playing); change(); setTimeout(() => { S.tts.playing = null; change(); }, S.tts.playing.dur * 1000 / S.speed); }
+  SP.sayPhrase = function (pid, lang) { const ph = SP.PHRASES.find(p => p.id === pid); if (!ph) return; lang = lang || S.survivorLang; doTTS(ph.text[lang] || ph.text['en-IN'], lang); const v = S.victims.find(x => x.id === S.go2.target); if (v && !v.contact && pid === 'p_hear' && S.go2.mode === 'arrived') setTimeout(() => SP.markContact(v.id), 3500 / S.speed); if (v && pid === 'p_help' && !v.contact && S.auto) setTimeout(() => SP.sayPhrase('p_hear', lang), 5000 / S.speed); };
+  SP.relay = function (text, fromLang, toLang) { toLang = toLang || S.survivorLang; setTimeout(() => doTTS(text + (toLang !== fromLang ? ` → [${SP.langName(toLang)}]` : ''), toLang), 500 / S.speed); };
+
+  /* ---------- demo ---------- */
+  const DEMO = [
+    { at: .5, run: () => log('mission_start', { m: SP.SITE.mission, sim: 'MuJoCo · 2 twins · 3 UWB tags' }, 'SIM') },
+    { at: 2, run: () => { const s = SP.LEAD_SAMPLES[0]; SP.speak(s.t, s.l, s.h, s.tr); } },
+    { at: 26, run: () => { const m = SP.member('t3'); m.uwbLost = true; m.src = 'stale'; m.acc = 2.5; } },
+    { on: 'proposal', delay: 12, once: true, run: () => { const s = SP.TEAM_SAMPLES.t3; SP.teamSpeak('t3', s.t, s.tr); } },
+    { on: 'team_said', delay: 1.5, filter: m => m.id === 't3', once: true, run: () => SP.request('t3', 'r_drone', 'dark here') },
+    { on: 'proposal', delay: 22, once: true, run: () => { const pk = SP.member('t2'); if (pk.route && pk.route.pts[pk.routeIdx + 1]) { const p = pk.route.pts[Math.min(pk.route.pts.length - 1, pk.routeIdx + 1)]; SP.collapse([p[0], 0, p[2]], 1.0, 'Go2 depth + drone'); } else SP.collapse([-0.5, 0, 6.3], 1.0, 'drone'); } },
+    { on: 'proposal', delay: 34, once: true, run: () => { const m = SP.member('t3'); m.signalLost = true; m.silentFor = 0; m.mandownAsked = false; } },
+    { on: 'decision', delay: 8, filter: d => d.kind === 'mandown', once: true, run: () => { const m = SP.member('t3'); m.signalLost = false; m.silentFor = 0; m.uwbLost = false; m.src = 'uwb'; m.acc = .2; log('signal_back', { who: m.name }, 'TEAM'); } },
+    { on: 'team_arrived', delay: 2, filter: d => d.m.id === 't2', once: true, run: () => { const s = SP.TEAM_SAMPLES.t2; SP.teamSpeak('t2', s.t, s.tr); } },
+    { on: 'team_said', delay: 1.5, filter: m => m.id === 't2', once: true, run: () => SP.request('t2', 'r_confirm', 'breathing, leg trapped') },
+    { on: 'team_arrived', delay: 3, filter: d => d.m.id === 't4', once: true, run: () => { const s = SP.TEAM_SAMPLES.t4; SP.teamSpeak('t4', s.t, s.tr); } },
+    { on: 'extracted', delay: 3, once: true, run: () => { if (S.auto) SP.dismissVictim('D-01', 'thermal only, radar negative — hot debris'); S.demoDone = true; emit('demo_done'); change(); } }
+  ];
+  let demoOffs = [];
+  SP.startDemo = function (o) {
+    o = o || {}; demoOffs.forEach(f => f()); demoOffs = []; S.auto = !!o.auto; S.running = true; S.demoDone = false; S.t = 0; S.victims.length = 0; S.log.length = 0; S.comms.length = 0; S.requests.length = 0; S.hazards.length = 0; S.decisions = []; S.proposal = null; S.proposalN = 0; S.selected = null; S.pick = null; S.evacuating = false; S.mic = { active: false, partial: '', final: '', lang: null };
+    S.drone = { pos: [-11.5, .2, 5.5], yaw: 0, mode: 'landed', path: null, idx: 0, light: false, overwatch: null }; S.go2 = { pos: [-11, 0, 7.5], yaw: 0, mode: 'idle', path: null, idx: 0, target: null, targetKind: null, payload: null, wpReached: 0 };
+    S.team.forEach((m, i) => { const init = [[-12.5, 0, 7.8], [-11.5, 0, 6.5], [10.5, 0, 6.6], [-12, 0, 8.8]][i]; m.pos = init.slice(); m.src = i === 0 ? 'gps' : 'uwb'; m.acc = m.src === 'uwb' ? .2 : 4; m.uwbLost = false; m.signalLost = false; m.silentFor = 0; m.mandownAsked = false; m.task = null; m.route = null; m.moving = false; m.work = null; m.queue = []; m.waiting = null; m.cutoff = false; m.cam = false; m.yaw = 0; m.egressRoute = null; });
+    resetSeen(); S.mapped = 0; S.go2Battery = 71; S.droneBattery = 84; S.credits = 49.6;
+    DEMO.forEach(st => { if (st.at != null) { const h = setTimeout(st.run, st.at * 1000 / S.speed); demoOffs.push(() => clearTimeout(h)); } else { let fired = false; const off = SP.on(st.on, d => { if (st.filter && !st.filter(d)) return; if (st.once && fired) return; fired = true; const h = setTimeout(st.run, st.delay * 1000 / S.speed); demoOffs.push(() => clearTimeout(h)); }); demoOffs.push(off); } });
+    change();
+  };
+  SP.setSpeed = s => { S.speed = s; change(); }; SP.setAuto = a => { S.auto = a; change(); }; SP.ensureRunning = () => { S.running = true; };
+
+  /* ---------- loop ---------- */
+  let last = performance.now(); const frameCbs = []; SP.onFrame = cb => frameCbs.push(cb);
+  (function loop(now) { const dt = Math.min(.05, (now - last) / 1000) * S.speed; last = now; if (S.running) { S.t += dt; tickDrone(dt); tickGo2(dt); tickTeam(dt); tickVictims(dt); S.credits = Math.max(0, S.credits - dt * .01 / 60); } frameCbs.forEach(f => f(dt)); requestAnimationFrame(loop); })(last);
+
+  /* ---------- 2D tactical map ---------- */
+  SP.Map2D = function (canvas, pal, opts) {
+    opts = opts || {}; const ctx = canvas.getContext('2d'); const view = { cx: -1, cz: 0, ppm: 28 }; let drag = null, hover = null; const layers = Object.assign({ grid: true, thermal: true, radar: true, routes: true, egress: false, bots: true, team: true, victims: true, fov: true, hazards: true }, opts.layers || {});
+    const W2S = (x, z) => [canvas.width / 2 + (x - view.cx) * view.ppm, canvas.height / 2 + (z - view.cz) * view.ppm]; const S2W = (px, py) => [(px - canvas.width / 2) / view.ppm + view.cx, (py - canvas.height / 2) / view.ppm + view.cz];
+    function resize() { const r = canvas.getBoundingClientRect(); const dpr = Math.min(2, devicePixelRatio || 1); canvas.width = Math.max(1, r.width * dpr); canvas.height = Math.max(1, r.height * dpr); if (!opts.fixed && !view.userZoom) view.ppm = Math.min(canvas.width / 27, canvas.height / 18.5); if (opts.fixed) view.ppm = opts.ppm * dpr; }
+    new ResizeObserver(resize).observe(canvas); resize();
+    const dprOf = () => canvas.width / (canvas.getBoundingClientRect().width || 1);
+    if (!opts.fixed) {
+      canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, moved: false }; canvas.setPointerCapture(e.pointerId); });
+      canvas.addEventListener('pointermove', e => { const r = canvas.getBoundingClientRect(); const dpr = dprOf(); if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; view.cx -= dx * dpr / view.ppm; view.cz -= dy * dpr / view.ppm; drag.x = e.clientX; drag.y = e.clientY; } hover = hit((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr); canvas.style.cursor = hover ? 'pointer' : 'crosshair'; });
+      canvas.addEventListener('pointerup', e => { if (drag && !drag.moved) { const r = canvas.getBoundingClientRect(); const dpr = dprOf(); const px = (e.clientX - r.left) * dpr, py = (e.clientY - r.top) * dpr; const h = hit(px, py); if (h) SP.select(h.kind, h.id); else { const [x, z] = S2W(px, py); S.selected = null; S.pick = { pos: [x, 0, z], sx: e.clientX - r.left, sy: e.clientY - r.top }; emit('pick', S.pick); change(); } } drag = null; });
+      canvas.addEventListener('wheel', e => { e.preventDefault(); view.userZoom = true; view.ppm = Math.max(8, Math.min(90, view.ppm * (1 - e.deltaY * .001))); }, { passive: false });
+      canvas.addEventListener('pointerleave', () => { hover = null; });
+    }
+    function hit(px, py) { let best = null, bd = 16 * dprOf(); const test = (kind, id, pos) => { const [x, y] = W2S(pos[0], pos[2]); const d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = { kind, id }; } }; if (layers.victims) S.victims.forEach(v => test('victim', v.id, v.pos)); if (layers.team) S.team.forEach(m => test('team', m.id, m.pos)); if (layers.bots) { test('drone', 'drone', S.drone.pos); test('go2', 'go2', S.go2.pos); } if (layers.hazards) S.hazards.forEach(h => test('hazard', h.id, h.pos)); return best; }
+    const line = (pts, color, w, dash) => { if (!pts || pts.length < 2) return; ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = W2S(p[0], p[2]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]); };
+    const triCol = v => { const t = SP.triageOf(v); return v.status === 'dismissed' ? pal.muted : v.status === 'extracted' ? pal.good : t === 'immediate' ? pal.bad : t === 'delayed' ? pal.warn : t === 'expectant' ? pal.muted : pal.candidate; };
+    function draw() {
+      const w = canvas.width, h = canvas.height, dpr = dprOf(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, w, h); ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, w, h);
+      if (opts.fixed && opts.center) { const c = opts.center(); view.cx = c[0]; view.cz = c[2]; }
+      const f = v => v * dpr; ctx.font = `600 ${f(11)}px ${pal.font}`;
+      if (layers.grid) for (let cz = 0; cz < G.h; cz++) for (let cx = 0; cx < G.w; cx++) { const i = cellIdx(cx, cz); const [x, z] = cellCenter(cx, cz); if (Math.abs(x) > 12.5 || Math.abs(z) > 8.5) continue; const [px, py] = W2S(x - G.cs / 2, z - G.cs / 2); const s = G.cs * view.ppm; const c = G.seen[i] ? G.truth[i] : 0; ctx.fillStyle = c === 0 ? pal.unknown : c === 1 ? (G.verified[i] ? pal.verified : pal.passable) : c === 2 ? pal.difficult : pal.blocked; ctx.fillRect(px, py, s + .5, s + .5); }
+      line([[-9, 0, -6], [9, 0, -6], [9, 0, 6], [-9, 0, 6], [-9, 0, -6]], pal.accent, f(1.2), [f(6), f(4)]);
+      { const [x, y] = W2S(STAGING[0], STAGING[2]); ctx.fillStyle = pal.ink2; ctx.fillText('STAGING W', x - f(28), y - f(26)); ctx.strokeStyle = pal.ink2; ctx.setLineDash([f(3), f(3)]); ctx.strokeRect(x - f(40), y - f(20), f(80), f(60)); ctx.setLineDash([]); }
+      if (layers.thermal) S.victims.forEach(v => { if (v.evidence.thermal == null) return; const [x, y] = W2S(v.pos[0], v.pos[2]); const r = f(10) + v.evidence.thermal * f(3); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, pal.heat); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); });
+      if (layers.radar) S.victims.forEach(v => { if (!v.evidence.radar || v.status === 'extracted') return; const [x, y] = W2S(v.pos[0], v.pos[2]); const ph = (S.t * (v.evidence.radar.bpm / 60)) % 1; ctx.strokeStyle = pal.radar; ctx.lineWidth = f(1.5); ctx.globalAlpha = 1 - ph; ctx.beginPath(); ctx.arc(x, y, f(8) + ph * f(22), 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; });
+      if (layers.hazards) S.hazards.forEach(hz => { const [x, y] = W2S(hz.pos[0], hz.pos[2]); ctx.fillStyle = pal.bad; ctx.globalAlpha = .18; ctx.beginPath(); ctx.arc(x, y, 1.2 * view.ppm, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.moveTo(x, y - f(9)); ctx.lineTo(x + f(8), y + f(6)); ctx.lineTo(x - f(8), y + f(6)); ctx.closePath(); ctx.fill(); ctx.fillStyle = pal.bg; ctx.fillText('!', x - f(3), y + f(5)); ctx.fillStyle = pal.bad; ctx.fillText(hz.id + (hz.collapse ? ' COLLAPSE' : ''), x + f(10), y + f(4)); });
+      // team routes + egress
+      S.team.forEach(m => { const me = opts.member && opts.member() === m.id; if (opts.member && !me) return; if (layers.routes && m.route && m.moving) line(m.route.pts.slice(Math.max(0, m.routeIdx - 1)), m.role === 'medic' ? pal.medic : pal.extraction, f(me ? 3.5 : 2.5), m.task && m.task.kind === 'staging' ? [f(6), f(4)] : []); const selM = S.selected && S.selected.kind === 'team' && S.selected.id === m.id; if ((layers.egress || selM || S.evacuating || me) && m.egressRoute && !(m.task && m.task.kind === 'staging') && !m.lead && Math.abs(m.pos[0]) < 10) line(m.egressRoute.pts, pal.egress, f(1.5), [f(3), f(4)]); });
+      if (layers.bots) { if (S.surveyPreview || S.drone.mode === 'survey' || S.drone.mode === 'takeoff') line(surveyWaypoints().slice(0, -1), pal.drone, f(1), [f(3), f(5)]); if (S.go2.mode === 'moving') line([S.go2.pos].concat(S.go2.path.slice(S.go2.idx)), pal.path, f(2.2)); const pend = S.decisions.find(d => d.kind === 'plan' && d.plan.route); if (pend) line(pend.plan.route.pts, pal.path, f(2), [f(6), f(4)]); }
+      if (layers.fov) { const d = S.drone; if (d.mode !== 'landed') { const [x, y] = W2S(d.pos[0], d.pos[2]); const r = d.pos[1] * Math.tan(36 * Math.PI / 180) * view.ppm; ctx.fillStyle = pal.drone; ctx.globalAlpha = .1; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = .5; ctx.strokeStyle = pal.drone; ctx.lineWidth = f(1); ctx.stroke(); ctx.globalAlpha = 1; } const g = S.go2; const [gx, gy] = W2S(g.pos[0], g.pos[2]); ctx.fillStyle = pal.go2; ctx.globalAlpha = .13; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.arc(gx, gy, 3.5 * view.ppm, -Math.PI / 2 + g.yaw - .7 - Math.PI, -Math.PI / 2 + g.yaw + .7 - Math.PI); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; S.team.forEach(m => { if (!m.cam) return; const [x, y] = W2S(m.pos[0], m.pos[2]); ctx.fillStyle = pal.team; ctx.globalAlpha = .13; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, 3 * view.ppm, -Math.PI / 2 + m.yaw - .6 - Math.PI, -Math.PI / 2 + m.yaw + .6 - Math.PI); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; }); }
+      if (layers.victims) S.victims.forEach(v => { const [x, y] = W2S(v.pos[0], v.pos[2]); const col = triCol(v); const sel = S.selected && S.selected.kind === 'victim' && S.selected.id === v.id; if (sel) { ctx.strokeStyle = pal.ink; ctx.lineWidth = f(2); ctx.beginPath(); ctx.arc(x, y, f(15), 0, Math.PI * 2); ctx.stroke(); } ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, f(7.5), 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = pal.bg; ctx.lineWidth = f(2); ctx.stroke(); if (v.status === 'extracted') { ctx.strokeStyle = pal.bg; ctx.lineWidth = f(2); ctx.beginPath(); ctx.moveTo(x - f(3.5), y); ctx.lineTo(x - f(1), y + f(3)); ctx.lineTo(x + f(4), y - f(3)); ctx.stroke(); } ctx.fillStyle = pal.ink; ctx.font = `700 ${f(11.5)}px ${pal.font}`; ctx.fillText(v.id + (v.status === 'dismissed' ? ' ✕' : ''), x + f(12), y - f(3)); ctx.font = `600 ${f(9.5)}px ${pal.font}`; ctx.fillStyle = col; ctx.fillText(v.status === 'extracted' ? 'EXTRACTED' : v.status === 'dismissed' ? 'DISMISSED' : SP.TRIAGE[SP.triageOf(v)].label['en-IN'].toUpperCase() + (v.triage ? '' : '?') + (v.lifeSign ? ' ♥' : ''), x + f(12), y + f(8)); ctx.font = `600 ${f(11)}px ${pal.font}`; });
+      if (layers.team) S.team.forEach((m, mi) => { const [x, y0] = W2S(m.pos[0], m.pos[2]); const stack = S.team.slice(0, mi).filter(o => dist2(o.pos, m.pos) < 1.2).length; const y = y0; const ly = y0 + stack * f(22); const me = opts.member && opts.member() === m.id; const col = m.lead ? pal.lead : m.role === 'medic' ? pal.medic : pal.extraction; ctx.strokeStyle = col; ctx.globalAlpha = .35; ctx.lineWidth = f(1); ctx.setLineDash(m.src === 'stale' || m.signalLost ? [f(3), f(3)] : []); ctx.beginPath(); ctx.arc(x, y, Math.max(f(6), m.acc * view.ppm), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; const sel = S.selected && S.selected.kind === 'team' && S.selected.id === m.id; if (sel || me) { ctx.strokeStyle = pal.ink; ctx.lineWidth = f(2); ctx.beginPath(); ctx.arc(x, y, f(16), 0, Math.PI * 2); ctx.stroke(); } ctx.fillStyle = m.signalLost ? pal.muted : col; if (m.lead) ctx.fillRect(x - f(9), y - f(9), f(18), f(18)); else { ctx.beginPath(); ctx.arc(x, y, f(10), 0, Math.PI * 2); ctx.fill(); } ctx.fillStyle = pal.bg; ctx.font = `800 ${f(9)}px ${pal.font}`; ctx.fillText(m.initials, x - f(7), y + f(3.5)); ctx.font = `600 ${f(9.5)}px ${pal.font}`; ctx.fillStyle = m.signalLost ? pal.bad : pal.ink2; const st = m.signalLost ? 'NO SIGNAL' : m.work ? m.work.label.toUpperCase() : m.waiting ? 'WAITING' : m.moving ? '→ ' + taskName(m.task) : m.lead ? 'COMMAND' : 'STANDBY'; ctx.fillText(`${first(m)} · ${st}`, x - f(10), ly + f(23)); ctx.font = `500 ${f(8.5)}px ${pal.mono}`; ctx.fillStyle = pal.muted; ctx.fillText(`${m.src.toUpperCase()} ±${m.acc}`, x - f(10), ly + f(34)); ctx.font = `600 ${f(11)}px ${pal.font}`; });
+      if (layers.bots) { const d = S.drone; const [dx, dy] = W2S(d.pos[0], d.pos[2]); ctx.save(); ctx.translate(dx, dy); ctx.rotate(d.yaw); ctx.strokeStyle = pal.drone; ctx.lineWidth = f(2.5); ctx.beginPath(); ctx.moveTo(-f(8), -f(8)); ctx.lineTo(f(8), f(8)); ctx.moveTo(f(8), -f(8)); ctx.lineTo(-f(8), f(8)); ctx.stroke(); ctx.fillStyle = pal.drone;[[-8, -8], [8, -8], [8, 8], [-8, 8]].forEach(o => { ctx.beginPath(); ctx.arc(f(o[0]), f(o[1]), f(3.5), 0, Math.PI * 2); ctx.fill(); }); if (d.light) { ctx.fillStyle = pal.warn; ctx.beginPath(); ctx.arc(0, 0, f(4), 0, Math.PI * 2); ctx.fill(); } ctx.restore(); ctx.fillStyle = pal.ink2; ctx.font = `500 ${f(9.5)}px ${pal.mono}`; ctx.fillText(`DRONE ${d.pos[1].toFixed(1)}m`, dx + f(12), dy - f(8)); const g = S.go2; const [gx, gy] = W2S(g.pos[0], g.pos[2]); ctx.save(); ctx.translate(gx, gy); ctx.rotate(g.yaw); ctx.fillStyle = pal.go2; ctx.fillRect(-f(5), -f(9), f(10), f(18)); ctx.fillStyle = pal.accent; ctx.beginPath(); ctx.moveTo(0, -f(13)); ctx.lineTo(f(4), -f(8)); ctx.lineTo(-f(4), -f(8)); ctx.fill(); ctx.restore(); ctx.fillStyle = pal.ink2; ctx.fillText('GO2' + (g.payload ? ' · ' + g.payload : ''), gx + f(12), gy + f(4)); ctx.font = `600 ${f(11)}px ${pal.font}`; }
+      if (S.pick && !opts.fixed) { const [x, y] = W2S(S.pick.pos[0], S.pick.pos[2]); ctx.strokeStyle = pal.accent; ctx.lineWidth = f(2); ctx.beginPath(); ctx.arc(x, y, f(9), 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x - f(14), y); ctx.lineTo(x + f(14), y); ctx.moveTo(x, y - f(14)); ctx.lineTo(x, y + f(14)); ctx.stroke(); }
+      { const px = 5 * view.ppm; ctx.strokeStyle = pal.ink2; ctx.lineWidth = f(2); ctx.beginPath(); ctx.moveTo(f(14), h - f(14)); ctx.lineTo(f(14) + px, h - f(14)); ctx.stroke(); ctx.fillStyle = pal.ink2; ctx.font = `500 ${f(10)}px ${pal.mono}`; ctx.fillText('5 m', f(14), h - f(20)); }
+      if (hover) { const ent = hover.kind === 'victim' ? S.victims.find(v => v.id === hover.id) : hover.kind === 'team' ? SP.member(hover.id) : hover.kind === 'hazard' ? S.hazards.find(x => x.id === hover.id) : hover.kind === 'drone' ? S.drone : S.go2; if (ent) { const [x, y] = W2S(ent.pos[0], ent.pos[2]); const txt = hover.kind === 'victim' ? `${ent.id} · ${SP.TRIAGE[SP.triageOf(ent)].label['en-IN']} · ${SP.sensorList(ent)}` : hover.kind === 'team' ? `${ent.name} · ${SP.roleName(ent.role)}` : hover.kind === 'hazard' ? `${ent.id} · ${ent.note}` : hover.kind === 'drone' ? `Drone · ${ent.mode}` : `Go2 · ${ent.mode}`; ctx.font = `600 ${f(11)}px ${pal.font}`; const tw = ctx.measureText(txt).width + f(14); ctx.fillStyle = pal.ink; ctx.fillRect(x + f(14), y - f(30), tw, f(22)); ctx.fillStyle = pal.bg; ctx.fillText(txt, x + f(21), y - f(15)); } }
+    }
+    SP.onFrame(draw);
+    return { layers, setLayer(k, v) { layers[k] = v; }, center(x, z) { view.cx = x; view.cz = z; }, resize };
+  };
+
+  /* ---------- 3D scene ---------- */
+  SP.Scene = function (container, pal) {
+    const THREE = window.THREE; if (!THREE) return null;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1)); container.appendChild(renderer.domElement); renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;cursor:grab';
+    const scene = new THREE.Scene(); scene.fog = new THREE.Fog(pal.fog, 30, 70); const cam = new THREE.PerspectiveCamera(42, 1, .1, 200); const orbit = { theta: -.9, phi: .95, r: 30, target: new THREE.Vector3(), follow: null };
+    scene.add(new THREE.HemisphereLight(pal.skyLight, pal.groundLight, .9)); const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(12, 20, 8); scene.add(sun);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 44), new THREE.MeshStandardMaterial({ color: pal.ground, roughness: 1 })); ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    const grid = new THREE.GridHelper(60, 30, pal.grid, pal.grid); grid.position.y = .01; grid.material.opacity = .35; grid.material.transparent = true; scene.add(grid);
+    scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-9, .03, -6), new THREE.Vector3(9, .03, -6), new THREE.Vector3(9, .03, 6), new THREE.Vector3(-9, .03, 6)]), new THREE.LineBasicMaterial({ color: pal.accent })));
+    const rubMat = new THREE.MeshStandardMaterial({ color: pal.rubble, roughness: .95 }); SP.RUBBLE.forEach(r => { const m = new THREE.Mesh(new THREE.BoxGeometry(r[2], r[3], r[4]), rubMat); m.position.set(r[0], r[3] / 2, r[1]); m.rotation.y = r[5]; m.rotation.z = r[5] * .25; scene.add(m); });
+    const drone = new THREE.Group(); drone.add(new THREE.Mesh(new THREE.BoxGeometry(.5, .14, .5), new THREE.MeshStandardMaterial({ color: pal.drone })));[[.3, .3], [-.3, .3], [.3, -.3], [-.3, -.3]].forEach(o => { const rot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .02, 16), new THREE.MeshStandardMaterial({ color: pal.drone, transparent: true, opacity: .55 })); rot.position.set(o[0], .1, o[1]); drone.add(rot); }); const dl = new THREE.SpotLight(0xfff2cc, 0, 12, .6, .5); dl.position.y = -.2; dl.target = new THREE.Object3D(); drone.add(dl); drone.add(dl.target); dl.target.position.y = -5; scene.add(drone);
+    const go2 = new THREE.Group(); const gb = new THREE.Mesh(new THREE.BoxGeometry(.4, .25, .75), new THREE.MeshStandardMaterial({ color: pal.go2 })); gb.position.y = .42; go2.add(gb); const head = new THREE.Mesh(new THREE.BoxGeometry(.22, .18, .22), new THREE.MeshStandardMaterial({ color: pal.go2 })); head.position.set(0, .48, .45); go2.add(head);[[.15, .28], [-.15, .28], [.15, -.28], [-.15, -.28]].forEach(o => { const leg = new THREE.Mesh(new THREE.BoxGeometry(.08, .34, .08), new THREE.MeshStandardMaterial({ color: pal.go2dark })); leg.position.set(o[0], .17, o[1]); go2.add(leg); }); const eye = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 8), new THREE.MeshBasicMaterial({ color: pal.accent })); eye.position.set(0, .5, .57); go2.add(eye); scene.add(go2);
+    const vicGroup = new THREE.Group(); scene.add(vicGroup); const vicMeshes = {}; const teamMeshes = {}; const teamGroup = new THREE.Group(); scene.add(teamGroup); const hzGroup = new THREE.Group(); scene.add(hzGroup); const collGroup = new THREE.Group(); scene.add(collGroup); let pathLine = null, surveyLine = null; const routeGroup = new THREE.Group(); scene.add(routeGroup);
+    const mkLine = (pts, color, dashed, y) => { const g = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p[0], (y != null ? y : p[1]) + .08, p[2]))); const l = new THREE.Line(g, dashed ? new THREE.LineDashedMaterial({ color, dashSize: .5, gapSize: .3 }) : new THREE.LineBasicMaterial({ color })); if (dashed) l.computeLineDistances(); return l; };
+    S.team.forEach(m => { const g = new THREE.Group(); const col = m.lead ? pal.lead : m.role === 'medic' ? pal.medic : pal.extraction; const body = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, 1.3, 8), new THREE.MeshStandardMaterial({ color: col })); body.position.y = .75; g.add(body); const ring = new THREE.Mesh(new THREE.RingGeometry(.4, .5, 24), new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: .7 })); ring.rotation.x = -Math.PI / 2; ring.position.y = .04; g.add(ring); teamGroup.add(g); teamMeshes[m.id] = g; });
+    let routeKey = '', hzKey = -1;
+    function sync() {
+      S.victims.forEach(v => { if (!vicMeshes[v.id]) { const g = new THREE.Group(); const s = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 16), new THREE.MeshStandardMaterial({ color: pal.victim, emissive: pal.victim, emissiveIntensity: .6 })); s.position.y = .35; g.add(s); const ring = new THREE.Mesh(new THREE.RingGeometry(.5, .62, 32), new THREE.MeshBasicMaterial({ color: pal.victim, side: THREE.DoubleSide, transparent: true, opacity: .8 })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; g.add(ring); g.position.set(v.pos[0], 0, v.pos[2]); g.userData = { ring, s }; vicGroup.add(g); vicMeshes[v.id] = g; } const t = SP.triageOf(v); const col = v.status === 'dismissed' ? pal.muted : v.status === 'extracted' ? pal.good : t === 'immediate' ? pal.bad : t === 'delayed' ? pal.warn : pal.candidate; vicMeshes[v.id].userData.s.material.color.set(col); vicMeshes[v.id].userData.s.material.emissive.set(col); vicMeshes[v.id].userData.ring.material.color.set(col); });
+      const wantPath = S.go2.mode === 'moving' ? [S.go2.pos.slice()].concat(S.go2.path.slice(S.go2.idx)) : null; const key = wantPath ? wantPath.length + ':' + S.go2.idx : ''; if (key !== sync.pk) { sync.pk = key; if (pathLine) scene.remove(pathLine); pathLine = null; if (wantPath) { pathLine = mkLine(wantPath, pal.path, false, 0); scene.add(pathLine); } }
+      const rk = S.team.map(m => m.moving && m.route ? m.id + m.routeIdx : '').join(','); if (rk !== routeKey) { routeKey = rk; routeGroup.clear(); S.team.forEach(m => { if (m.moving && m.route) routeGroup.add(mkLine(m.route.pts.slice(Math.max(0, m.routeIdx - 1)), m.role === 'medic' ? pal.medic : pal.extraction, false, 0)); }); }
+      if (S.hazards.length !== hzKey) { hzKey = S.hazards.length; hzGroup.clear(); collGroup.clear(); S.hazards.forEach(hz => { const c = new THREE.Mesh(new THREE.ConeGeometry(.35, .9, 4), new THREE.MeshStandardMaterial({ color: pal.bad })); c.position.set(hz.pos[0], .45, hz.pos[2]); hzGroup.add(c); if (hz.collapse) { const pile = new THREE.Mesh(new THREE.DodecahedronGeometry(1.0, 0), new THREE.MeshStandardMaterial({ color: pal.rubble, roughness: 1 })); pile.position.set(hz.pos[0], .5, hz.pos[2]); pile.scale.set(1, .6, 1); collGroup.add(pile); } }); }
+      const ws = S.surveyPreview || S.drone.mode === 'survey' || S.drone.mode === 'takeoff'; if (ws && !surveyLine) { surveyLine = mkLine(surveyWaypoints(), pal.drone, true); scene.add(surveyLine); } if (!ws && surveyLine) { scene.remove(surveyLine); surveyLine = null; }
+      dl.intensity = S.drone.light ? 1.6 : 0;
+    }
+    const el = renderer.domElement; let drag = null; el.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId); orbit.follow = null; }); el.addEventListener('pointermove', e => { if (!drag) return; orbit.theta -= (e.clientX - drag.x) * .006; orbit.phi = Math.max(.15, Math.min(1.45, orbit.phi - (e.clientY - drag.y) * .006)); drag = { x: e.clientX, y: e.clientY }; }); el.addEventListener('pointerup', () => { drag = null; }); el.addEventListener('wheel', e => { e.preventDefault(); orbit.r = Math.max(6, Math.min(60, orbit.r * (1 + e.deltaY * .001))); }, { passive: false });
+    function resize() { const w = container.clientWidth || 1, h = container.clientHeight || 1; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } new ResizeObserver(resize).observe(container); resize();
+    let pulse = 0; const api = { active: true };
+    SP.onFrame(dt => { if (!api.active) return; sync(); pulse += dt * 2; drone.position.set(S.drone.pos[0], S.drone.pos[1], S.drone.pos[2]); drone.rotation.y = S.drone.yaw; drone.children.slice(1, 5).forEach((r, i) => { r.rotation.y += (S.drone.mode === 'landed' ? 0 : .9) * (i % 2 ? 1 : -1); }); go2.position.set(S.go2.pos[0], 0, S.go2.pos[2]); go2.rotation.y = S.go2.yaw; gb.position.y = .42 + (S.go2.mode === 'moving' ? Math.sin(pulse * 6) * .02 : 0); Object.values(vicMeshes).forEach(g => { const k = 1 + Math.sin(pulse) * .12; g.userData.ring.scale.set(k, k, 1); }); S.team.forEach(m => { teamMeshes[m.id].position.set(m.pos[0], 0, m.pos[2]); }); const tgt = orbit.follow === 'drone' ? S.drone.pos : orbit.follow === 'go2' ? S.go2.pos : null; if (tgt) orbit.target.lerp(new THREE.Vector3(tgt[0], tgt[1], tgt[2]), .08); cam.position.set(orbit.target.x + orbit.r * Math.sin(orbit.phi) * Math.sin(orbit.theta), orbit.target.y + orbit.r * Math.cos(orbit.phi), orbit.target.z + orbit.r * Math.sin(orbit.phi) * Math.cos(orbit.theta)); cam.lookAt(orbit.target); renderer.render(scene, cam); });
+    api.follow = w => { orbit.follow = w; if (w) orbit.r = Math.min(orbit.r, 14); }; api.overview = () => { orbit.follow = null; orbit.target.set(0, 0, 0); orbit.r = 30; orbit.theta = -.9; orbit.phi = .95; }; api.scene = scene; return api;
+  };
+
+  /* ---------- camera POV tiles: drone / go2 / team body cam ---------- */
+  SP.CamView = function (canvas, overlay, kind, pal, sceneRef, memberId) {
+    const THREE = window.THREE; if (!THREE || !sceneRef) return null; const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true }); renderer.setPixelRatio(1); const cam = new THREE.PerspectiveCamera(kind === 'drone' ? 72 : 80, 16 / 9, .05, 120); const ctx = overlay.getContext('2d'); let acc = 0; const v3 = new THREE.Vector3(); const api = { active: true };
+    function resize() { const w = canvas.clientWidth || 320, h = canvas.clientHeight || 180; renderer.setSize(w, h, false); overlay.width = w; overlay.height = h; cam.aspect = w / h; cam.updateProjectionMatrix(); } new ResizeObserver(resize).observe(canvas); resize();
+    SP.onFrame(dt => {
+      if (!api.active) return; acc += dt; if (acc < 1 / 15) return; acc = 0;
+      if (kind === 'drone') { cam.position.set(S.drone.pos[0], S.drone.pos[1], S.drone.pos[2]); cam.up.set(Math.sin(S.drone.yaw), 0, Math.cos(S.drone.yaw)); cam.lookAt(S.drone.pos[0], 0, S.drone.pos[2]); } else if (kind === 'go2') { const g = S.go2; cam.position.set(g.pos[0], .5, g.pos[2]); cam.up.set(0, 1, 0); cam.lookAt(g.pos[0] + Math.sin(g.yaw) * 3, .3, g.pos[2] + Math.cos(g.yaw) * 3); } else { const m = SP.member(memberId); cam.position.set(m.pos[0], 1.5, m.pos[2]); cam.up.set(0, 1, 0); cam.lookAt(m.pos[0] + Math.sin(m.yaw) * 3, .8, m.pos[2] + Math.cos(m.yaw) * 3); }
+      renderer.render(sceneRef.scene, cam); const w = overlay.width, h = overlay.height; ctx.clearRect(0, 0, w, h); ctx.font = '600 10.5px ui-monospace,monospace'; ctx.fillStyle = pal.hud; ctx.strokeStyle = pal.hud; ctx.lineWidth = 1;
+      const hdr = kind === 'drone' ? `RGB+D · THERMAL · RADAR  alt ${S.drone.pos[1].toFixed(1)} m` : kind === 'go2' ? `FRONT · RADAR · CO₂  hdg ${((S.go2.yaw * 180 / Math.PI + 360) % 360).toFixed(0)}°` : `BODY CAM · ${SP.member(memberId).name.toUpperCase()}`; ctx.fillText(hdr, 8, 15); ctx.fillText(kind === 'team' ? 'phone · 5 fps' : '5 fps · latest-frame', 8, h - 7); ctx.strokeRect(w / 2 - 10, h / 2 - 10, 20, 20);
+      const list = kind === 'drone' ? S.victims.concat(VDEF.filter(d => !S.victims.some(v => v.id === d.id) && S.drone.mode === 'survey' && dist2(S.drone.pos, d.pos) < 4.5).map(d => ({ id: d.id, pos: d.pos, fused: 0, status: 'scanning', evidence: {} }))) : S.victims;
+      list.forEach(v => { v3.set(v.pos[0], v.pos[1] + .3, v.pos[2]); const dc = v3.distanceTo(cam.position); v3.project(cam); if (v3.z > 1 || Math.abs(v3.x) > 1.1 || Math.abs(v3.y) > 1.1) return; const x = (v3.x + 1) / 2 * w, y = (1 - v3.y) / 2 * h, s = Math.max(14, Math.min(w / 2, 130 / dc)); const col = v.status === 'scanning' ? pal.hud : v.status === 'dismissed' ? pal.muted : v.lifeSign ? pal.victim : pal.warn; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(x - s / 2, y - s / 2, s, s); const lbl = v.status === 'scanning' ? 'scanning…' : `${v.id} ${(v.fused * 100).toFixed(0)}%${v.evidence.thermal != null ? ' +' + v.evidence.thermal.toFixed(1) + '°' : ''}${v.evidence.radar ? ' ♥' + v.evidence.radar.bpm.toFixed(0) : ''}`; ctx.fillStyle = col; ctx.fillRect(x - s / 2, y - s / 2 - 15, Math.min(w, ctx.measureText(lbl).width + 8), 15); ctx.fillStyle = pal.hudInk; ctx.fillText(lbl, x - s / 2 + 4, y - s / 2 - 4); });
+      if (kind === 'drone') S.team.forEach(m => { v3.set(m.pos[0], .9, m.pos[2]); v3.project(cam); if (v3.z > 1 || Math.abs(v3.x) > 1 || Math.abs(v3.y) > 1) return; const x = (v3.x + 1) / 2 * w, y = (1 - v3.y) / 2 * h; ctx.strokeStyle = pal.team; ctx.lineWidth = 1.5; ctx.strokeRect(x - 9, y - 9, 18, 18); ctx.fillStyle = pal.team; ctx.fillText('tag ' + m.initials, x + 11, y + 4); });
+    });
+    return api;
+  };
+
+  /* ---------- markup helpers ---------- */
+  const VSTATUS = { located: 'Located', medic: 'Medic on site', stabilized: 'Stabilised', extracting: 'Extracting', extracted: 'Extracted', dismissed: 'Dismissed' }; SP.vstatus = v => VSTATUS[v.status] || v.status;
+  SP.ui = {
+    triageBar(v) { const cur = SP.triageOf(v); return `<div class="triage" data-id="${v.id}">${Object.keys(SP.TRIAGE).map(k => `<button class="tbtn t-${k} ${cur === k ? 'on' : ''} ${v.suggest === k && !v.triage ? 'sugg' : ''}" data-tri="${k}">${SP.TRIAGE[k].label['en-IN']}${v.suggest === k ? '<small>suggested</small>' : ''}</button>`).join('')}</div>`; },
+    evidence(v) { const ev = v.evidence; const row = (label, val, ok, note) => `<div class="ev ${ok ? 'on' : 'off'}"><span class="ev-k">${label}</span><span class="ev-v">${val}</span><span class="ev-n">${note}</span></div>`; return `<div class="evidence">${row('RGB · YOLOv8n', ev.rgb != null ? 'person ' + ev.rgb.toFixed(2) : 'no detection', ev.rgb != null, ev.rgb != null ? 'drone frame' : 'occluded')}${row('Thermal', ev.thermal != null ? '+' + ev.thermal.toFixed(1) + ' °C' : 'none', ev.thermal != null, ev.thermal > 8 ? 'too hot for a body' : ev.thermal != null ? 'body range' : '—')}${row('UWB radar', ev.radar ? ev.radar.bpm.toFixed(0) + ' bpm · ' + ev.radar.snr : v.radarNegative ? 'no life signs' : 'not scanned', !!ev.radar, ev.radar ? 'heartbeat' : v.radarNegative ? 'negative' : 'Go2 scans on arrival')}${row('Acoustic', ev.acoustic ? 'tapping' : 'silent', !!ev.acoustic, 'Go2 mic')}${row('CO₂', ev.co2 != null ? '+' + (ev.co2 - 300) + ' ppm' : '—', ev.co2 != null, 'void breathing')}${ev.human ? row('Team on site', 'confirmed', true, 'rescuer report') : ''}</div>`; },
+    victimPanel(v) {
+      const going = S.team.filter(m => m.task && m.task.kind === 'victim' && m.task.target === v.id); const here = S.team.filter(m => (v.medicOnSite === m.id) || v.extractionOnSite.includes(m.id)); const medic = here.find(m => m.role === 'medic') || going.find(m => m.role === 'medic'); const exs = here.filter(m => m.role === 'extraction').concat(going.filter(m => m.role === 'extraction' && !here.includes(m)));
+      const need = `<div class="needs"><div class="need ${v.stabilized ? 'done' : medic ? 'active' : ''}"><b>Medic</b><span>${v.stabilized ? 'stabilised' : medic ? first(medic) + (v.medicOnSite ? ' · on site' : ' · en route') : 'needed'}</span></div><div class="need ${v.status === 'extracted' ? 'done' : exs.length ? 'active' : ''}"><b>Extraction ×2</b><span>${v.status === 'extracted' ? 'done' : exs.length ? exs.map(first).join(' + ') + (exs.length < 2 ? ' · 1 of 2' : '') : 'needed'}</span></div><div class="need ${v.contact ? 'done' : v.go2 ? 'active' : ''}"><b>Go2</b><span>${v.contact ? 'contact made' : v.go2 === 'onsite' ? 'on site' : v.go2 === 'enroute' ? 'en route' : 'not sent'}</span></div></div>`;
+      return `<article class="panel-v" data-id="${v.id}"><header class="ph"><div><span class="vid">${v.id}</span> <span class="chip">${SP.vstatus(v)}</span>${v.lifeSign ? ' <span class="chip life">♥ ' + (v.evidence.radar ? v.evidence.radar.bpm.toFixed(0) + ' bpm' : 'life sign') + '</span>' : ''}</div><button class="btn tiny" data-act="close">✕</button></header>
+        <p class="where">${SP.esc(v.where)} · <span class="mono">${fmtPos(v.pos)}</span> · ${SP.langName(v.lang)}</p>
+        <div class="sec-h">Triage <small>system suggests · you decide</small></div>${SP.ui.triageBar(v)}
+        <div class="sec-h">Needs</div>${need}
+        <div class="sec-h">Send</div><div class="sendrow">${S.team.filter(m => !m.lead).map(m => `<button class="btn who r-${m.role}" data-act="sendm" data-m="${m.id}" ${v.status === 'extracted' || v.status === 'dismissed' ? 'disabled' : ''}><b>${m.initials}</b>${first(m)}<small>${SP.roleName(m.role)}</small></button>`).join('')}<button class="btn who r-bot" data-act="go2" ${S.go2.mode === 'moving' ? 'disabled' : ''}><b>Go2</b>send<small>confirm</small></button><button class="btn who r-bot" data-act="drone"><b>Drone</b>overwatch<small>confirm</small></button></div>
+        <details class="ev-d"><summary>Evidence · ${SP.sensorList(v)} · fused ${(v.fused * 100).toFixed(0)}%</summary>${SP.ui.evidence(v)}</details>
+        <footer class="acts">${v.status !== 'extracted' && v.status !== 'dismissed' ? '<button class="btn ghost" data-act="dismiss">Dismiss</button>' : ''}${(v.status === 'stabilized' || v.status === 'extracting' || v.status === 'medic') ? '<button class="btn" data-act="extracted">Mark extracted</button>' : ''}</footer></article>`;
+    },
+    teamPanel(m) {
+      const thread = S.comms.filter(c => c.from === m.id || c.to === m.id || (c.from === 't1' && !c.to)).slice(-4); const st = m.signalLost ? 'NO SIGNAL' : m.work ? m.work.label + ' ' + Math.round((1 - m.work.left / m.work.total) * 100) + '%' : m.waiting ? m.waiting : m.moving ? '→ ' + taskName(m.task) + ' · ' + Math.round(Math.max(0, m.route.secs * (1 - progressed(m) / Math.max(.1, m.route.len)))) + ' s' : m.lead ? 'command post' : 'standby'; const eg = m.egressRoute;
+      return `<article class="panel-t" data-id="${m.id}"><header class="ph"><div><span class="vid">${m.name}</span> <span class="chip r-${m.role}">${SP.roleName(m.role)}</span></div><button class="btn tiny" data-act="close">✕</button></header>
+        <p class="where">${SP.langName(m.lang)} · <span class="mono">${fmtPos(m.pos)}</span> · ${m.src.toUpperCase()} ±${m.acc} m${m.signalLost ? ' · <b class="bad">phone unreachable</b>' : ''}</p>
+        <div class="state ${m.signalLost ? 'bad' : ''}"><b>${st}</b>${m.queue && m.queue.length ? `<span>then ${m.queue.map(q => taskName(q)).join(', ')}</span>` : ''}${eg && !m.lead && Math.abs(m.pos[0]) < 10 ? `<span class="eg">way out: ${eg.len.toFixed(0)} m · ${eg.climbs} climbs · ${eg.hazards.length ? '⚠ ' + eg.hazards.join(',') : 'clear'}</span>` : ''}</div>
+        ${m.lead ? '' : `<div class="sec-h">Actions</div><div class="acts"><button class="btn" data-act="recall">Return to staging</button><button class="btn" data-act="go2team">Go2 to ${first(m)}</button><button class="btn" data-act="owteam">Drone overwatch</button><button class="btn ${m.cam ? 'on' : ''}" data-act="cam">${m.cam ? 'Body cam on' : 'Body cam'}</button></div>`}
+        <div class="sec-h">Comms <small>shown in ${SP.langName(m.lang)} on their phone</small></div><ul class="thread">${thread.map(c => `<li class="${c.from === 't1' ? 'lead' : ''}"><time class="mono">${c.clock}</time><span>${SP.esc(c.tr['en-IN'])}</span></li>`).join('') || '<li class="dim">No messages yet.</li>'}</ul>
+        ${m.lead ? '' : `<div class="msgrow"><input data-msg placeholder="Message ${first(m)} (translated to ${SP.langName(m.lang)})"><button class="btn" data-act="msg">Send</button></div>`}</article>`;
+    },
+    botPanel(kind) { const d = S.drone, g = S.go2; return kind === 'drone' ? `<article class="panel-t"><header class="ph"><div><span class="vid">Drone</span> <span class="chip">${SP.MODELS.drone}</span></div><button class="btn tiny" data-act="close">✕</button></header><div class="state"><b>${d.mode}${d.overwatch ? ' · ' + (d.overwatchKind === 'team' ? first(SP.member(d.overwatch)) : fmtPos(d.overwatch)) : ''}</b><span>alt ${d.pos[1].toFixed(1)} m · battery ${S.droneBattery.toFixed(0)}% · light ${d.light ? 'on' : 'off'} · mapped ${S.mapped}%</span></div><div class="acts"><button class="btn" data-act="light">${d.light ? 'Light off' : 'Light on'}</button><button class="btn" data-act="resurvey">Re-map building</button></div></article>` : `<article class="panel-t"><header class="ph"><div><span class="vid">Go2</span> <span class="chip">${SP.MODELS.go2}</span></div><button class="btn tiny" data-act="close">✕</button></header><div class="state"><b>${g.mode}${g.target ? ' · ' + (g.targetKind === 'team' ? first(SP.member(g.target)) : g.targetKind === 'point' ? fmtPos(g.target) : g.target) : ''}</b><span>battery ${S.go2Battery.toFixed(0)}% · payload ${g.payload || 'speaker + radar + CO₂'} · 0.6 m/s</span></div><div class="sec-h">Speaker · bulbul:v3 <select class="sel" data-lang>${SP.LANGS.map(l => `<option value="${l.code}" ${l.code === S.survivorLang ? 'selected' : ''}>${l.native}</option>`).join('')}</select></div><div class="phrases">${SP.PHRASES.map(p => `<button class="btn" data-ph="${p.id}">${p.label}<small>${SP.esc(p.text[S.survivorLang])}</small></button>`).join('')}</div><div class="msgrow"><input data-relay placeholder="Relay your words → translate → speak"><button class="btn" data-act="relay">Speak</button></div><div class="acts"><button class="btn" data-act="go2home">Return to staging</button></div></article>`; },
+    hazardPanel(h) { const affected = S.team.filter(m => m.route && m.route.hazards && m.route.hazards.includes(h.id)); return `<article class="panel-t"><header class="ph"><div><span class="vid">${h.id}</span> <span class="chip bad">${h.collapse ? 'collapse' : 'hazard'}</span></div><button class="btn tiny" data-act="close">✕</button></header><p class="where">${SP.esc(h.note)} · <span class="mono">${fmtPos(h.pos)}</span> · ${h.src} · ${h.clock}</p><div class="state"><b>${h.collapse ? 'Cells blocked, routes recomputed' : 'Routes within 1.2 m cost ×4'}</b><span>${affected.length ? 'On route of ' + affected.map(first).join(', ') : 'No active route passes it'}</span></div></article>`; },
+    pickMenu(p) { const near = S.victims.filter(v => dist2(v.pos, p.pos) < 1.5)[0]; return `<div class="pick"><div class="pick-h">Point <span class="mono">${fmtPos(p.pos)}</span>${near ? ' · near ' + near.id : ''}</div><div class="pick-sec">Send people <small>goes immediately</small></div><div class="pick-row">${S.team.filter(m => !m.lead).map(m => `<button class="btn who r-${m.role} ${m.signalLost ? 'dis' : ''}" data-pm="${m.id}"><b>${m.initials}</b>${first(m)}<small>${SP.roleName(m.role)}</small></button>`).join('')}</div><div class="pick-sec">Bots <small>asks to confirm</small></div><div class="pick-row"><button class="btn who r-bot" data-pb="go2"><b>Go2</b>go here<small>contact · supplies</small></button><button class="btn who r-bot" data-pb="drone"><b>Drone</b>overwatch<small>light · re-map</small></button></div><div class="pick-row end"><button class="btn primary" data-pgo disabled>Send selected</button><button class="btn ghost" data-phz>Mark hazard</button><button class="btn ghost" data-pcancel>Cancel</button></div></div>`; },
+    decision(d) { return `<div class="dec k-${d.kind} ${d.risk ? 'risk-' + d.risk : ''}" data-id="${d.id}"><div class="dec-h"><span class="dec-k">${{ plan: 'Confirm robot plan', proposal: 'Allocation', request: 'Team request', cutoff: 'Route cut', mandown: 'Check on teammate', deteriorate: 'Victim weakening', newvictim: 'New candidate', speak: 'Go2 speaker', warn: 'Role check' }[d.kind] || d.kind}</span><time class="mono">${d.clock}</time></div><b class="dec-t">${SP.esc(d.title)}</b><p class="dec-b">${SP.esc(d.body || '')}</p>${d.proposal ? SP.ui.timeline(d.proposal, true) : ''}<div class="dec-a">${d.actions.map(a => `<button class="btn ${a.primary ? 'primary' : ''}" data-dec="${a.id}">${a.label}</button>`).join('')}</div></div>`; },
+    timeline(P, compact) { const T = Math.max(60, P.total); const rows = S.team.filter(m => !m.lead).map(m => ({ id: m.id, name: first(m), role: m.role, tasks: P.tasks.filter(t => t.res === m.id) })).concat([{ id: 'go2', name: 'Go2', role: 'bot', tasks: P.botTasks.filter(t => t.res === 'go2') }, { id: 'drone', name: 'Drone', role: 'bot', tasks: P.botTasks.filter(t => t.res === 'drone') }]); return `<div class="tl ${compact ? 'compact' : ''}"><div class="tl-order">${P.order.map((id, i) => `<span><b>${i + 1}</b> ${id}</span>`).join('')}${P.warns.length ? `<span class="warn">⚠ ${P.warns.length} warning${P.warns.length > 1 ? 's' : ''}</span>` : ''}</div>${rows.map(r => `<div class="tl-row r-${r.role}"><span class="tl-name">${r.name}</span><div class="tl-bar">${r.tasks.map(t => `<span class="tl-seg ${t.kind}" style="left:${t.t0 / T * 100}%;width:${Math.max(1.5, (t.t1 - t.t0) / T * 100)}%" title="${t.kind} ${t.target} ${Math.round(t.t0)}–${Math.round(t.t1)} s">${(t.t1 - t.t0) / T > .08 ? (t.kind === 'travel' ? '→ ' + t.target : t.kind === 'wait' ? 'wait' : t.kind === 'overwatch' ? 'overwatch' : t.label || t.note || t.target) : ''}</span>`).join('')}</div></div>`).join('')}<div class="tl-axis"><span>0</span><span>${Math.round(T / 2)} s</span><span>${Math.round(T)} s</span></div>${!compact && P.warns.length ? `<ul class="tl-warns">${P.warns.map(w => `<li>⚠ ${SP.esc(w)}</li>`).join('')}</ul>` : ''}</div>`; },
+    logLine(e, lang) { return `<li class="log-line src-${e.src}"><time class="mono">${e.clock}</time><span class="src">${e.src}</span><span class="txt">${SP.esc(SP.logText(e, lang))}</span></li>`; },
+    commLine(c, lang) { const m = SP.member(c.from); const txt = c.tr[lang] || c.tr['en-IN']; return `<li class="comm ${m.lead ? 'lead' : ''} ${c.evac ? 'evac' : ''}"><span class="av r-${m.role}">${m.initials}</span><div><div class="who">${first(m)}${c.to ? ' → ' + first(SP.member(c.to)) : ''} <time class="mono">${c.clock}</time></div><div class="say">${SP.esc(txt)}</div>${c.lang !== lang ? `<small class="orig">${SP.esc(c.text)} · ${SP.langName(c.lang)}</small>` : ''}</div></li>`; }
+  };
+  SP.first = first; SP.progressed = progressed;
+})();
+</script>
+<script>
+(function(){
+  const $=s=>document.querySelector(s); const S=SP.state; const first=SP.first;
+  const pal3={fog:0x0b0f14,skyLight:0x8fb3d9,groundLight:0x1a1410,ground:0x121a22,grid:0x243040,accent:0xff9f1c,rubble:0x3a4652,drone:0x5ab4ff,go2:0xc9d4e0,go2dark:0x6b7a89,victim:0xff5c5c,candidate:0xffd166,path:0xff9f1c,warn:0xffd166,good:0x3ddc84,bad:0xff5c5c,muted:0x5e6f80,team:0xc77dff,medic:0x3ddc84,extraction:0xc77dff,lead:0xff9f1c,hud:'#5ab4ff',hudInk:'#001018'};
+  const pal2={bg:'#0d131a',unknown:'#141b23',passable:'#1d3a2a',verified:'#245a3a',difficult:'#4a3a14',blocked:'#3a1a1a',accent:'#ff9f1c',ink:'#e6edf3',ink2:'#9fb0c0',muted:'#5e6f80',heat:'rgba(255,120,40,.5)',radar:'#ff5c5c',bad:'#ff5c5c',warn:'#ffd166',good:'#3ddc84',drone:'#5ab4ff',go2:'#c9d4e0',path:'#ff9f1c',victim:'#ff5c5c',candidate:'#9fb0c0',team:'#c77dff',medic:'#3ddc84',extraction:'#c77dff',lead:'#ff9f1c',egress:'#5ab4ff',font:'"Barlow Condensed",sans-serif',mono:'"IBM Plex Mono",monospace'};
+  $('#siteName').textContent=SP.SITE.name+' · '+SP.SITE.mission; $('#siteDesc').textContent=SP.SITE.desc; $('#phMission').textContent=SP.SITE.mission;
+  const map=SP.Map2D($('#map'),pal2); const scene=SP.Scene($('#view3d'),pal3); scene.active=false;
+  /* cams */
+  const cams={}; function ensureCam(key,kind,memberId,label){ if(cams[key])return cams[key]; const el=document.createElement('div'); el.className='cam'; el.dataset.cam=key; el.innerHTML=`<canvas></canvas><canvas></canvas><span class="lbl">${label}</span>`; $('#cams').appendChild(el); const [c,o]=el.querySelectorAll('canvas'); const api=SP.CamView(c,o,kind,pal3,scene,memberId); cams[key]={el,api}; return cams[key]; }
+  ensureCam('drone','drone',null,'Drone sees'); ensureCam('go2','go2',null,'Go2 sees');
+  $('#cams').addEventListener('click',e=>{const el=e.target.closest('.cam'); if(!el)return; const st=$('#stage'); const was=el.classList.contains('focus'); document.querySelectorAll('.cam').forEach(x=>x.classList.remove('focus')); if(was){st.classList.remove('focus');} else {el.classList.add('focus'); st.classList.add('focus');} });
+  function syncCams(){ S.team.forEach(m=>{ const key='cam_'+m.id; if(m.cam&&!cams[key]) ensureCam(key,'team',m.id,first(m)+' body cam'); if(!m.cam&&cams[key]){cams[key].api.active=false; cams[key].el.remove(); delete cams[key];} }); }
+  /* tools */
+  const LAYERS=[['grid','Passability'],['thermal','Thermal'],['radar','Radar'],['routes','Team routes'],['egress','Egress routes'],['bots','Bot paths'],['fov','Camera FOV'],['team','Team'],['victims','People'],['hazards','Hazards']];
+  $('#layersPop').innerHTML=LAYERS.map(l=>`<label><input type="checkbox" data-layer="${l[0]}" ${map.layers[l[0]]?'checked':''}> ${l[1]}</label>`).join('')+'<hr><div class="lg"><i style="background:#1d3a2a"></i>Passable <i style="background:#4a3a14;margin-left:6px"></i>Climb <i style="background:#3a1a1a;margin-left:6px"></i>Blocked <i style="background:#141b23;margin-left:6px"></i>Unmapped</div><div class="lg"><i style="background:var(--bad);border-radius:50%"></i>Immediate <i style="background:var(--warn);border-radius:50%;margin-left:6px"></i>Delayed <i style="background:#9fb0c0;border-radius:50%;margin-left:6px"></i>Unknown</div><div class="lg"><i style="background:var(--medic);border-radius:50%"></i>Medic <i style="background:var(--extraction);border-radius:50%;margin-left:6px"></i>Extraction <i style="background:var(--lead)"></i>Lead</div><div class="lg"><i style="background:var(--drone)"></i>Drone <i style="background:var(--go2);margin-left:6px"></i>Go2 <i style="background:var(--info);margin-left:6px"></i>Egress</div>';
+  $('#layersPop').addEventListener('change',e=>{const c=e.target.closest('[data-layer]'); if(c) map.setLayer(c.dataset.layer,c.checked);});
+  $('#tLayers').addEventListener('click',()=>$('#layersPop').classList.toggle('on'));
+  $('#t3d').addEventListener('click',()=>{const on=!$('#stage').classList.contains('three'); $('#stage').classList.toggle('three',on); scene.active=on; $('#t3d').classList.toggle('on',on); if(on)scene.overview();});
+  $('#tReset').addEventListener('click',()=>{map.center(-1,0); scene.overview(); $('#stage').classList.remove('focus'); document.querySelectorAll('.cam').forEach(x=>x.classList.remove('focus'));});
+  $('#tTimeline').addEventListener('click',()=>{$('#ovlTimeline').classList.add('on'); renderTimeline();}); $('#tLog').addEventListener('click',()=>{$('#ovlLog').classList.add('on'); renderLog();});
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('.ovl').classList.remove('on')));
+  $('#tlRecompute').addEventListener('click',()=>{SP.propose('lead requested'); renderTimeline();});
+  SP.on('open_timeline',()=>{$('#ovlTimeline').classList.add('on'); renderTimeline();});
+  $('#logLang').innerHTML=SP.LANGS.map(l=>`<option value="${l.code}">${l.native}</option>`).join(''); $('#logLang').value='en-IN'; $('#logLang').addEventListener('change',renderLog);
+  /* evac hold */
+  const ev=$('#btnEvac'); let evT=null; ev.addEventListener('pointerdown',()=>{ev.classList.add('holding'); evT=setTimeout(()=>{ev.classList.remove('holding'); SP.ensureRunning(); SP.everyoneOut();},1000);}); ['pointerup','pointerleave'].forEach(x=>ev.addEventListener(x,()=>{ev.classList.remove('holding'); clearTimeout(evT);}));
+  $('#btnStand').addEventListener('click',()=>SP.standDown());
+  /* voice */
+  const ptt=$('#ptt'); let down=false; const SAMPLES=SP.LEAD_SAMPLES;
+  $('#vmore').innerHTML=SAMPLES.map((s,i)=>`<button class="btn" data-s="${i}">${s.t}<small>${s.l}</small></button>`).join('')+`<div class="row"><input id="cmdText" placeholder="Type a command (mock mic)…"><select class="sel" id="cmdLang">${SP.LANGS.map(l=>`<option value="${l.code}">${l.native}</option>`).join('')}</select><button class="btn" id="cmdSend">Send</button></div>`;
+  $('#cmdLang').value='hi-IN'; $('#vtoggle').addEventListener('click',()=>$('#vmore').classList.toggle('on'));
+  $('#vmore').addEventListener('click',e=>{const b=e.target.closest('[data-s]'); if(b){const s=SAMPLES[b.dataset.s]; SP.ensureRunning(); SP.speak(s.t,s.l,s.h,s.tr); $('#vmore').classList.remove('on');} if(e.target.id==='cmdSend'){const t=$('#cmdText').value.trim(); if(!t)return; SP.ensureRunning(); SP.speak(t,$('#cmdLang').value); $('#cmdText').value=''; $('#vmore').classList.remove('on');}});
+  $('#vmore').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='cmdText')$('#cmdSend').click();});
+  ptt.addEventListener('pointerdown',e=>{down=true;ptt.classList.add('live');ptt.setAttribute('aria-pressed','true');ptt.setPointerCapture(e.pointerId);});
+  ptt.addEventListener('pointerup',()=>{if(!down)return;down=false;ptt.classList.remove('live');ptt.setAttribute('aria-pressed','false');SP.ensureRunning();const n=S.comms.filter(c=>c.from==='t1'&&!c.to).length; const s=SAMPLES[n%SAMPLES.length]; SP.speak(s.t,s.l,s.h,s.tr);});
+  /* demo */
+  $('#btnDemo').addEventListener('click',()=>{SP.setSpeed(+$('#selSpeed').value); SP.startDemo({auto:$('#chkAuto').checked}); $('#btnDemo').textContent='↻ Restart'; $('#stage').classList.remove('panel','focus'); Object.keys(cams).forEach(k=>{if(k.startsWith('cam_')){cams[k].api.active=false;cams[k].el.remove();delete cams[k];}});});
+  $('#chkAuto').addEventListener('change',e=>SP.setAuto(e.target.checked)); $('#selSpeed').addEventListener('change',e=>SP.setSpeed(+e.target.value));
+  SP.on('overwatch_on',()=>{cams.drone.el.classList.add('pinned'); setTimeout(()=>cams.drone.el.classList.remove('pinned'),20000/S.speed);});
+  /* map pick menu */
+  let pickSel=new Set(); let pickEl=null;
+  SP.on('pick',p=>{ pickSel=new Set(); if(pickEl)pickEl.remove(); pickEl=document.createElement('div'); pickEl.innerHTML=SP.ui.pickMenu(p); pickEl=pickEl.firstElementChild; const st=$('#stage').getBoundingClientRect(); const x=Math.min(p.sx+12,st.width-350), y=Math.min(p.sy+12,st.height-300); pickEl.style.left=x+'px'; pickEl.style.top=Math.max(50,y)+'px'; $('#stage').appendChild(pickEl); $('#stage').classList.remove('panel');
+    pickEl.addEventListener('click',e=>{ const pm=e.target.closest('[data-pm]'); if(pm){pm.classList.toggle('sel'); const id=pm.dataset.pm; pickSel.has(id)?pickSel.delete(id):pickSel.add(id); pickEl.querySelector('[data-pgo]').disabled=!pickSel.size; return;} const pb=e.target.closest('[data-pb]'); if(pb){SP.ensureRunning(); pb.dataset.pb==='go2'?SP.sendGo2(p.pos.slice(),'point',null):SP.sendDrone(p.pos.slice(),'point'); closePick(); return;} if(e.target.closest('[data-pgo]')){SP.ensureRunning(); const near=S.victims.filter(v=>SP.dist2(v.pos,p.pos)<1.5&&v.status!=='extracted'&&v.status!=='dismissed')[0]; near?SP.dispatch([...pickSel],near.id,'victim'):SP.dispatch([...pickSel],p.pos.slice(),'point'); closePick(); return;} if(e.target.closest('[data-phz]')){SP.ensureRunning(); SP.addHazard(p.pos.slice(),'marked by lead','LEAD'); closePick(); return;} if(e.target.closest('[data-pcancel]')) closePick(); });
+  });
+  function closePick(){ if(pickEl){pickEl.remove(); pickEl=null;} S.pick=null; }
+  /* context panel actions */
+  const cp=$('#cpanel'); let sendPickFor=null;
+  cp.addEventListener('click',e=>{
+    const sel=S.selected; if(!sel)return; const b=e.target.closest('[data-act],[data-tri],[data-ph]'); if(!b)return;
+    if(b.dataset.tri){SP.setTriage(sel.id,b.dataset.tri); return;}
+    if(b.dataset.ph){SP.sayPhrase(b.dataset.ph,S.survivorLang); return;}
+    const a=b.dataset.act; SP.ensureRunning();
+    if(a==='close') SP.select(null);
+    else if(a==='sendm') SP.dispatch([b.dataset.m],sel.id,'victim');
+    else if(a==='go2') SP.sendGo2(sel.id,'victim',null);
+    else if(a==='drone') SP.sendDrone(S.victims.find(v=>v.id===sel.id).pos.slice(),'point');
+    else if(a==='dismiss') SP.dismissVictim(sel.id,'lead review');
+    else if(a==='extracted'){const v=S.victims.find(x=>x.id===sel.id); if(v){v.status='extracted'; SP.state.team.forEach(m=>{if(m.task&&m.task.target===v.id){m.task=null;m.work=null;}}); SP.emit('change');}}
+    else if(a==='recall') SP.recall(sel.id);
+    else if(a==='go2team') SP.sendGo2(sel.id,'team','first-aid kit');
+    else if(a==='owteam') SP.sendDrone(sel.id,'team');
+    else if(a==='cam'){const m=SP.member(sel.id); m.cam=!m.cam; syncCams(); SP.emit('change');}
+    else if(a==='msg'){const inp=cp.querySelector('[data-msg]'); if(inp&&inp.value.trim()){SP.leadMessage(sel.id,inp.value.trim()); inp.value='';}}
+    else if(a==='relay'){const inp=cp.querySelector('[data-relay]'); if(inp&&inp.value.trim()){SP.relay(inp.value.trim(),'hi-IN',S.survivorLang); inp.value='';}}
+    else if(a==='light'){S.drone.light=!S.drone.light; SP.emit('change');}
+    else if(a==='resurvey'){SP.proposeFromText('map the building','en-IN','survey');}
+    else if(a==='go2home'){SP.sendGo2(SP.STAGING.slice(),'point',null);}
+  });
+  cp.addEventListener('change',e=>{const s=e.target.closest('[data-lang]'); if(s){S.survivorLang=s.value; SP.emit('change');}});
+  cp.addEventListener('keydown',e=>{if(e.key!=='Enter')return; if(e.target.matches('[data-msg]'))cp.querySelector('[data-act="msg"]').click(); if(e.target.matches('[data-relay]'))cp.querySelector('[data-act="relay"]').click();});
+  /* decision queue actions */
+  $('#queue').addEventListener('click',e=>{const b=e.target.closest('[data-dec]'); if(!b)return; const card=b.closest('[data-id]'); SP.act(card.dataset.id,b.dataset.dec);});
+  /* phone */
+  let member=S.team[1], phTab='feed', phMap=null, phCam=null;
+  $('#phPick').innerHTML=S.team.filter(t=>!t.lead).map(t=>`<button class="btn ${t.id===member.id?'on':''}" data-m="${t.id}">${first(t)} · ${SP.langName(t.lang)}</button>`).join('');
+  $('#phPick').addEventListener('click',e=>{const b=e.target.closest('[data-m]'); if(!b)return; member=SP.member(b.dataset.m); $('#phPick').querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x.dataset.m===member.id)); phoneStructure(); renderPhone();});
+  $('#phTabs').addEventListener('click',e=>{const b=e.target.closest('[data-pt]'); if(!b)return; phTab=b.dataset.pt; phoneStructure(); renderPhone();});
+  $('#btnPhone').addEventListener('click',()=>{$('#drawer').classList.add('on'); phoneStructure(); renderPhone();}); $('#phoneClose').addEventListener('click',()=>{$('#drawer').classList.remove('on'); if(phCam){phCam.active=false;}});
+  function phoneStructure(){
+    const L=member.lang; $('#phSub').textContent=`${member.name} · ${SP.roleName(member.role,L)} · ${SP.langName(L)}`;
+    $('#phTabs').innerHTML=['feed','map','cam','help','talk'].map(t=>`<button class="btn ${phTab===t?'on':''}" data-pt="${t}">${SP.ui4(t,L)}</button>`).join('');
+    const body=$('#phBody'); body.innerHTML=''; if(phCam){phCam.active=false; phCam=null;}
+    if(phTab==='feed') body.innerHTML=`<div id="phEvac"></div><div class="ph-lead" id="phLead"></div><div id="phTask"></div><div class="sec-h">${SP.ui4('leadSays',L)} · log</div><ul class="ph-log" id="phLog"></ul>`;
+    if(phTab==='map'){ body.innerHTML=`<div class="ph-map"><canvas id="phMapC"></canvas></div><div id="phTask"></div>`; phMap=SP.Map2D($('#phMapC'),pal2,{fixed:true,ppm:16,center:()=>member.pos,member:()=>member.id,layers:{fov:false,thermal:false,radar:false,egress:true}}); }
+    if(phTab==='cam'){ body.innerHTML=`<div class="ph-cam"><div class="cam"><canvas id="phC1"></canvas><canvas id="phC2"></canvas><span class="lbl">${SP.ui4('cam',L)}</span></div></div><button class="btn ${member.cam?'on':''}" id="phCamToggle">${member.cam?SP.ui4('camOff',L):SP.ui4('camOn',L)}</button><p class="dim" style="font-size:12px;margin:0">${L==='en-IN'?'When shared, the lead sees this feed as a tile on the ops map.':L==='hi-IN'?'साझा करने पर लीड इसे ऑप्स मैप पर टाइल की तरह देखेंगे।':L==='mr-IN'?'शेअर केल्यावर लीड हे ऑप्स नकाशावर टाइल म्हणून पाहतील.':'பகிர்ந்தால் தலைவர் இதை வரைபடத்தில் பார்ப்பார்.'}</p>`; phCam=SP.CamView($('#phC1'),$('#phC2'),'team',pal3,scene,member.id); $('#phCamToggle').onclick=()=>{member.cam=!member.cam; syncCams(); phoneStructure(); SP.emit('change');}; }
+    if(phTab==='help') body.innerHTML=`<div class="ph-req">${Object.keys(SP.REQUESTS).map(k=>`<button class="btn" data-req="${k}">${SP.REQUESTS[k].label[L]}</button>`).join('')}<input id="phNote" placeholder="${L==='en-IN'?'Note for the lead (optional)':L==='hi-IN'?'लीड के लिए नोट (वैकल्पिक)':L==='mr-IN'?'लीडसाठी टीप (ऐच्छिक)':'தலைவருக்கு குறிப்பு'}"></div><div class="sec-h">${SP.ui4('nearest',L)}: <span id="phNear" class="mono"></span></div><div class="ph-mine" id="phMine"></div>`;
+    if(phTab==='talk') body.innerHTML=`<div class="ph-talk"><button class="ph-ptt" id="phPtt">${SP.ui4('hold',L)}</button><div class="ph-tr" id="phTr"><span class="dim">${SP.langName(L)} · saaras:v3-realtime</span></div><div class="ph-sent" id="phSent"></div><button class="btn" id="phSample" style="text-align:left;font-size:13px;width:100%">${SP.esc(SP.TEAM_SAMPLES[member.id].t)}</button><input id="phTalkText" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px" placeholder="…"></div>`;
+    body.onclick=e=>{const r=e.target.closest('[data-req]'); if(r){SP.ensureRunning(); SP.request(member.id,r.dataset.req,$('#phNote').value.trim()); $('#phNote').value=''; renderPhone(); return;} if(e.target.id==='phSample'){const s=SP.TEAM_SAMPLES[member.id]; SP.ensureRunning(); SP.teamSpeak(member.id,s.t,s.tr);} if(e.target.id==='phListen'){e.target.textContent='▶ bulbul:v3 · '+SP.VOICES[L];}};
+    const pp=$('#phPtt'); if(pp){let d=false; pp.addEventListener('pointerdown',e=>{d=true;pp.classList.add('live');pp.setPointerCapture(e.pointerId);}); pp.addEventListener('pointerup',()=>{if(!d)return;d=false;pp.classList.remove('live');SP.ensureRunning();const t=$('#phTalkText').value.trim(); if(t){SP.teamSpeak(member.id,t);$('#phTalkText').value='';} else {const s=SP.TEAM_SAMPLES[member.id]; SP.teamSpeak(member.id,s.t,s.tr);}});}
+  }
+  function phoneTask(L){ const m=member; if(!m.task) return `<div class="ph-task dim">${SP.ui4('noTask',L)}</div>`; const v=m.task.kind==='victim'?S.victims.find(x=>x.id===m.task.target):null; const r=m.route; const head=m.task.kind==='staging'?SP.ui4('toStaging',L):m.task.kind==='point'?SP.ui4('point',L):`${SP.ui4('yourTask',L)} → ${v.id} · ${SP.TRIAGE[SP.triageOf(v)].label[L]}`; return `<div class="ph-task ${m.task.kind==='staging'?'':''}"><b>${head}</b>${r?`<span>${r.len.toFixed(0)} m · ${r.climbs} ${SP.ui4('climbs',L)} · ~${Math.round(r.secs)} s · ${r.diff}${r.hazards.length?' · ⚠ '+r.hazards.join(', '):''}</span>`:''}${v?`<span class="dim">${SP.esc(v.where)}</span>`:''}${m.work?`<span>${m.work.label} · ${Math.round((1-m.work.left/m.work.total)*100)}%</span>`:''}${m.waiting?`<span>${m.waiting}</span>`:''}${m.egressRoute&&m.task.kind!=='staging'?`<span class="eg">${SP.ui4('egress',L)}: ${m.egressRoute.len.toFixed(0)} m</span>`:''}</div>`; }
+  function renderPhone(){
+    if(!$('#drawer').classList.contains('on'))return; const L=member.lang;
+    if(phTab==='feed'){ $('#phEvac').innerHTML=S.evacuating?`<div class="ph-evac">${SP.ui4('evacuate',L)}<small>${SP.EVAC[L]}</small></div>`:''; const lead=S.comms.filter(c=>c.from==='t1'&&(!c.to||c.to===member.id)).slice(-1)[0]; const el=$('#phLead'); if(S.mic.active) el.innerHTML=`<div class="eyebrow">${SP.ui4('leadSays',L)} · …</div><div class="say dim">${SP.esc(S.mic.partial)}▍</div>`; else if(lead) el.innerHTML=`<div class="eyebrow">${SP.ui4('leadSays',L)} · ${lead.clock}</div><div class="say">${SP.esc(lead.tr[L]||lead.tr['en-IN'])}</div>${lead.lang!==L?`<div class="orig">${SP.esc(lead.text)} · ${SP.langName(lead.lang)} → sarvam-translate</div>`:''}<button class="btn" id="phListen">🔊 ${SP.ui4('listen',L)}</button>`; else el.innerHTML=`<div class="eyebrow">${SP.ui4('leadSays',L)}</div><div class="say dim">—</div>`; $('#phTask').innerHTML=phoneTask(L); $('#phLog').innerHTML=S.log.slice(-8).reverse().map(e=>`<li><time>${e.clock} · ${e.src}</time>${SP.esc(SP.logText(e,L))}</li>`).join(''); }
+    if(phTab==='map') $('#phTask').innerHTML=phoneTask(L);
+    if(phTab==='help'){ const near=S.victims.filter(v=>!['dismissed','extracted'].includes(v.status)).sort((a,b)=>SP.dist2(member.pos,a.pos)-SP.dist2(member.pos,b.pos))[0]; $('#phNear').textContent=near?`${near.id} · ${SP.dist2(member.pos,near.pos).toFixed(1)} m`:'—'; $('#phMine').innerHTML=S.requests.filter(r=>r.member===member.id).map(r=>`<div><span>${SP.REQUESTS[r.type].label[L]}${r.victim?' · '+r.victim:''}</span><span class="chip ${r.status}">${SP.ui4(r.status==='pending'?'pending':r.status,L)}</span></div>`).join(''); }
+    if(phTab==='talk'){ const pm=S.phoneMic; const tr=$('#phTr'); const last=S.comms.filter(c=>c.from===member.id).slice(-1)[0]; if(pm&&pm.member===member.id) tr.innerHTML=`<span class="dim">${SP.esc(pm.partial)}▍</span>`; else if(last) tr.textContent=last.text; $('#phSent').innerHTML=last&&!(pm&&pm.member===member.id)?`✓ ${SP.ui4('sentToLead',L)}<small>→ हिन्दी: ${SP.esc(last.tr['hi-IN'])}</small>`:''; }
+  }
+  /* render */
+  let dirty=false; SP.on('change',()=>{if(dirty)return;dirty=true;requestAnimationFrame(()=>{dirty=false;render();});});
+  function renderTimeline(){ $('#tlBody').innerHTML=S.proposal?SP.ui.timeline(S.proposal,false)+`<p class="dim" style="font-size:12px;margin:8px 0 0">Proposal #${S.proposal.n} · ${S.proposal.reason} · ${S.proposal.approved?'approved':'pending'} · travel grey, work green, wait amber. Extraction starts only after the medic has stabilised.</p>`:'<p class="dim">No proposal yet. It appears automatically when mapping completes, or press Recompute.</p>'; }
+  function renderLog(){ const lang=$('#logLang').value; $('#comms').innerHTML=S.comms.slice(-20).reverse().map(c=>SP.ui.commLine(c,lang)).join('')||'<li class="dim">—</li>'; $('#log').innerHTML=S.log.slice(-60).reverse().map(e=>SP.ui.logLine(e,lang)).join('')||'<li class="dim">—</li>'; }
+  function render(){
+    const vs=S.victims.filter(v=>!v.decoy||v.status!=='dismissed'); const live=S.victims.filter(v=>v.status!=='extracted'&&v.status!=='dismissed'); const cnt=k=>live.filter(v=>SP.triageOf(v)===k).length;
+    $('#kImm').textContent=cnt('immediate'); $('#kDel').textContent=cnt('delayed'); $('#kUnk').textContent=cnt('unknown'); $('#kExt').textContent=S.victims.filter(v=>v.status==='extracted').length;
+    $('#teamdots').innerHTML=S.team.map(m=>`<span class="td r-${m.role} ${m.signalLost?'lost':''} ${m.work?'working':m.moving?'moving':''}" title="${m.name} · ${SP.roleName(m.role)}">${m.initials}<i></i></span>`).join('');
+    $('#evacbar').classList.toggle('on',S.evacuating);
+    // queue
+    const q=S.decisions; $('#queue').innerHTML=q.length?q.slice(0,3).map(d=>SP.ui.decision(d)).join('')+(q.length>3?`<div class="qmore">+${q.length-3} more waiting</div>`:''):(S.running?'<div class="qcalm">No decisions pending</div>':'');
+    // voice strip
+    const vl=$('#vline'); if(S.mic.active) vl.innerHTML=`<span class="partial">${SP.esc(S.mic.partial||'…')}</span>`; else if(S.mic.final) vl.innerHTML=`${SP.esc(S.mic.final)} <span class="dim mono" style="font-size:11px">${S.mic.lang}</span>`; const lastTeam=S.comms.filter(c=>c.from!=='t1').slice(-1)[0]; $('#vsub').innerHTML=S.phoneMic?`<b>${first(SP.member(S.phoneMic.member))}</b> speaking… ${SP.esc(S.phoneMic.partial)}`:lastTeam?`<b>${first(SP.member(lastTeam.from))}</b> ${lastTeam.clock}: ${SP.esc(lastTeam.tr['en-IN'])}`:'Last from team: —';
+    const tb=$('#ttsBadge'); if(S.tts.playing){tb.classList.add('on'); tb.innerHTML=`<b>Go2 speaking · ${SP.langName(S.tts.playing.lang)} · ${S.tts.playing.voice}</b>${SP.esc(S.tts.playing.text)}`;} else tb.classList.remove('on');
+    // context panel
+    const sel=S.selected; const st=$('#stage'); if(sel){ st.classList.add('panel'); closePick(); let html=''; if(sel.kind==='victim'){const v=S.victims.find(x=>x.id===sel.id); html=v?SP.ui.victimPanel(v):'';} else if(sel.kind==='team') html=SP.ui.teamPanel(SP.member(sel.id)); else if(sel.kind==='hazard'){const h=S.hazards.find(x=>x.id===sel.id); html=h?SP.ui.hazardPanel(h):'';} else html=SP.ui.botPanel(sel.kind); const active=document.activeElement; const keep=active&&cp.contains(active)&&active.tagName==='INPUT'?{sel:active.dataset.msg!==undefined?'[data-msg]':'[data-relay]',val:active.value}:null; cp.innerHTML=html; if(keep){const i=cp.querySelector(keep.sel); if(i){i.value=keep.val; i.focus();}} } else { st.classList.remove('panel'); }
+    syncCams(); if($('#ovlTimeline').classList.contains('on'))renderTimeline(); if($('#ovlLog').classList.contains('on'))renderLog(); renderPhone();
+  }
+  SP.onFrame(()=>{ const t=S.t|0; $('#stT').textContent=String(t/60|0).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); const since=SP.SITE.collapseMinAgo*60+t; $('#stSince').textContent=String(since/3600|0)+':'+String((since/60|0)%60).padStart(2,'0')+':'+String(since%60).padStart(2,'0'); });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePick(); SP.select(null); $('#layersPop').classList.remove('on'); $('#vmore').classList.remove('on'); document.querySelectorAll('.ovl.on').forEach(o=>o.classList.remove('on'));}});
+  render();
+})();
+</script>
