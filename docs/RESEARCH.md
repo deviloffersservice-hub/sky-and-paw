@@ -115,7 +115,7 @@ Everything else in SPEC.md is feasible as written.
 |---|---|---|
 | Endpoint / models | CONFIRMED | `POST /v1/chat/completions`; **only** `sarvam-105b` (128K) and `sarvam-105b-conversations` (32K). `sarvam-30b` is **deprecated** ("migrate to Sarvam-105B") and absent from the SDK enum. |
 | Structured output | CONFIRMED | `response_format={"type":"json_schema","json_schema":{"name","schema","strict":true}}`; JSON arrives as a string in `message.content`. Also `json_object`, `text`. `tools` + `tool_choice` (`none|auto|required|{function}`) supported. |
-| `reasoning_effort` | CORRECTED | Docs disagree (`none|low|high|max` vs `low|medium|high|None`). **Use `low`, `medium`, `high`, or `null` to disable.** Default is reasoning ON; reasoning tokens bill as output and count toward `max_tokens` (set ≥1024 for plans). SDK accepts `none|low|high|max` literals; pass `null`/omit if `none` is rejected. |
+| `reasoning_effort` | **VERIFIED LIVE** | Server accepts only `low`, `medium`, `high` (or omit). `none`/`max` → 400 "Input should be low, medium or high". SDK 0.1.41 literals are wrong (`none|low|high|max`): pass the value as a plain string. Default is reasoning ON; reasoning tokens bill as output and count toward `max_tokens` (set ≥1024 for plans). SDK accepts `none|low|high|max` literals; pass `null`/omit if `none` is rejected. |
 | Limits / price | CONFIRMED | `max_tokens` Starter 4096 / Pro 16384 / Business 128000 (default 2048). ₹15/M input, ₹5/M cached, ₹60/M output. 60 rpm PAYG. `stream: true` → SSE with `reasoning_content` deltas. |
 | SDK | CONFIRMED | `client.chat.completions(messages=, model="sarvam-105b", reasoning_effort=, max_tokens=, response_format=, tools=, tool_choice=, stream=)`. |
 
@@ -133,7 +133,7 @@ Everything else in SPEC.md is feasible as written.
 | REST | CONFIRMED | `POST /translate` `{input (≤2000 chars for sarvam-translate:v1, ≤1000 mayura), source_language_code (required; "auto" only with mayura:v1), target_language_code, model: "sarvam-translate:v1" | "mayura:v1", mode (formal only for sarvam-translate), speaker_gender, numerals_format, output_script (mayura)}` → `{request_id, translated_text, source_language_code}`. Default model when omitted: UNVERIFIED (always pass it). 23 languages. ₹2/1k chars, 60 rpm. SDK `client.text.translate(input=, source_language_code=, target_language_code=, model=)`. |
 
 ### 2.6 Credits
-CONFIRMED: ₹100 free credits per verified signup, never expire. Budget math for the hackathon: ₹100 ≈ 200 min STT, or ~33k TTS chars (v3), or ~50k translated chars. Hence: cache TTS and translations, translate only on change, keep the realtime socket open only while the mic is held.
+DOCS say ₹100 free credits per verified signup. **LIVE CHECK 2026-10-31: this key has ₹0; every billable call → 402 `insufficient_quota_error`.** Owner must claim/add credits at indus.sarvam.ai before M5. Budget math for the hackathon: ₹100 ≈ 200 min STT, or ~33k TTS chars (v3), or ~50k translated chars. Hence: cache TTS and translations, translate only on change, keep the realtime socket open only while the mic is held.
 
 ---
 
