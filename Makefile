@@ -7,6 +7,8 @@
 #   make setup-ml  optional ML stack (ultralytics 8.3 + torch CPU), needed from M3
 #   make docker    build the optional Docker image
 #   make lock      regenerate backend/requirements*.txt from backend/pyproject.toml
+#   make scene     create/reuse the Cyberwave scene, run MuJoCo (120 s), save frames (billable)
+#   make scene-dry print the scene plan (GET requests only, no simulation)
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
@@ -28,10 +30,10 @@ NODE_STAMP := frontend/node_modules/.skypaw-setup
 DIST := frontend/dist/index.html
 FRONTEND_SRC := $(wildcard frontend/src/*) frontend/index.html frontend/vite.config.ts frontend/tsconfig.json
 
-.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean FORCE
+.PHONY: help setup setup-ml run test lint pytest typecheck build smoke docker lock clean scene scene-dry glb FORCE
 
 help:
-	@sed -n '2,9p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
+	@sed -n '2,11p' $(firstword $(MAKEFILE_LIST)) | sed 's/^# *//'
 
 setup: $(PY_STAMP) $(NODE_STAMP) $(DIST)
 
@@ -74,9 +76,13 @@ run: $(PY_STAMP) $(DIST)
 
 test: lint pytest typecheck
 
+LINT_SCRIPTS := scripts/scene.py
+
 lint: $(PY_STAMP)
 	$(VENV)/bin/ruff check backend
 	$(VENV)/bin/ruff format --check backend
+	$(VENV)/bin/ruff check --config backend/pyproject.toml $(LINT_SCRIPTS)
+	$(VENV)/bin/ruff format --check --config backend/pyproject.toml $(LINT_SCRIPTS)
 
 pytest: $(PY_STAMP)
 	$(VENV)/bin/pytest backend
@@ -89,6 +95,19 @@ build: $(NODE_STAMP)
 
 smoke: $(PY_STAMP) build
 	scripts/smoke.sh
+
+# M1 scene. SCENE_ARGS adds flags, e.g. SCENE_ARGS="--env skypaw-m1-dev --duration 90".
+# `make scene` starts a billable MuJoCo run (default 120 s = 0.02 credits) and always stops it.
+SCENE_ARGS ?=
+scene: $(PY_STAMP)
+	$(VPY) scripts/scene.py --capture $(SCENE_ARGS)
+
+scene-dry: $(PY_STAMP)
+	$(VPY) scripts/scene.py --dry-run $(SCENE_ARGS)
+
+# Rebuild backend/skypaw/scene/rubble.glb from site.yaml (offline).
+glb: $(PY_STAMP)
+	$(VPY) -m skypaw.scene.build_glb
 
 docker:
 	docker build --build-arg GIT_SHA=$(GIT_SHA) -t $(IMAGE) .
