@@ -88,3 +88,11 @@ Interfaces between streams are **Python protocols** declared in `skypaw/mission/
 
 ## Budgets
 Simulation: `duration ≤ 300 s` per run, always stopped in `finally`; each stream ≤ 10 requested minutes during development. Sarvam: ≤ ₹5 per stream during development; everything cached.
+
+## Clarifications (resolved by streams D and E; binding for stream A)
+- `grid.cls`: row-major bytes, `index = j*w + i`, row `j` at `y = y0 + (j+0.5)*cs` (row 0 = south edge), column `i` at `x = x0 + (i+0.5)*cs`. `grid.seen`: packed bits MSB-first (`numpy.packbits` order) over the same indexing; a server may instead send one byte per cell and the console accepts both.
+- Decision actions: the console sends `confirm{plan_id}` for the primary/`go`/`confirm` action of a plan card, `cancel{plan_id}` for `cancel`, and `decide{decision_id, action}` for everything else (e.g. a speaker card's phrase ids).
+- `command.intent = "stop_all"` may carry `target: "drone" | "go2"`; without a target it stops both. The drone's Hold button sends `stop_all` with target `drone`.
+- The server sends a `snapshot` immediately after accepting `hello` (the console treats the first `snapshot`/`pong` as connected).
+- Victims carry no language in v1; the console keeps a per-console survivor-language selector (default `mr-IN`) and sends it with `tts`.
+- Camera overlay boxes are not drawn in v1 (no intrinsics in the snapshot).

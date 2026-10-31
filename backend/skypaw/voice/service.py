@@ -28,6 +28,7 @@ from skypaw.voice.client import (
     tone_wav,
 )
 from skypaw.voice.phrases import LEAD_SAMPLES, TEAM_LANGS, lookup
+from skypaw.voice.settings import VoiceSettings
 from skypaw.voice.translate import TranslateCache
 from skypaw.voice.tts import TtsCache, cache_key, normalise_text, speaker_for, tts_dir, url_for
 
@@ -40,8 +41,13 @@ FALLBACK_MAX_BYTES = int(stt.REST_MAX_S * stt.BYTES_PER_S)
 class SarvamVoice:
     """Live Voice port: realtime STT relay, sarvam-105b planner, cached Bulbul, cached translate."""
 
-    def __init__(self, client: Any, data_dir: Path) -> None:
+    def __init__(
+        self, client: Any, data_dir: Path, voice_settings: VoiceSettings | None = None
+    ) -> None:
         self.client = client
+        vs = voice_settings or VoiceSettings()
+        self.plan_model = vs.sarvam_plan_model
+        self.plan_fallback_model = vs.sarvam_plan_fallback_model
         self.data_dir = Path(data_dir)
         self.tts = TtsCache(client, self.data_dir)
         self.translator = TranslateCache(client, self.data_dir / "cache.db")
@@ -84,7 +90,13 @@ class SarvamVoice:
             yield await stt.transcribe_clip(self.client, stt.pcm_clip(bytes(buffered)), lang)
 
     async def plan(self, text: str, lang: str) -> Plan:
-        return await planner.plan(self.client, text, lang)
+        return await planner.plan(
+            self.client,
+            text,
+            lang,
+            model=self.plan_model,
+            fallback_model=self.plan_fallback_model,
+        )
 
     async def speak(self, text: str, lang: str) -> str:
         return await self.tts.speak(text, lang)
@@ -176,7 +188,7 @@ class FakeVoice:
 
 def fake_sarvam_voice(data_dir: Path, **fake_kw: Any) -> SarvamVoice:
     """The real SarvamVoice pipeline over FakeSarvam (fixture responses, offline)."""
-    return SarvamVoice(FakeSarvam(**fake_kw), data_dir)
+    return SarvamVoice(FakeSarvam(**fake_kw), data_dir, VoiceSettings(_env_file=None))
 
 
 __all__ = ["FakeVoice", "SarvamVoice", "fake_sarvam_voice"]
