@@ -159,10 +159,37 @@ def _asset_update_schema(**fields: Any) -> Any:
     return AssetUpdateSchema(**fields)
 
 
-def ensure_asset_glb(
-    ctx: SceneContext, name: str, glb: bytes, glb_sha256: str, *, filename: str = "rubble.glb"
+def find_asset(
+    ctx: SceneContext, name: str, env_uuid: str | None, twin_name: str | None
 ) -> str | None:
-    """Asset uuid by name, with this exact GLB attached and MuJoCo enabled.
+    """Existing asset uuid for ``name`` without listing all assets.
+
+    ``cw.assets.list()`` does not return user-created assets (verified live 2026-10-31; it
+    caused a duplicate asset in M1), so the lookup is: (1) the ``asset_uuid`` of the twin
+    named ``twin_name`` in the environment, (2) ``cw.assets.search(name)`` filtered to an
+    exact name match, preferring a ``registry_id`` that ends in ``/<name>``.
+    """
+    cw = ctx.cw
+    if env_uuid and twin_name:
+        twin = next(iter(_by_name(cw.twins.list(environment_id=env_uuid), twin_name)), None)
+        if twin is not None and _get(twin, "asset_uuid"):
+            return str(_get(twin, "asset_uuid"))
+    matches = _by_name(cw.assets.search(name) or [], name)
+    matches.sort(key=lambda a: not str(_get(a, "registry_id") or "").endswith(f"/{name}"))
+    return _uuid(matches[0]) if matches else None
+
+
+def ensure_asset_glb(
+    ctx: SceneContext,
+    name: str,
+    glb: bytes,
+    glb_sha256: str,
+    *,
+    filename: str = "rubble.glb",
+    env_uuid: str | None = None,
+    twin_name: str | None = None,
+) -> str | None:
+    """Asset uuid (see :func:`find_asset`), with this exact GLB attached and MuJoCo enabled.
 
     * upload only when ``glb_file`` is missing or the stored ``skypaw_glb_sha256`` differs;
     * PATCH ``supported_simulation_backends=["playground","mujoco"]`` and ``fixed_base=True``
@@ -171,9 +198,9 @@ def ensure_asset_glb(
       recorded in ``ctx.notes["fixed_base_accepted"]`` either way.
     """
     cw = ctx.cw
-    found = _by_name(cw.assets.list(), name)
+    found = find_asset(ctx, name, env_uuid, twin_name)
     if found:
-        asset_uuid = _uuid(found[0])
+        asset_uuid = found
         ctx.step("reuse", "asset", name)
     elif ctx.dry_run:
         ctx.step("create", "asset", name, "planned")
@@ -407,7 +434,14 @@ def build_scene(
     h = SceneHandles()
     h.project_uuid = ensure_project(ctx, project)
     h.environment_uuid = ensure_environment(ctx, environment, h.project_uuid)
-    h.rubble_asset_uuid = ensure_asset_glb(ctx, RUBBLE_ASSET_NAME, glb, glb_sha256)
+    h.rubble_asset_uuid = ensure_asset_glb(
+        ctx,
+        RUBBLE_ASSET_NAME,
+        glb,
+        glb_sha256,
+        env_uuid=h.environment_uuid,
+        twin_name=TWIN_NAMES["rubble"],
+    )
     spawn = site.spawn
     go2_target = go2_pose or spawn["go2"]
     h.go2_twin_uuid = ensure_twin(ctx, h.environment_uuid, TWIN_NAMES["go2"], GO2_SLUG, go2_target)
@@ -444,6 +478,7 @@ __all__ = [
     "ensure_environment",
     "ensure_project",
     "ensure_twin",
+    "find_asset",
     "ensure_waypoints",
     "place",
     "resolve_asset_uuid",
