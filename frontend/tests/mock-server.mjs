@@ -507,7 +507,11 @@ wss.on("connection", (ws) => {
   ws.send(JSON.stringify(snapshot()));
   ws.on("message", (data, isBinary) => {
     if (isBinary) {
-      received.push({ binary: data.length });
+      // zc: zero crossings in the frame; a 440 Hz tone at 16 kHz gives ~88 per 1600 samples,
+      // which lets tests check the console resampled the device rate to 16 kHz.
+      let zc = 0;
+      for (let i = 2; i + 1 < data.length; i += 2) if ((data.readInt16LE(i) >= 0) !== (data.readInt16LE(i - 2) >= 0)) zc++;
+      received.push({ binary: data.length, zc });
       onBinary(data);
       return;
     }

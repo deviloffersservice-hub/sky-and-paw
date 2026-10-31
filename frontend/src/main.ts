@@ -1,3 +1,4 @@
+import "./fonts";
 import "./styles.css";
 
 import { initAudio } from "./audio";
@@ -221,6 +222,14 @@ function boot(root: HTMLElement): void {
     log.render();
   });
   voice.render();
+  // Events are for toasts only (PROTOCOL): surface errors on the voice strip.
+  store.onEvent((e) => {
+    if (e.name === "error" || e.name === "sim.error") {
+      const d = e.data ?? {};
+      const why = String(d.reason ?? d.error ?? d.message ?? "error");
+      voice.notice(e.name === "sim.error" ? `Simulation: ${why}` : `Backend: ${why}`);
+    }
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;

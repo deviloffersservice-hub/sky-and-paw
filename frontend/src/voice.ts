@@ -292,5 +292,17 @@ export function initVoice(els: {
     if (phase === "live") render();
   }, 250);
 
-  return { render, stop, close: () => more.classList.remove("on"), dispose: () => window.clearInterval(ticker), stats: () => ({ phase, framesSent }) };
+  /** Shows a short message (e.g. a backend error event) on the strip's second line for 6 s. */
+  let noticeTimer = 0;
+  const notice = (msg: string) => {
+    error = msg;
+    render();
+    window.clearTimeout(noticeTimer);
+    noticeTimer = window.setTimeout(() => {
+      if (error === msg) error = "";
+      render();
+    }, 6000);
+  };
+
+  return { render, stop, notice, close: () => more.classList.remove("on"), dispose: () => window.clearInterval(ticker), stats: () => ({ phase, framesSent }) };
 }

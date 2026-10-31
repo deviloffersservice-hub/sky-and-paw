@@ -233,6 +233,9 @@ async function main() {
       check(tri.victim_id === "V-02" && tri.category === "immediate", `sent ${JSON.stringify(tri)}`);
       await waitFor(async () => (await page.textContent("#kImm")) === "2", "Immediate count 2");
       check(await page.$('.cpanel .tbtn.t-immediate.on'), "chosen triage filled; header count updated (C4)");
+      check(/suggested/.test(await page.textContent('.cpanel .tbtn.t-delayed')), "the system suggestion stays visible after the lead's choice (C4)");
+      await waitFor(async () => (await snap(page)).victims.find((v) => v.id === "V-02").triage === "immediate", "snapshot confirms triage");
+      check(true, "pin label drops the ? once the snapshot carries the lead's triage");
       await page.click('.cpanel [data-act="go2"]');
       const cmd = await waitFor(() => sent((m) => m.type === "command" && m.intent === "navigate_go2"), "navigate_go2 command");
       check(cmd.target === "V-02", `sent ${JSON.stringify(cmd)}`);
@@ -241,6 +244,8 @@ async function main() {
       check(tts.lang === "mr-IN", `sent ${JSON.stringify(tts)}`);
       await page.waitForSelector(".tts-badge.on", { timeout: 3000 });
       check(/Go2 speaking · मराठी · rohan/.test(await page.textContent(".tts-badge")), "TTS badge shows language and voice (B4)");
+      await waitFor(async () => (await snap(page)).log.some((e) => e.src === "TTS" && /तुम्हाला ऐकू येतंय का/.test(e.text["en-IN"]) && /mr-IN/.test(e.text["en-IN"])), "TTS log line");
+      check(true, "log carries the exact spoken text and language (B4, from the snapshot)");
       const audioSrc = await waitFor(() => page.$eval("#ttsAudio", (a) => a.getAttribute("src")), "audio src");
       check(/\/tts\/[0-9a-f]+\.wav$/.test(audioSrc), `<audio> plays ${audioSrc} after the first gesture`);
       await page.fill(".cpanel [data-relay]", "Stay where you are");
@@ -260,6 +265,8 @@ async function main() {
       const cancel = await waitFor(() => sent((m) => m.type === "cancel"), "cancel");
       check(cancel.plan_id === "P-2" || /^P-/.test(cancel.plan_id), `sent ${JSON.stringify(cancel)}`);
       const v01 = page.locator(".dec", { hasText: "Go2 → V-01" });
+      check((await snap(page)).robots.go2.mode !== "moving", "Go2 does not move while the plan waits (B1)");
+      check((await stats(page)).goPath === 0, "no solid Go2 path before Confirm");
       await v01.locator(".btn.primary").click();
       const confirm = await waitFor(() => sent((m) => m.type === "confirm"), "confirm");
       check(confirm.plan_id === "P-1", `sent ${JSON.stringify(confirm)}`);
@@ -316,6 +323,8 @@ async function main() {
       check(frames.length >= 1, `${frames.length} binary frames between start and stop`);
       check(frames.slice(0, -1).every((f) => f.binary === 3200), `full frames are 3200 bytes (${[...new Set(frames.map((f) => f.binary))].join(",")})`);
       check(stopIdx > startIdx && !log.slice(stopIdx + 1).some((m) => m.binary != null), "no binary after mic stop");
+      const zcs = frames.filter((f) => f.binary === 3200).slice(1).map((f) => f.zc);
+      check(zcs.length > 0 && zcs.every((z) => z >= 80 && z <= 96), `440 Hz tone arrives as 440 Hz at 16 kHz (zero crossings per frame ${zcs.join(",")}, expect ~88)`);
       const rate = await page.evaluate(() => window.__fakeMic && window.__fakeMic.rate);
       console.log(`  info device rate ${rate} Hz resampled to 16 kHz`);
       await waitFor(async () => /V-02/.test(await page.textContent("#vline")), "final transcript in the strip");
@@ -482,6 +491,39 @@ async function main() {
       } finally {
         await ctx.close();
       }
+    }
+  });
+
+  await test("pages", "Console on another origin (GitHub Pages) with ?api= connects, loads frames cross-origin, remembers the URL", async () => {
+    const http = require("node:http");
+    const dist = path.join(ROOT, "dist");
+    const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".woff": "font/woff" };
+    const srv = http.createServer((req, res) => {
+      let file = path.join(dist, decodeURIComponent(new URL(req.url, "http://x").pathname));
+      if (!file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(dist, "index.html");
+      res.writeHead(200, { "content-type": types[path.extname(file)] || "application/octet-stream" });
+      res.end(fs.readFileSync(file));
+    });
+    const sport = await freePort();
+    await new Promise((r) => srv.listen(sport, "127.0.0.1", r));
+    const STATIC = `http://localhost:${sport}`;
+    const { ctx, page: p } = await newPage(1280, 720);
+    try {
+      await p.goto(`${STATIC}/?api=${encodeURIComponent(BASE)}`);
+      await p.waitForSelector('body[data-conn="connected"]', { timeout: 10_000 });
+      check(true, `${STATIC} with ?api=${BASE} connects over /ws`);
+      check((await p.evaluate(() => localStorage.getItem("skypaw_api"))) === BASE, "?api= remembered in localStorage.skypaw_api");
+      const src = await waitFor(() => p.getAttribute('.cam[data-cam="drone"] img', "src"), "frame src");
+      check(src.startsWith(`${BASE}/frames/`), `frames load from the backend origin (${src})`);
+      await waitFor(() => p.$eval('.cam[data-cam="drone"] img', (i) => i.complete && i.naturalWidth > 0), "cross-origin frame decoded");
+      await waitFor(async () => (await p.textContent("#versionDd")) === "mock-0.1.0", "version via cross-origin /healthz");
+      check(true, "cross-origin /healthz allowed by CORS");
+      await p.goto(`${STATIC}/`);
+      await p.waitForSelector('body[data-conn="connected"]', { timeout: 10_000 });
+      check(/\(storage\)$/.test(await p.textContent(".meta dd")), "reload without ?api= uses the stored backend");
+    } finally {
+      await ctx.close();
+      srv.close();
     }
   });
 

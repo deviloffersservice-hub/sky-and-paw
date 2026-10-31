@@ -89,3 +89,4 @@ h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:.02em}
 @media (max-width:900px){.cpanel{box-sizing:border-box}}
 @media (max-width:600px){.queue{top:48px} .cams{max-width:calc(100% - 20px)} .cam{width:110px}}
 .stage.focus .cam.focus .hud.foot{top:auto;bottom:12px;right:120px}
+.stage.panel .queue{right:410px} /* mockup used 382px, but the panel is 372px + 28px padding wide (content-box), which hid 18px of the cards */
