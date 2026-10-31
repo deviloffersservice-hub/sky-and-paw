@@ -1,0 +1,26 @@
+{
+  "frame_id": "m2_overhead_bottom",
+  "t": 0.0,
+  "sensor_id": "camera_chasis_bottom",
+  "position": [
+    0.3301830802649502,
+    -0.03159125204753496,
+    5.996824151495882
+  ],
+  "rotation": [
+    0.9764695512488882,
+    0.003022180525150283,
+    -0.013713287716680511,
+    0.21519764786973858
+  ],
+  "intrinsics": {
+    "width": 640,
+    "height": 360,
+    "fovy": 58.72
+  },
+  "note": "M2 flight capture (tests/evidence/M2/dev). MQTT pose at capture; the rendered frame lags it by ~2.7 m along the flight path (offset -2.5, -1.0 m fitted against site.yaml rubble). No humans or markers in this scene.",
+  "fitted_camera_offset_xy": [
+    -2.5,
+    -1.0
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "candidates": [],
+  "frames": [
+    {
+      "frame_id": "live_0",
+      "fired": "none",
+      "boxes": [],
+      "hits": [],
+      "footprint": [
+        [
+          -3.375,
+          -6.001
+        ],
+        [
+          -3.375,
+          6.001
+        ],
+        [
+          3.375,
+          6.001
+        ],
+        [
+          3.375,
+          -6.001
+        ]
+      ],
+      "detect_ms": 155.6,
+      "total_ms": 157.8,
+      "drone_position": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "frame_id": "live_1",
+      "fired": "none",
+      "boxes": [],
+      "hits": [],
+      "footprint": [
+        [
+          -3.375,
+          -6.001
+        ],
+        [
+          -3.375,
+          6.001
+        ],
+        [
+          3.375,
+          6.001
+        ],
+        [
+          3.375,
+          -6.001
+        ]
+      ],
+      "detect_ms": 78.1,
+      "total_ms": 79.2,
+      "drone_position": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    },
+    {
+      "frame_id": "live_2",
+      "fired": "none",
+      "boxes": [],
+      "hits": [],
+      "footprint": [
+        [
+          -3.375,
+          -6.001
+        ],
+        [
+          -3.375,
+          6.001
+        ],
+        [
+          3.375,
+          6.001
+        ],
+        [
+          3.375,
+          -6.001
+        ]
+      ],
+      "detect_ms": 71.8,
+      "total_ms": 73.1,
+      "drone_position": [
+        0.0,
+        0.0,
+        6.0
+      ]
+    }
+  ],
+  "latency_ms": {
+    "frames": 3,
+    "mean": 103.4,
+    "max": 157.8
+  },
+  "frames_dir": "tests/evidence/V1-B",
+  "yolo_loaded": true,
+  "truth_distance_m": {},
+  "seed": 0,
+  "note": "thermal/radar are synthetic (SPEC 3.2); marker boxes stand in for people"
+}

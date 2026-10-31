@@ -1,0 +1,43 @@
+{
+  "frame_id": "live_1",
+  "t": 5.26,
+  "sensor_id": "camera_chasis_bottom",
+  "position": [
+    0.0,
+    0.0,
+    5.99999999999999
+  ],
+  "rotation": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "intrinsics": {
+    "width": 640,
+    "height": 360,
+    "fovy": 58.72
+  },
+  "pose_before": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 5.99999999999999
+    },
+    "rotation": {
+      "w": 1.0,
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  },
+  "stats": {
+    "shape": [
+      360,
+      640,
+      3
+    ],
+    "mean": 162.77,
+    "std": 43.56
+  }
+}

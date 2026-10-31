@@ -1,0 +1,23 @@
+{
+  "frame_id": "v1b_yaw0",
+  "t": 0.75,
+  "sensor_id": "camera_chasis_bottom",
+  "position": [
+    0.0,
+    0.0,
+    5.99999999999999
+  ],
+  "rotation": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "intrinsics": {
+    "width": 640,
+    "height": 360,
+    "fovy": 58.72
+  },
+  "visible_markers": [],
+  "note": "live V1-B run 1: drone spawned at (0,0,6) yaw 0, static; no marker in view (image short axis along world X)"
+}

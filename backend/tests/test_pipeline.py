@@ -1,0 +1,184 @@
+"""End-to-end pipeline on real captured frames (tests/fixtures/frames).
+
+1. The real M2 overhead frame (rubble only, no people, no markers): no candidates.
+2. The same real frame with marker box tops painted where a drone at four survey poses
+   would see them (the live scene has no humans; markers stand in, see scene/markers.py):
+   exactly the four site.yaml targets, within 0.5 m, with the SPEC triage
+   (V-01 immediate, V-02 delayed, V-03 unknown, D-01 expectant) - M3-A4 offline.
+3. Live V1-B frames, when present: every candidate within 1.0 m of its truth.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import math
+from pathlib import Path
+
+import cv2
+import pytest
+from perception_helpers import FIXTURES, paint_markers
+
+from skypaw.mission.ports import Frame
+from skypaw.perception.detector import CompositeDetector
+from skypaw.perception.pipeline import DetectionPipeline, truth_errors
+from skypaw.perception.project import CameraPose, yaw_to_quat_wxyz
+from skypaw.scene.markers import MARKER_NOTE
+from skypaw.sensors.synthetic import SyntheticSensors
+
+M2 = FIXTURES / "frames" / "m2_overhead_bottom.jpg"
+# Drone poses (world x, y, z, yaw): each sees one or two targets; all within 2.6 m of one.
+POSES = {
+    "p_v01": (2.5, 0.5, 6.0, 0.0),
+    "p_d01": (-6.0, 4.0, 6.0, 0.0),
+    "p_v03": (6.0, -3.5, 6.0, 0.0),
+    "p_v02": (-4.5, -2.0, 6.0, 0.3),
+}
+EXPECTED = {"V-01": "immediate", "V-02": "delayed", "V-03": "unknown", "D-01": "expectant"}
+
+
+def _pipeline(seed: int = 0) -> DetectionPipeline:
+    return DetectionPipeline(CompositeDetector(None), SyntheticSensors(seed=seed))
+
+
+def _painted_frames(tmp_path: Path, sensors: SyntheticSensors) -> list[Frame]:
+    frames = []
+    for i, (name, (x, y, z, yaw)) in enumerate(POSES.items()):
+        rot = yaw_to_quat_wxyz(yaw)
+        img = cv2.imread(str(M2))
+        painted = paint_markers(img, CameraPose.from_frame([x, y, z], rot), sensors.truths)
+        assert painted, name
+        path = tmp_path / f"{name}.jpg"
+        cv2.imwrite(str(path), img)
+        frames.append(Frame(name, str(path), float(i), "camera_chasis_bottom", [x, y, z], rot))
+    return frames
+
+
+def test_real_rubble_frame_gives_no_candidates() -> None:
+    meta = json.loads(M2.with_suffix(".json").read_text())
+    pipe = _pipeline()
+    frame = Frame("m2", str(M2), 0.0, "camera_chasis_bottom", meta["position"], meta["rotation"])
+    assert pipe.process(frame) == []
+    assert pipe.records[0].fired == "none"
+
+
+def test_painted_markers_on_real_frame_end_to_end(tmp_path: Path) -> None:
+    pipe = _pipeline()
+    cands = []
+    for f in _painted_frames(tmp_path, pipe.sensors):
+        cands = asyncio.run(pipe.on_frame(f))
+    by_id = {c.victim_id: c for c in cands}
+    assert set(by_id) == set(EXPECTED)  # no other candidates
+    errs = truth_errors(cands, pipe.sensors)
+    assert all(e is not None and e < 0.5 for e in errs.values()), errs
+    assert {k: c.suggested_triage for k, c in by_id.items()} == EXPECTED
+    v01, d01 = by_id["V-01"], by_id["D-01"]
+    assert v01.fused >= 0.99 and v01.life_sign
+    assert v01.source["rgb"] == "marker" and v01.source["rgb_note"] == MARKER_NOTE
+    assert v01.source["thermal"] == "synthetic" and v01.evidence["radar"]["source"] == "synthetic"
+    assert d01.evidence["rgb"] is None and d01.evidence["radar_negative"]
+    assert d01.evidence["objects"] == ["decoy_marker"]
+    assert by_id["V-03"].evidence["thermal"] is None and by_id["V-03"].evidence["rgb"] > 0.5
+    assert by_id["V-02"].evidence["radar"]["snr"] == "weak"
+    assert all(r.fired == "marker" for r in pipe.records)
+
+
+def test_pipeline_is_deterministic_for_a_seed(tmp_path: Path) -> None:
+    def run(seed: int) -> list:
+        pipe = _pipeline(seed)
+        out = []
+        for f in _painted_frames(tmp_path, pipe.sensors):
+            out = pipe.process(f)
+        return [(c.victim_id, c.fused, c.evidence["thermal"]) for c in out]
+
+    assert run(3) == run(3)
+
+
+def test_unknown_object_far_from_truth_gets_c_id(tmp_path: Path) -> None:
+    from skypaw.sensors.synthetic import Truth
+
+    pipe = _pipeline()
+    fake = Truth("X", (0.5, 0.5, 0.5), False, None, None, None, None, None, None, None)
+    img = cv2.imread(str(M2))
+    rot = yaw_to_quat_wxyz(0.0)
+    paint_markers(img, CameraPose.from_frame([0.0, 0.0, 6.0], rot), [fake])
+    path = tmp_path / "x.jpg"
+    cv2.imwrite(str(path), img)
+    cands = pipe.process(Frame("x", str(path), 0.0, "cam", [0.0, 0.0, 6.0], rot))
+    assert [c.victim_id for c in cands] == ["C-01"]
+    assert cands[0].evidence["radar_negative"] and cands[0].suggested_triage == "unknown"
+
+
+LIVE = sorted((FIXTURES / "frames").glob("v1b_*.jpg"))
+FIXTURE_FRAMES = [M2, *LIVE]
+
+
+def _frame(p: Path) -> tuple[Frame, dict]:
+    meta = json.loads(p.with_suffix(".json").read_text())
+    f = Frame(p.stem, str(p), 0.0, meta["sensor_id"], meta["position"], meta["rotation"])
+    return f, meta
+
+
+def rgb_precision_recall(radius_m: float = 1.0) -> dict[str, float | int]:
+    """RGB (marker stand-in) detections on the real fixture frames vs ``visible_markers``.
+
+    Per frame: a projected person hit within ``radius_m`` of a visible marker's truth is a
+    TP (one per marker), other person hits are FPs, visible markers with no hit are FNs.
+    """
+    sensors = SyntheticSensors()
+    truth = {t.id: t for t in sensors.truths}
+    tp = fp = fn = 0
+    for p in FIXTURE_FRAMES:
+        f, meta = _frame(p)
+        pipe = DetectionPipeline(CompositeDetector(None), sensors)
+        pipe.process(f)
+        hits = [h for h in pipe.records[0].hits if h["kind"] == "person"]
+        visible = list(meta.get("visible_markers", []))
+        matched: set[str] = set()
+        for h in hits:
+            near = [
+                v
+                for v in visible
+                if v not in matched and math.dist(h["position"][:2], truth[v].world[:2]) <= radius_m
+            ]
+            if near:
+                matched.add(near[0])
+                tp += 1
+            else:
+                fp += 1
+        fn += len(set(visible) - matched)
+    return {
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "precision": tp / (tp + fp) if tp + fp else 1.0,
+        "recall": tp / (tp + fn) if tp + fn else 1.0,
+    }
+
+
+@pytest.mark.skipif(not LIVE, reason="no live V1-B frames committed")
+def test_live_v1b_frames_rgb_precision_recall_and_position() -> None:
+    """Live MuJoCo frames: the grey V-01 marker is found and projected within 0.3 m; no
+    false positives on any real fixture frame; V-02 (grey on a grey slab at the image edge)
+    is the known miss."""
+    pr = rgb_precision_recall()
+    assert pr["fp"] == 0 and pr["precision"] == 1.0
+    assert pr["tp"] >= 1 and pr["recall"] >= 0.5
+    pipe = _pipeline()
+    for p in LIVE:
+        pipe.process(_frame(p)[0])
+    v01 = next(c for c in pipe.candidates() if c.victim_id == "V-01")
+    assert v01.source["rgb"] == "marker" and v01.evidence["rgb"] > 0.9
+    assert truth_errors([v01], pipe.sensors)["V-01"] <= 0.3
+
+
+@pytest.mark.skipif(not LIVE, reason="no live V1-B frames committed")
+def test_live_static_frame_validates_projection_exactly() -> None:
+    """Static live drone at (0, 0, 6), exact MQTT pose: rubble IoU >= 0.9 with the default
+    mount and no fitted offset."""
+    from test_projection import _rubble_iou
+
+    for p in LIVE:
+        f, _ = _frame(p)
+        img = cv2.imread(str(p))
+        assert _rubble_iou(img, CameraPose.from_frame(f.position, f.rotation)) >= 0.9
